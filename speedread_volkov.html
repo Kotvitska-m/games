@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Скорочтение: Изумрудный город</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fdf6ee; --paper: #fff9f2;
+  --mint: #b8ddd4; --rose: #f0c4c4; --lavender: #d5c8e8;
+  --peach: #f5d6b8; --sage: #c8d8b8; --sky: #c4d8f0;
+  --ink: #4a3f35; --ink-l: #7a6a60;
+  --a: #8b6fb5; --a2: #c07070; --a3: #5a9e8a;
+  --sh: rgba(74,63,53,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; overflow-x: hidden; }
+
+.blob { position:fixed; border-radius:50%; filter:blur(60px); opacity:.32; pointer-events:none; z-index:0; }
+.b1{width:420px;height:420px;background:var(--mint);top:-100px;left:-100px}
+.b2{width:300px;height:300px;background:var(--rose);top:200px;right:-80px}
+.b3{width:360px;height:360px;background:var(--lavender);bottom:-100px;left:30%}
+.b4{width:250px;height:250px;background:var(--peach);top:60%;left:-60px}
+.b5{width:200px;height:200px;background:var(--sky);top:10%;right:20%}
+
+.stk { position:fixed; pointer-events:none; z-index:1; font-size:2.2rem; opacity:.5;
+  filter:drop-shadow(2px 3px 4px var(--sh)); animation:fl 4s ease-in-out infinite; }
+@keyframes fl { 0%,100%{transform:rotate(var(--r,0deg)) translateY(0)} 50%{transform:rotate(var(--r,0deg)) translateY(-8px)} }
+
+.app { position:relative; z-index:2; max-width:860px; margin:0 auto; padding:24px 20px 80px; }
+
+.hdr { text-align:center; margin-bottom:22px; }
+.hdr h1 { font-family:'Caveat',cursive; font-size:2.6rem; font-weight:700; color:var(--a); text-shadow:2px 3px 0 rgba(139,111,181,.18); }
+.hdr p { font-size:.93rem; color:var(--ink-l); font-style:italic; margin-top:4px; }
+
+.tabs { display:flex; gap:8px; margin-bottom:18px; }
+.tab { padding:8px 20px; border-radius:50px; border:2px solid #e0d4c8; background:var(--paper);
+  font-family:'Nunito',sans-serif; font-size:.9rem; font-weight:700; cursor:pointer; color:var(--ink-l); transition:all .18s; }
+.tab.on { background:var(--a); color:#fff; border-color:var(--a); }
+
+.card { background:var(--paper); border-radius:20px; padding:20px 24px; margin-bottom:16px;
+  box-shadow:0 4px 20px var(--sh),0 0 0 1.5px rgba(255,255,255,.8) inset; position:relative; overflow:hidden; }
+.card::before { content:''; position:absolute; top:0;left:0;right:0;height:4px; border-radius:20px 20px 0 0; background:var(--ca,var(--mint)); }
+.ct { font-family:'Caveat',cursive; font-size:1.3rem; font-weight:700; color:var(--ink); margin-bottom:12px; }
+
+.chips { display:flex; flex-wrap:wrap; gap:7px; }
+.chip { padding:6px 14px; border-radius:50px; border:2px solid transparent; background:#f0e8e0;
+  font-family:'Nunito',sans-serif; font-size:.84rem; font-weight:600; color:var(--ink); cursor:pointer; transition:all .15s; }
+.chip:hover { background:var(--lavender); }
+.chip.on { background:var(--a); color:#fff; border-color:var(--a); }
+
+.ifg { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+@media(max-width:540px){.ifg{grid-template-columns:repeat(2,1fr)}}
+.ifc { padding:8px 10px; border-radius:12px; border:2px solid #e0d4c8; background:#faf3ec;
+  font-size:.8rem; font-weight:600; color:var(--ink); cursor:pointer; text-align:center; transition:all .15s; user-select:none; }
+.ifc:hover { border-color:var(--a); background:var(--lavender); }
+.ifc.on { border-color:var(--a); background:var(--lavender); color:var(--a); }
+
+.srow { display:flex; align-items:center; gap:12px; margin-top:4px; }
+input[type=range] { -webkit-appearance:none; flex:1; height:6px; border-radius:6px; background:#e0d4c8; outline:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px;height:20px; border-radius:50%; background:var(--a); cursor:pointer; box-shadow:0 2px 6px rgba(139,111,181,.4); }
+.sv { font-family:'Caveat',cursive; font-size:1.2rem; min-width:44px; text-align:right; color:var(--a); font-weight:700; }
+
+.trow { display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
+.tog { width:44px;height:24px;background:#e0d4c8;border-radius:12px;position:relative;transition:background .2s;flex-shrink:0; }
+.tog::after { content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px var(--sh); }
+.tog.on { background:var(--a3); }
+.tog.on::after { left:23px; }
+textarea { width:100%;min-height:90px;margin-top:10px;padding:12px 14px;border:2px solid #e0d4c8;border-radius:14px;font-family:'Nunito',sans-serif;font-size:.9rem;background:#faf3ec;color:var(--ink);resize:vertical;outline:none;transition:border-color .2s; }
+textarea:focus { border-color:var(--a); }
+
+.sgrid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:540px){.sgrid{grid-template-columns:1fr}}
+.full { grid-column:1/-1; }
+.lbl { display:block; font-size:.79rem; font-weight:700; color:var(--ink-l); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; }
+
+.btn { display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:50px;border:none;font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .18s; }
+.bp { background:var(--a);color:#fff;box-shadow:0 4px 14px rgba(139,111,181,.4); }
+.bp:hover { transform:translateY(-2px);box-shadow:0 6px 18px rgba(139,111,181,.5); }
+.bs { background:var(--paper);color:var(--ink);border:2px solid #d8c8bc; }
+.bs:hover { background:var(--peach); }
+.bd { background:var(--a2);color:#fff;box-shadow:0 4px 14px rgba(192,112,112,.4); }
+.bt { background:var(--a3);color:#fff;box-shadow:0 4px 14px rgba(90,158,138,.4); }
+
+.ghead { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px; }
+.timer { font-family:'Caveat',cursive;font-size:2.4rem;color:var(--a);font-weight:700;min-width:80px; }
+.pbw { height:8px;background:#e0d4c8;border-radius:8px;margin-bottom:14px;overflow:hidden; }
+.pbf { height:100%;background:linear-gradient(90deg,var(--a3),var(--a));border-radius:8px;width:0%;transition:width .3s; }
+
+.twrap { position:relative;overflow:hidden;border-radius:16px;box-shadow:0 4px 24px var(--sh); }
+#textBox {
+  background:var(--paper); padding:28px 30px;
+  line-height:1.9; color:var(--ink); position:relative; min-height:180px;
+  word-break:normal; overflow-wrap:normal; hyphens:none; white-space:normal;
+}
+.sht { display:none; }
+#scCont { overflow:hidden; }
+#scInner { will-change:transform; position:relative; }
+
+/* ── SHUTTER OVERLAYS ── */
+/* We layer a repeating stripe div on top of textBox.
+   The stripe covers exactly the top or bottom half of each glyph.
+   Applied via JS after layout measurement. */
+#shutOverTop, #shutOverBot {
+  display: none;
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 8;
+  background-repeat: repeat-y;
+  background-size: 100% var(--row, 36px);
+  background-position: 0 var(--offset, 0px);
+}
+
+.ml { color:transparent;background:var(--rose);border-radius:3px;display:inline-block;min-width:.55em; }
+.fud { transform:scaleY(-1);display:inline-block; }
+
+.qq { font-family:'Caveat',cursive;font-size:1.55rem;color:var(--a);margin-bottom:14px; }
+.qo { display:block;width:100%;text-align:left;padding:11px 18px;margin-bottom:9px;border-radius:13px;border:2px solid #d8c8bc;background:#faf3ec;font-family:'Nunito',sans-serif;font-size:.93rem;font-weight:600;cursor:pointer;transition:all .15s;color:var(--ink); }
+.qo:hover { background:var(--lavender);border-color:var(--a); }
+.qo.ok { background:var(--sage);border-color:var(--a3); }
+.qo.no { background:var(--rose);border-color:var(--a2); }
+
+.rs { font-family:'Caveat',cursive;font-size:4rem;color:var(--a);font-weight:700;line-height:1; }
+
+.lr { display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:#faf3ec;margin-bottom:8px; }
+.lrk { font-family:'Caveat',cursive;font-size:1.5rem;color:var(--a);min-width:32px; }
+.lnm { font-weight:700;flex:1; }
+.lsc { font-family:'Caveat',cursive;font-size:1.3rem;color:var(--a3); }
+.lmt { font-size:.78rem;color:var(--ink-l); }
+
+.ov { display:none;position:fixed;inset:0;background:rgba(74,63,53,.45);z-index:100;align-items:center;justify-content:center;padding:20px; }
+.ov.open { display:flex; }
+.md { background:var(--paper);border-radius:24px;padding:30px 34px;max-width:500px;width:100%;box-shadow:0 12px 48px rgba(74,63,53,.25);position:relative;max-height:90vh;overflow-y:auto; }
+.md h2 { font-family:'Caveat',cursive;font-size:1.9rem;color:var(--a);margin-bottom:14px; }
+.md p,.md li { font-size:.93rem;color:var(--ink-l);line-height:1.7; }
+.md ul { padding-left:20px; }
+.mc { position:absolute;top:14px;right:18px;font-size:1.4rem;background:none;border:none;cursor:pointer;color:var(--ink-l);font-family:'Caveat',cursive; }
+.md input[type=text] { width:100%;padding:11px 15px;border-radius:13px;border:2px solid #d8c8bc;font-family:'Nunito',sans-serif;font-size:1rem;background:#faf3ec;color:var(--ink);outline:none;margin:12px 0; }
+
+.sig { position:fixed;bottom:18px;right:22px;font-family:'Caveat',cursive;font-size:1.3rem;color:var(--ink-l);opacity:.55;transform:rotate(-3deg);pointer-events:none;z-index:10; }
+</style>
+</head>
+<body>
+
+<div class="blob b1"></div><div class="blob b2"></div>
+<div class="blob b3"></div><div class="blob b4"></div><div class="blob b5"></div>
+
+<div class="stk" style="top:5%;left:2%;--r:-12deg;animation-delay:0s">🌈</div>
+<div class="stk" style="top:13%;right:4%;--r:8deg;animation-delay:.6s">⭐</div>
+<div class="stk" style="top:34%;left:1%;--r:-6deg;animation-delay:1.2s">🌸</div>
+<div class="stk" style="top:55%;right:2%;--r:14deg;animation-delay:.4s">🦋</div>
+<div class="stk" style="top:72%;left:1.5%;--r:-10deg;animation-delay:.9s">🌻</div>
+<div class="stk" style="top:85%;right:3%;--r:5deg;animation-delay:1.5s">🍀</div>
+<div class="stk" style="top:2%;right:17%;--r:-4deg;animation-delay:.3s;font-size:1.6rem">✨</div>
+
+<div class="app">
+
+  <div class="hdr">
+    <h1>🏰 Скорочтение: Изумрудный город</h1>
+    <p>Тренируй скорость чтения с текстами из волшебной серии!</p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">
+      <button class="btn bs" onclick="openMd('mdRules')">📜 Правила</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tbS" onclick="goTab('S')">⚙️ Настройки</button>
+    <button class="tab"    id="tbG" onclick="goTab('G')">📖 Игра</button>
+    <button class="tab"    id="tbL" onclick="goTab('L')">🏆 Рейтинг</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="pS">
+    <div class="card" style="--ca:var(--mint)">
+      <div class="ct">✍️ Источник текста</div>
+      <div class="trow" onclick="togCustom()">
+        <div class="tog" id="togEl"></div>
+        <span id="togTxt">Тексты Волкова (автоматически)</span>
+      </div>
+      <div id="custArea" style="display:none">
+        <textarea id="custText" placeholder="Вставьте свой текст здесь..."></textarea>
+      </div>
+    </div>
+
+    <div class="sgrid">
+      <div class="card" style="--ca:var(--rose)">
+        <div class="ct">📝 Объём текста</div>
+        <div class="chips" id="gW">
+          <div class="chip on" data-v="60"  onclick="pick('gW',this)">60 слов</div>
+          <div class="chip"    data-v="120" onclick="pick('gW',this)">120 слов</div>
+          <div class="chip"    data-v="180" onclick="pick('gW',this)">180 слов</div>
+          <div class="chip"    data-v="300" onclick="pick('gW',this)">300 слов</div>
+        </div>
+      </div>
+
+      <div class="card" style="--ca:var(--lavender)">
+        <div class="ct">⏱ Время</div>
+        <span class="lbl">Режим</span>
+        <div class="chips" id="gTm" style="margin-bottom:12px">
+          <div class="chip on" data-v="cd" onclick="pick('gTm',this)">Отсчёт</div>
+          <div class="chip"    data-v="sw" onclick="pick('gTm',this)">Секундомер</div>
+        </div>
+        <span class="lbl" id="tmLbl">Секунд показа</span>
+        <div class="srow">
+          <input type="range" id="slTm" min="5" max="120" value="30" oninput="onTm()">
+          <div class="sv" id="vTm">30с</div>
+        </div>
+      </div>
+
+      <div class="card" style="--ca:var(--peach)">
+        <div class="ct">🔡 Размер шрифта</div>
+        <div class="chips" id="gF">
+          <div class="chip"    data-v="14" onclick="pick('gF',this)">Маленький</div>
+          <div class="chip on" data-v="18" onclick="pick('gF',this)">Средний</div>
+          <div class="chip"    data-v="24" onclick="pick('gF',this)">Крупный</div>
+        </div>
+      </div>
+
+      <div class="card" style="--ca:var(--sky)">
+        <div class="ct">☀️ Яркость зоны</div>
+        <div class="srow">
+          <input type="range" id="slBr" min="40" max="100" value="100" oninput="onBr()">
+          <div class="sv" id="vBr">100%</div>
+        </div>
+      </div>
+
+      <div class="card full" style="--ca:var(--sage)">
+        <div class="ct">🎭 Помехи <span style="font-size:.85rem;font-family:'Nunito';font-weight:400;color:var(--ink-l)">(можно несколько)</span></div>
+        <div class="ifg">
+          <div class="ifc" data-id="sTop" onclick="togIF(this)">🔼 Шторка сверху</div>
+          <div class="ifc" data-id="sBot" onclick="togIF(this)">🔽 Шторка снизу</div>
+          <div class="ifc" data-id="scr"  onclick="togIF(this)">➡️ Уплывание</div>
+          <div class="ifc" data-id="mis"  onclick="togIF(this)">⬜ Пропуск букв</div>
+          <div class="ifc" data-id="fud"  onclick="togIF(this)">🙃 Вверх ногами</div>
+          <div class="ifc" data-id="flr"  onclick="togIF(this)">🔄 Задом наперёд</div>
+        </div>
+        <div id="spdRow" style="display:none;margin-top:14px">
+          <span class="lbl">Скорость уплывания</span>
+          <div class="chips" id="gSp">
+            <div class="chip"    data-v="slow"   onclick="pick('gSp',this)">Медленно</div>
+            <div class="chip on" data-v="medium" onclick="pick('gSp',this)">Средне</div>
+            <div class="chip"    data-v="fast"   onclick="pick('gSp',this)">Быстро</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:8px">
+      <button class="btn bp" style="font-size:1.1rem;padding:14px 44px" onclick="startGame()">🚀 Начать игру</button>
+    </div>
+  </div><!-- /pS -->
+
+  <!-- GAME -->
+  <div id="pG" style="display:none">
+    <div id="gWait">
+      <div class="card" style="--ca:var(--mint);text-align:center;padding:44px 24px">
+        <div style="font-size:3rem;margin-bottom:10px">📚</div>
+        <div style="font-family:'Caveat',cursive;font-size:1.5rem;color:var(--a)">Настройте игру и нажмите «Начать»</div>
+      </div>
+    </div>
+
+    <div id="gPlay" style="display:none">
+      <div class="ghead">
+        <div>
+          <div style="font-size:.78rem;color:var(--ink-l);font-weight:700;text-transform:uppercase;letter-spacing:.07em">Слов</div>
+          <div style="font-family:'Caveat',cursive;font-size:1.5rem;color:var(--a)" id="dWC">—</div>
+        </div>
+        <div class="timer" id="dTm">—</div>
+        <button class="btn bd" onclick="manStop()">✕ Стоп</button>
+      </div>
+      <div class="pbw"><div class="pbf" id="pb"></div></div>
+      <div class="twrap">
+        <div id="scCont"><div id="scInner">
+          <div style="position:relative">
+            <div id="textBox"></div>
+            <div id="shutOverTop"></div>
+            <div id="shutOverBot"></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div id="gQuiz" style="display:none">
+      <div class="card" style="--ca:var(--lavender)">
+        <div class="qq" id="qTxt"></div>
+        <div id="qOpts"></div>
+      </div>
+    </div>
+
+    <div id="gRes" style="display:none">
+      <div class="card" style="--ca:var(--rose);text-align:center">
+        <div style="font-size:2.4rem;margin-bottom:6px">🎉</div>
+        <div class="rs" id="rSc"></div>
+        <div style="font-size:.9rem;color:var(--ink-l);margin-top:4px">очков</div>
+        <div style="margin:14px 0;font-size:.92rem;color:var(--ink-l)" id="rDet"></div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button class="btn bp" onclick="doSave()">💾 Сохранить</button>
+          <button class="btn bs" onclick="goTab('S')">⚙️ Настройки</button>
+          <button class="btn bt" onclick="startGame()">🔄 Ещё раз</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /pG -->
+
+  <!-- LEADERBOARD -->
+  <div id="pL" style="display:none">
+    <div class="card" style="--ca:var(--peach)">
+      <div class="ct">🏆 Таблица рекордов</div>
+      <div id="lbEl"></div>
+      <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:.82rem;color:var(--ink-l);flex:1">Можно удалить только свои записи</span>
+        <button class="btn bs" style="font-size:.8rem" onclick="delMine()">🗑 Удалить мои записи</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<div class="sig">✦ Котвицкая</div>
+
+<!-- RULES MODAL -->
+<div class="ov" id="mdRules">
+  <div class="md">
+    <button class="mc" onclick="closeMd('mdRules')">✕</button>
+    <h2>📜 Как играть</h2>
+    <ul>
+      <li><b>Выберите настройки</b> — объём, помехи, время, шрифт.</li>
+      <li>Нажмите <b>«Начать игру»</b> — появится текст с помехами.</li>
+      <li>Читайте <b>как можно внимательнее</b> — время идёт!</li>
+      <li>После окончания ответьте на <b>вопрос по тексту</b>.</li>
+      <li>За правильный ответ — <b>бонусные очки</b>.</li>
+      <li>Сохраните результат в <b>рейтинг</b>.</li>
+    </ul>
+    <p style="margin-top:12px"><b>Виды помех:</b></p>
+    <ul>
+      <li>🔼🔽 <b>Шторки</b> — закрывают часть текста</li>
+      <li>➡️ <b>Уплывание</b> — текст уходит вверх</li>
+      <li>⬜ <b>Пропуск букв</b> — часть букв скрыта</li>
+      <li>🙃 <b>Вверх ногами</b> — текст перевёрнут</li>
+      <li>🔄 <b>Задом наперёд</b> — слова в обратном порядке</li>
+    </ul>
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn bp" onclick="closeMd('mdRules')">Понятно!</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAME MODAL -->
+<div class="ov" id="mdName">
+  <div class="md" style="max-width:360px">
+    <h2>💾 Ваше имя</h2>
+    <p>Введите имя для таблицы рекордов:</p>
+    <input type="text" id="nameIn" placeholder="Элли, Страшила, Дровосек..." maxlength="30">
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn bs" onclick="closeMd('mdName')">Отмена</button>
+      <button class="btn bp" onclick="confirmSave()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── TEXTS ──────────────────────────────────────────────────────────
+var TX = [
+  'Элли жила в маленьком домике в канзасской прерии вместе с дядей Генри и тётей Мэри. Дядя Генри был фермером и целые дни проводил в поле, а тётя Мэри вела хозяйство. Жизнь в прерии была тихой и однообразной, только ветер иногда разгонял тучи пыли по дороге. Но Элли не скучала — у неё была верная собачка Тотошка, маленькая чёрная собачонка с умными блестящими глазами. Тотошка постоянно бегал за Элли и весело лаял, когда она с ним играла. Однажды небо потемнело и над прерией закружился огромный ураган. Дядя Генри побежал прятаться, а Элли не успела — вихрь подхватил домик и понёс его высоко в небо. Тотошка жалобно скулил в углу, а Элли держалась за кроватную спинку. Домик летел долго, пока не приземлился в незнакомой стране.',
+  'Добрая волшебница Виллина носила высокую шляпу с колокольчиками, которые звенели при каждом движении. Она появилась перед Элли в сиянии серебристого тумана и ласково улыбнулась девочке. «Не бойся, дитя моё», — сказала волшебница. Элли рассказала ей о своём желании вернуться домой, к дяде Генри и тёте Мэри. Виллина задумалась, а потом сообщила, что серебряные башмачки, которые были на ногах Элли, обладают волшебной силой. Нужно только пройти по дороге из жёлтого кирпича до самого Изумрудного города и попросить помощи у великого волшебника Гудвина. Элли поблагодарила добрую волшебницу и смело зашагала по блестящей дороге. Тотошка весело скакал рядом, нюхал цветы и гонялся за бабочками.',
+  'Страшила сидел на шесте посреди кукурузного поля и грустно смотрел на дорогу. Когда Элли подошла ближе, он поздоровался с ней самым вежливым образом. «Я бы очень хотел иметь мозги», — сказал он печально. Элли предложила ему пойти вместе к Гудвину, и Страшила с радостью согласился. Он сошёл с шеста немного неуклюже, несколько раз чуть не упал, но потом приловчился ходить. По дороге он рассуждал о том, каким бы умным он стал с настоящими мозгами. Тотошка поначалу облаивал Страшилу, но потом привык к новому другу. К вечеру они нашли домик, где можно было переночевать, и Элли заснула крепким сном.',
+  'В глубине дремучего леса жил Железный Дровосек. Когда-то он был настоящим человеком и умел любить, но злая волшебница заколдовала его, и теперь у него не было сердца. Он стоял под дождём и заржавел так, что не мог пошевелить ни рукой, ни ногой. Элли смазала все его суставы маслёнкой, и он ожил. «Я хочу иметь сердце», — сказал Железный Дровосек тихим голосом. Он присоединился к маленькому отряду, и теперь их шло уже трое. Дровосек нёс свой большой топор и шагал осторожно, стараясь не наступить на жучков и червячков, потому что боялся случайно причинить им вред.',
+  'Трусливый Лев вдруг выскочил из кустов и зарычал так громко, что Страшила и Железный Дровосек испугались. Но маленький Тотошка не растерялся и залаял прямо на Льва. Тот от неожиданности отступил. Элли рассердилась и шлёпнула Льва по носу. «Стыдно обижать маленьких!» — воскликнула она. Лев сел и заплакал большими слезами. Он признался, что страшно труслив и боится решительно всего — шума листьев, стрекота кузнечиков и даже собственного голоса. «Я хочу получить смелость», — сказал он жалобно. Путники взяли его с собой.',
+  'Изумрудный город сверкал так ярко, что приходилось щуриться. Все дома здесь были из зелёного мрамора, мостовые вымощены изумрудными плитами, а жители ходили в зелёных одеждах. Стражник у ворот выдал путникам специальные очки с зелёными стёклами, чтобы сияние города их не ослепило. В центре стоял огромный дворец Гудвина. Путники замерли от восторга: такой красоты они ещё не видели. Стражник проводил их в роскошные покои, где их угостили вкусным ужином.',
+  'Гудвин умел принимать разные обличья. Для Элли он явился огромной головой, для Страшилы — прекрасной феей, для Железного Дровосека — ужасным зверем, а для Льва — огненным шаром. В каждом случае великий волшебник говорил внушительным голосом, от которого дрожали стены зала. Он пообещал выполнить желания друзей только после того, как они победят злую волшебницу Бастинду. Путники были в ужасе — ведь Бастинда была самой могущественной злодейкой в стране. Но деваться было некуда.',
+  'Конец Бастинды пришёл неожиданно. Злая волшебница подставила Элли подножку, девочка упала и рассердилась. Она схватила ведро с водой и плеснула на Бастинду. Та завопила диким голосом, начала таять и через минуту превратилась в лужицу. Жевуны ликовали. Они так долго жили под властью злодейки, что забыли, каково это — быть свободными. Теперь Элли могла вернуться в Изумрудный город.',
+  'Когда путники вернулись в Изумрудный город, оказалось, что Гудвин — вовсе не волшебник, а обычный человек из Омахи. Страшиле он набил голову отрубями с иголками и булавками. Железному Дровосеку положил в грудь шёлковое сердечко, набитое опилками. Льву дал выпить зелёное питьё смелости. Каждый из друзей почувствовал себя счастливым. А для Элли Гудвин надул воздушный шар, но тот улетел без неё. Элли пришлось искать другой путь домой.',
+  'Добрая волшебница Стелла жила на юге волшебной страны. Когда Элли рассказала ей о своих приключениях, Стелла задумчиво покачала головой. «Серебряные башмачки могут перенести тебя куда угодно», — сказала она. Нужно было только три раза ударить каблучком и произнести заветные слова. Элли крепко обняла друзей. Страшила, Дровосек и Лев грустили, но желали ей счастливого пути. Тотошка прыгнул Элли на руки, она ударила каблуком три раза — и всё исчезло в облаке серебристых искр.'
+];
+
+// ── CONFIG ─────────────────────────────────────────────────────────
+var C = { words:60, timeSec:30, mode:'cd', fontSize:18, bright:100, spd:'medium', ifs:[], custom:false };
+
+// ── GAME STATE ─────────────────────────────────────────────────────
+var G = { on:false, tick:null, raf:null, elapsed:0, text:'', score:0 };
+var pending = 0;
+
+// ── TABS ───────────────────────────────────────────────────────────
+function goTab(t) {
+  ['S','G','L'].forEach(function(x) {
+    document.getElementById('tb'+x).classList.toggle('on', x===t);
+    document.getElementById('p'+x).style.display = (x===t) ? '' : 'none';
+  });
+  if (t==='L') renderLB();
+}
+
+// ── CHIP PICKER ────────────────────────────────────────────────────
+function pick(grp, el) {
+  document.querySelectorAll('#'+grp+' .chip').forEach(function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  var v = el.dataset.v;
+  if (grp==='gW')  C.words    = parseInt(v);
+  if (grp==='gTm') { C.mode = v; document.getElementById('tmLbl').textContent = v==='cd' ? 'Секунд показа' : 'Максимум секунд'; }
+  if (grp==='gF')  C.fontSize = parseInt(v);
+  if (grp==='gSp') C.spd      = v;
+}
+
+function togIF(el) {
+  el.classList.toggle('on');
+  var id = el.dataset.id;
+  C.ifs = C.ifs.filter(function(x){ return x!==id; });
+  if (el.classList.contains('on')) C.ifs.push(id);
+  document.getElementById('spdRow').style.display = C.ifs.indexOf('scr')>=0 ? '' : 'none';
+}
+
+function onTm() { var v=document.getElementById('slTm').value; C.timeSec=parseInt(v); document.getElementById('vTm').textContent=v+'с'; }
+function onBr() { var v=document.getElementById('slBr').value;  C.bright=parseInt(v);  document.getElementById('vBr').textContent=v+'%'; }
+
+function togCustom() {
+  C.custom = !C.custom;
+  document.getElementById('togEl').classList.toggle('on', C.custom);
+  document.getElementById('togTxt').textContent = C.custom ? 'Свой текст' : 'Тексты Волкова (автоматически)';
+  document.getElementById('custArea').style.display = C.custom ? '' : 'none';
+}
+
+// ── TEXT BUILD ─────────────────────────────────────────────────────
+function buildText() {
+  if (C.custom) {
+    var t = document.getElementById('custText').value.trim();
+    if (t) return t;
+  }
+  var pool = TX.slice().sort(function(){ return Math.random()-.5; }).join(' ');
+  var words = pool.split(/\s+/);
+  var res = [], cnt = 0;
+  for (var i=0; i<words.length; i++) {
+    res.push(words[i]);
+    if (words[i].replace(/[^а-яёА-ЯЁa-zA-Z]/g,'').length > 1) cnt++;
+    if (cnt >= C.words) break;
+  }
+  return res.join(' ').replace(/\s+/g,' ').trim();
+}
+
+function sigCount(s) {
+  return s.split(/\s+/).filter(function(w){ return w.replace(/[^а-яёА-ЯЁa-zA-Z]/g,'').length>1; }).length;
+}
+
+// ── INTERFERENCE ───────────────────────────────────────────────────
+function applyIF(text) {
+  // Normalize whitespace first to avoid orphan spaces
+  var s = text.replace(/\s+/g,' ').trim();
+  // Escape HTML
+  s = s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  if (C.ifs.indexOf('flr')>=0) {
+    // reverse each word's characters, preserve spaces exactly
+    s = s.replace(/\S+/g, function(w){ return w.split('').reverse().join(''); });
+  }
+  if (C.ifs.indexOf('fud')>=0) {
+    s = s.replace(/\S+/g, function(w){ return '<span class="fud">'+w+'</span>'; });
+  }
+  if (C.ifs.indexOf('mis')>=0) {
+    // Rules: hide 1-2 letters at a time, then force gap of at least 4 letters
+    var letters = [];
+    for (var ci = 0; ci < s.length; ci++) {
+      if (/[а-яёА-ЯЁa-zA-Z]/.test(s[ci])) letters.push(ci);
+    }
+    var hidden = {};
+    var li = 0;
+    while (li < letters.length) {
+      // random gap of 4-7 visible letters before next hidden group
+      var gap = 4 + Math.floor(Math.random() * 4);
+      li += gap;
+      if (li >= letters.length) break;
+      // hide 1 or 2 letters
+      var count = Math.random() < 0.5 ? 1 : 2;
+      for (var k = 0; k < count && (li + k) < letters.length; k++) {
+        hidden[letters[li + k]] = true;
+      }
+      li += count;
+    }
+    var out = '';
+    for (var ci2 = 0; ci2 < s.length; ci2++) {
+      if (hidden[ci2]) {
+        out += '<span class="ml">&nbsp;</span>';
+      } else {
+        out += s[ci2];
+      }
+    }
+    s = out;
+  }
+  return s;
+}
+
+// ── GAME ───────────────────────────────────────────────────────────
+function startGame() {
+  // stop old
+  G.on = false;
+  clearInterval(G.tick);
+  cancelAnimationFrame(G.raf);
+
+  var raw = buildText();
+  G.text = raw;
+  G.elapsed = 0;
+  G.score = 0;
+  pending = 0;
+
+  // switch tab
+  goTab('G');
+
+  // show sections
+  document.getElementById('gWait').style.display = 'none';
+  document.getElementById('gPlay').style.display = '';
+  document.getElementById('gQuiz').style.display = 'none';
+  document.getElementById('gRes').style.display  = 'none';
+
+  // fill text — clean up space-before-punctuation artifacts
+  var cleaned = raw.replace(/\s+([,\.;:!?»\)])/g, '$1').replace(/\s+/g, ' ').trim();
+  var tb = document.getElementById('textBox');
+  tb.style.fontSize = C.fontSize+'px';
+  tb.style.filter   = 'brightness('+C.bright+'%)';
+  tb.innerHTML      = applyIF(cleaned);
+
+  document.getElementById('dWC').textContent = sigCount(cleaned);
+  var si = document.getElementById('scInner');
+  var tb2 = document.getElementById('textBox');
+  si.style.transform = 'translateY(0)';
+
+  // Clear previous mask
+  tb2.classList.remove('mask-top','mask-bot','mask-both');
+  tb2.style.removeProperty('--lh');
+
+  var hasTop = C.ifs.indexOf('sTop')>=0;
+  var hasBot = C.ifs.indexOf('sBot')>=0;
+
+  if (hasTop || hasBot) {
+    // Wait one frame so browser has computed layout, then measure real line-height
+    requestAnimationFrame(function(){
+      var ovTop = document.getElementById('shutOverTop');
+      var ovBot = document.getElementById('shutOverBot');
+      ovTop.style.display = 'none';
+      ovBot.style.display = 'none';
+
+      if (!hasTop && !hasBot) return;
+
+      var cs  = window.getComputedStyle(tb2);
+      var lh  = parseFloat(cs.lineHeight);
+      var fs  = parseFloat(cs.fontSize);
+      if (!lh || isNaN(lh)) lh = fs * 1.9;
+
+      // Font geometry (Nunito proportions, approximate):
+      // Full em box = fs. Descenders ≈ 0.22*fs below baseline.
+      // Cap-height  ≈ 0.72*fs above baseline.
+      // x-height    ≈ 0.53*fs above baseline.
+      // Leading above/below em box = (lh - fs) / 2
+      var halfLead = (lh - fs) / 2;
+      // From top of lh period:
+      //   halfLead           → top of em box
+      //   halfLead + (fs - fs*0.22 - fs*0.72) = halfLead + fs*0.06  → top of caps
+      //   halfLead + (fs - fs*0.22 - fs*0.53) = halfLead + fs*0.25  → top of x-height
+      //   halfLead + (fs - fs*0.22)            → baseline
+      //   halfLead + fs                        → bottom of em box
+      var emTop      = halfLead;
+      var capTop     = halfLead + fs * 0.06;   // top of uppercase letters
+      var capMid     = capTop + (fs * 0.72) / 2; // mid of uppercase → top shutter cuts here
+      var xTop       = halfLead + fs * 0.25;   // top of lowercase letters
+      var xMid       = xTop + (fs * 0.53) / 2;  // mid of lowercase  → bot shutter cuts here
+      var emBot      = halfLead + fs;
+
+      var pt     = parseFloat(cs.paddingTop) || 0;
+      var offset = pt % lh;
+      var row    = lh;
+
+      // TOP shutter: hide [halfLead .. halfLead + fs/2] — covers top half of em box (original working formula)
+      if (hasTop) {
+        var tA = halfLead;
+        var tB = halfLead + fs / 2;
+        ovTop.style.display = 'block';
+        ovTop.style.backgroundImage =
+          'repeating-linear-gradient(to bottom,' +
+          ' transparent 0px,' +
+          ' transparent ' + tA + 'px,' +
+          ' var(--paper) ' + tA + 'px,' +
+          ' var(--paper) ' + tB + 'px,' +
+          ' transparent ' + tB + 'px,' +
+          ' transparent ' + row + 'px)';
+        ovTop.style.backgroundSize     = '100% ' + row + 'px';
+        ovTop.style.backgroundPosition = '0 '    + offset + 'px';
+      }
+
+      // BOTTOM shutter: hide [xMid .. emBot] — covers bottom half of lowercase glyphs
+      if (hasBot) {
+        ovBot.style.display = 'block';
+        ovBot.style.backgroundImage =
+          'repeating-linear-gradient(to bottom,' +
+          ' transparent 0px,' +
+          ' transparent ' + xMid + 'px,' +
+          ' var(--paper) ' + xMid + 'px,' +
+          ' var(--paper) ' + emBot + 'px,' +
+          ' transparent ' + emBot + 'px,' +
+          ' transparent ' + row + 'px)';
+        ovBot.style.backgroundSize     = '100% ' + row + 'px';
+        ovBot.style.backgroundPosition = '0 '    + offset + 'px';
+      }
+    });
+  }
+
+  document.getElementById('pb').style.width = '0%';
+
+  G.on = true;
+  tickUI();
+
+  G.tick = setInterval(function(){
+    if (!G.on) return;
+    G.elapsed++;
+    tickUI();
+    document.getElementById('pb').style.width = Math.min(100, G.elapsed/C.timeSec*100)+'%';
+    if (G.elapsed >= C.timeSec) endGame();
+  }, 1000);
+
+  if (C.ifs.indexOf('scr')>=0) {
+    var spds = {slow:0.4, medium:0.9, fast:1.8};
+    var px = spds[C.spd] || 0.9;
+    var off = 0;
+    function step(){
+      if (!G.on) return;
+      off += px;
+      si.style.transform = 'translateY(-'+off+'px)';
+      G.raf = requestAnimationFrame(step);
+    }
+    G.raf = requestAnimationFrame(step);
+  }
+}
+
+function tickUI() {
+  var el = document.getElementById('dTm');
+  if (C.mode==='cd') {
+    var left = Math.max(0, C.timeSec - G.elapsed);
+    el.textContent = left+'с';
+    el.style.color = left<=5 ? 'var(--a2)' : 'var(--a)';
+  } else {
+    el.textContent = G.elapsed+'с';
+    el.style.color = 'var(--a3)';
+  }
+}
+
+function endGame() {
+  if (!G.on) return;
+  G.on = false;
+  clearInterval(G.tick);
+  cancelAnimationFrame(G.raf);
+  document.getElementById('shutOverTop').style.display = 'none';
+  document.getElementById('shutOverBot').style.display = 'none';
+  pending = C.words + C.ifs.length * 20;
+  showQuiz();
+}
+
+function manStop() { endGame(); }
+
+// ── QUIZ ───────────────────────────────────────────────────────────
+var QQ = [
+  {q:'С кем жила Элли до урагана?',     o:['С дядей Генри и тётей Мэри','С бабушкой','Одна','С Гудвином'],               a:0},
+  {q:'Как звали собачку Элли?',          o:['Рекс','Тотошка','Шарик','Бобик'],                                             a:1},
+  {q:'Чего хотел Страшила?',             o:['Сердце','Смелость','Мозги','Домой'],                                          a:2},
+  {q:'Что просил Железный Дровосек?',    o:['Мозги','Сердце','Смелость','Крылья'],                                         a:1},
+  {q:'Чего боялся Трусливый Лев?',       o:['Огня','Воды','Всего на свете','Только волков'],                               a:2},
+  {q:'Как называется главный город?',    o:['Рубиновый','Золотой','Изумрудный','Серебряный'],                              a:2},
+  {q:'Кем оказался Гудвин?',             o:['Добрым магом','Обычным человеком из Омахи','Злым волшебником','Принцем'],     a:1},
+  {q:'Что уничтожило Бастинду?',         o:['Огонь','Вода','Серебряные башмачки','Топор Дровосека'],                       a:1},
+  {q:'По какой дороге шли путники?',     o:['Из белого камня','Из жёлтого кирпича','Из красного кирпича','Из синей плитки'], a:1},
+  {q:'Кто дал Элли башмачки?',           o:['Гудвин','Бастинда','Волшебница Виллина','Тётя Мэри'],                        a:2}
+];
+var curQ = null;
+
+function showQuiz() {
+  document.getElementById('gPlay').style.display = 'none';
+  document.getElementById('gQuiz').style.display = '';
+  curQ = QQ[Math.floor(Math.random()*QQ.length)];
+  document.getElementById('qTxt').textContent = '❓ '+curQ.q;
+  var wrap = document.getElementById('qOpts');
+  wrap.innerHTML = '';
+  curQ.o.forEach(function(txt, i){
+    var b = document.createElement('button');
+    b.className = 'qo';
+    b.textContent = txt;
+    b.onclick = function(){ answer(i,b); };
+    wrap.appendChild(b);
+  });
+}
+
+function answer(i, btn) {
+  document.querySelectorAll('.qo').forEach(function(b){ b.onclick=null; });
+  var ok = i===curQ.a;
+  btn.classList.add(ok ? 'ok' : 'no');
+  if (!ok) document.querySelectorAll('.qo')[curQ.a].classList.add('ok');
+  var correct = ok;
+  setTimeout(function(){ showRes(correct); }, 900);
+}
+
+// ── RESULT ─────────────────────────────────────────────────────────
+function showRes(correct) {
+  G.score = correct ? (pending+50) : Math.floor(pending*0.3);
+  document.getElementById('gQuiz').style.display = 'none';
+  document.getElementById('gRes').style.display  = '';
+  document.getElementById('rSc').textContent = G.score;
+  var nm = {sTop:'шторка↑',sBot:'шторка↓',scr:'уплывание',mis:'пропуск букв',fud:'вверх ногами',flr:'задом наперёд'};
+  var ifl = C.ifs.map(function(x){ return nm[x]||x; }).join(', ') || 'без помех';
+  document.getElementById('rDet').innerHTML =
+    'Слов: '+C.words+' &bull; Время: '+G.elapsed+'с &bull; Помехи: '+ifl+'<br>'+
+    (correct ? '✅ Верно! +50 бонус' : '❌ Неверно');
+}
+
+// ── LEADERBOARD ────────────────────────────────────────────────────
+function doSave() {
+  document.getElementById('nameIn').value = localStorage.getItem('sr_name') || '';
+  openMd('mdName');
+  setTimeout(function(){ document.getElementById('nameIn').focus(); }, 80);
+}
+
+function confirmSave() {
+  var name = document.getElementById('nameIn').value.trim() || 'Читатель';
+  localStorage.setItem('sr_name', name);
+  var bd = JSON.parse(localStorage.getItem('sr_bd') || '[]');
+  bd.push({ name:name, score:G.score, words:C.words, elapsed:G.elapsed, date:new Date().toLocaleDateString('ru') });
+  bd.sort(function(a,b){ return b.score-a.score; });
+  if (bd.length>20) bd.length=20;
+  localStorage.setItem('sr_bd', JSON.stringify(bd));
+  closeMd('mdName');
+  goTab('L');
+}
+
+function renderLB() {
+  var bd = JSON.parse(localStorage.getItem('sr_bd') || '[]');
+  var el = document.getElementById('lbEl');
+  if (!bd.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--ink-l);padding:30px;font-style:italic">Пока нет результатов. Сыграй первым! 🌟</div>';
+    return;
+  }
+  var med = ['🥇','🥈','🥉'];
+  el.innerHTML = bd.map(function(b,i){
+    return '<div class="lr"><div class="lrk">'+(med[i]||'#'+(i+1))+'</div><div><div class="lnm">'+esc(b.name)+'</div><div class="lmt">'+b.words+' сл · '+b.elapsed+'с · '+b.date+'</div></div><div class="lsc">'+b.score+'</div></div>';
+  }).join('');
+}
+
+function delMine() {
+  var me = localStorage.getItem('sr_name');
+  if (!me) { alert('У вас нет сохранённых записей.'); return; }
+  var bd = JSON.parse(localStorage.getItem('sr_bd') || '[]');
+  var cnt = bd.filter(function(b){ return b.name===me; }).length;
+  if (!cnt) { alert('Записей с именем «'+me+'» не найдено.'); return; }
+  if (confirm('Удалить все записи «'+me+'» ('+cnt+' шт.)?')) {
+    localStorage.setItem('sr_bd', JSON.stringify(bd.filter(function(b){ return b.name!==me; })));
+    renderLB();
+  }
+}
+
+// ── MODALS ─────────────────────────────────────────────────────────
+function openMd(id)  { document.getElementById(id).classList.add('open'); }
+function closeMd(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── UTILS ──────────────────────────────────────────────────────────
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── INIT ───────────────────────────────────────────────────────────
+goTab('S');
+</script>
+</body>
+</html>
