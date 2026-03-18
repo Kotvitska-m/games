@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Палаццо Памяти</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1a1c2e;--panel:#252840;--panel2:#2e3155;--accent:#c8a96e;--accent2:#7eb8c9;--accent3:#a98fd4;--text:#e8e4d8;--dim:#9a96a0;--ok:#6dbf8a;--err:#d47b7b;--border:rgba(200,169,110,.25);--sh:0 8px 32px rgba(0,0,0,.5);--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(126,184,201,.07) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(169,143,212,.07) 0%,transparent 60%);pointer-events:none;z-index:0}
+.header{width:100%;max-width:980px;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;position:relative;z-index:10}
+.logo{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--accent);letter-spacing:2px}
+.logo span{color:var(--accent2)}
+.hbtns{display:flex;gap:8px;align-items:center}
+.btn{font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:700;padding:8px 16px;border-radius:8px;border:1.5px solid var(--border);background:var(--panel);color:var(--text);cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--panel2);border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.btn-a{background:var(--accent);color:#1a1c2e;border-color:var(--accent)}
+.btn-a:hover{background:#d4b87e;color:#1a1c2e}
+.btn-g{background:var(--ok);color:#1a1c2e;border-color:var(--ok)}
+.btn-g:hover{background:#7dd49a;color:#1a1c2e}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.main{width:100%;max-width:980px;padding:0 14px 70px;position:relative;z-index:5}
+.screen{display:none}.screen.active{display:block}
+/* SETTINGS */
+.scard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:34px;max-width:580px;margin:0 auto;box-shadow:var(--sh)}
+.scard h2{font-family:'Cinzel',serif;color:var(--accent);margin-bottom:6px;font-size:1.25rem}
+.scard p{color:var(--dim);margin-bottom:26px;font-size:.88rem}
+.field{margin-bottom:20px}
+.field label{display:block;font-weight:800;margin-bottom:10px;color:var(--accent2);font-size:.8rem;letter-spacing:1.5px;text-transform:uppercase}
+.tgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.tbtn{background:var(--panel2);border:2px solid transparent;border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .18s;font-size:.78rem;font-weight:700;color:var(--dim)}
+.tbtn:hover{border-color:var(--accent);color:var(--text)}
+.tbtn.sel{border-color:var(--accent);background:rgba(200,169,110,.12);color:var(--accent)}
+.tbtn .em{font-size:1.5rem;display:block;margin-bottom:4px}
+.crow{display:flex;align-items:center;gap:14px}
+.crow input[type=range]{flex:1;accent-color:var(--accent)}
+.cval{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--accent);min-width:28px;text-align:center}
+.sep{border:none;border-top:1px solid var(--border);margin:18px 0}
+/* GAME */
+.glayout{display:flex;gap:14px;align-items:flex-start}
+.room-outer{flex:1;border-radius:var(--r);border:2px solid var(--border);position:relative;overflow:hidden;height:440px;background:var(--panel2);box-shadow:var(--sh);cursor:crosshair}
+.room-img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none}
+.pins-layer{position:absolute;inset:0}
+.pin{position:absolute;background:rgba(18,16,36,.88);border:2px solid var(--accent);border-radius:20px;padding:5px 10px 5px 8px;font-size:.78rem;font-weight:700;color:var(--accent);white-space:nowrap;box-shadow:0 2px 14px rgba(0,0,0,.6);display:flex;align-items:center;gap:5px;touch-action:none;z-index:30;cursor:grab;user-select:none}
+.pin.dragging-now{cursor:grabbing;box-shadow:0 6px 24px rgba(0,0,0,.8);border-color:var(--accent2);opacity:.85}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.px{margin-left:3px;color:var(--dim);font-size:.68rem;cursor:pointer;padding:1px 3px;border-radius:3px}
+.px:hover{color:var(--err);background:rgba(212,123,123,.15)}
+.sidebar{width:195px;display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+.wpool{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:13px;box-shadow:var(--sh);max-height:440px;overflow-y:auto}
+.wpool h3{font-family:'Cinzel',serif;font-size:.8rem;color:var(--accent2);margin-bottom:10px;letter-spacing:1px}
+.pw{background:var(--panel2);border:1.5px dashed var(--border);border-radius:8px;padding:7px 11px;margin-bottom:5px;font-weight:700;font-size:.8rem;cursor:pointer;transition:all .15s;user-select:none;touch-action:none;display:flex;align-items:center;gap:7px}
+.pw:hover{border-color:var(--accent);color:var(--accent)}
+.pw.active-pick{border-color:var(--accent2);color:var(--accent2);background:rgba(126,184,201,.1)}
+.pw.placed{opacity:.32;cursor:not-allowed;text-decoration:line-through;pointer-events:none}
+.pn{color:var(--dim);font-size:.68rem;min-width:14px}
+.prog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.pbar-w{background:var(--panel2);border-radius:4px;height:5px;flex:1;margin:0 9px}
+.pbar-f{height:100%;border-radius:4px;background:var(--accent);transition:width .3s}
+/* QUIZ */
+.qcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:28px 32px;max-width:660px;margin:0 auto;box-shadow:var(--sh)}
+.qdots{display:flex;gap:5px;margin-bottom:20px}
+.qdot{flex:1;height:4px;border-radius:2px;background:var(--panel2);transition:background .3s}
+.qdot.done{background:var(--ok)}.qdot.active{background:var(--accent)}
+.qbadge{font-size:.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent2);margin-bottom:8px}
+.qq{font-family:'Cinzel',serif;font-size:1rem;color:var(--text);margin-bottom:18px;line-height:1.55}
+.choices{display:grid;gap:7px}
+.cbtn{background:var(--panel2);border:2px solid var(--border);border-radius:10px;padding:11px 15px;text-align:left;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:700;color:var(--text);transition:all .16s;display:flex;align-items:center;gap:9px}
+.cbtn:hover:not(:disabled){border-color:var(--accent2);color:var(--accent2);transform:translateX(3px)}
+.cbtn.ok{border-color:var(--ok)!important;background:rgba(109,191,138,.13)!important;color:var(--ok)!important}
+.cbtn.bad{border-color:var(--err)!important;background:rgba(212,123,123,.1)!important;color:var(--err)!important}
+.cl{font-family:'Cinzel',serif;font-weight:700;color:var(--accent);min-width:18px}
+.mc-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.mc{background:var(--panel2);border:2px solid var(--border);border-radius:10px;padding:10px 13px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:700;color:var(--text);text-align:left;transition:all .16s;display:flex;align-items:center;gap:7px}
+.mc:hover:not(:disabled){border-color:var(--accent2)}
+.mc.sel{border-color:var(--accent);background:rgba(200,169,110,.1);color:var(--accent)}
+.mc.ok{border-color:var(--ok)!important;background:rgba(109,191,138,.12)!important;color:var(--ok)!important}
+.mc.bad{border-color:var(--err)!important;background:rgba(212,123,123,.1)!important;color:var(--err)!important}
+.mchk{width:15px;height:15px;border-radius:4px;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.6rem}
+.slist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.si{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:9px 13px;cursor:grab;font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:9px;transition:all .13s;user-select:none}
+.si:hover{border-color:var(--accent)}.si.over{border-color:var(--accent2);background:rgba(126,184,201,.08)}
+.sh{color:var(--dim)}
+.fb{border-radius:8px;padding:9px 13px;margin-top:10px;font-weight:700;font-size:.83rem;display:none}
+.fb.show{display:block}
+.fb.ok{background:rgba(109,191,138,.1);color:var(--ok);border:1px solid var(--ok)}
+.fb.bad{background:rgba(212,123,123,.08);color:var(--err);border:1px solid var(--err)}
+.qnav{display:flex;justify-content:flex-end;margin-top:16px}
+/* RESULTS */
+.rcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:30px;max-width:480px;margin:0 auto 20px;text-align:center;box-shadow:var(--sh)}
+.rscore{font-family:'Cinzel',serif;font-size:2.8rem;color:var(--accent);margin:12px 0}
+.rstars{font-size:1.9rem;margin:8px 0}
+.rlabel{color:var(--dim);font-size:.88rem;margin-bottom:18px}
+/* LB */
+.lbcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:22px;max-width:500px;margin:0 auto;box-shadow:var(--sh)}
+.lbcard h3{font-family:'Cinzel',serif;color:var(--accent);margin-bottom:14px}
+.lbrow{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;background:var(--panel2);margin-bottom:5px;font-size:.85rem}
+.lbrank{font-family:'Cinzel',serif;color:var(--accent);width:22px;text-align:center}
+.lbname{flex:1;font-weight:700}
+.lbsc{color:var(--accent2);font-weight:700}
+.lbdel{background:none;border:none;color:var(--dim);cursor:pointer;font-size:.95rem;transition:color .15s}
+.lbdel:hover{color:var(--err)}
+.mine{border:1px solid rgba(200,169,110,.3)}
+/* MODAL */
+.mover{position:fixed;inset:0;background:rgba(10,10,20,.78);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .22s}
+.mover.open{opacity:1;pointer-events:all}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:28px 30px;max-width:540px;width:92%;box-shadow:var(--sh);transform:translateY(16px);transition:transform .22s;max-height:80vh;overflow-y:auto;position:relative}
+.mover.open .modal{transform:translateY(0)}
+.modal h2{font-family:'Cinzel',serif;color:var(--accent);margin-bottom:14px}
+.modal p,.modal li{color:var(--dim);line-height:1.7;margin-bottom:8px;font-size:.88rem}
+.modal ul{padding-left:17px}
+.mclose{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--dim);font-size:1.3rem;cursor:pointer}
+.ninput{width:100%;padding:11px 15px;background:var(--panel2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.95rem;margin-bottom:13px;outline:none}
+.ninput:focus{border-color:var(--accent)}
+.sbadge{background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-family:'Cinzel',serif;font-size:.82rem;color:var(--accent);display:flex;align-items:center;gap:5px}
+.hint{font-size:.76rem;color:var(--dim);margin-top:8px}
+.footer{position:fixed;bottom:12px;right:18px;font-family:'Cinzel',serif;font-size:.72rem;color:var(--dim);letter-spacing:2px;opacity:.5;z-index:50}
+@media(max-width:600px){.glayout{flex-direction:column}.sidebar{width:100%;flex-direction:row;flex-wrap:wrap}.wpool{flex:1;max-height:160px}.tgrid{grid-template-columns:repeat(3,1fr)}.mc-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">Палаццо <span>Памяти</span></div>
+  <div class="hbtns">
+    <div class="sbadge" id="scoreDisp">🏆 0</div>
+    <button class="btn" onclick="showRules()">📖 Правила</button>
+    <button class="btn" onclick="showScreen('leaderboard')">🏅 Рейтинг</button>
+  </div>
+</div>
+<div class="main">
+
+<!-- SETTINGS -->
+<div class="screen active" id="screen-settings">
+  <div class="scard">
+    <h2>⚙️ Настройки игры</h2>
+    <p>Выбери тему и количество слов — начни тренировку Дворца Памяти</p>
+    <div class="field">
+      <label>🎨 Тема слов</label>
+      <div class="tgrid">
+        <div class="tbtn sel" onclick="selTheme(this,'food')"><span class="em">🍕</span>Еда</div>
+        <div class="tbtn" onclick="selTheme(this,'nature')"><span class="em">🌿</span>Природа</div>
+        <div class="tbtn" onclick="selTheme(this,'toys')"><span class="em">🧸</span>Игрушки</div>
+        <div class="tbtn" onclick="selTheme(this,'jobs')"><span class="em">👩‍🔬</span>Профессии</div>
+        <div class="tbtn" onclick="selTheme(this,'all')"><span class="em">✨</span>Всё вместе</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>🔢 Количество слов</label>
+      <div class="crow">
+        <span style="color:var(--dim);font-size:.82rem">3</span>
+        <input type="range" min="3" max="15" value="5" id="wc" oninput="document.getElementById('wcv').textContent=this.value">
+        <span style="color:var(--dim);font-size:.82rem">15</span>
+        <span class="cval" id="wcv">5</span>
+      </div>
+    </div>
+    <hr class="sep">
+    <button class="btn btn-a" style="width:100%;justify-content:center;font-size:.95rem;padding:13px" onclick="startGame()">🏛️ Начать игру</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="screen-game">
+  <div class="prog-row" style="margin-bottom:12px">
+    <span style="font-family:'Cinzel',serif;color:var(--accent);font-size:.85rem">🗺️ Размести слова по комнате</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="pbar-w" style="width:130px"><div class="pbar-f" id="gprog" style="width:0%"></div></div>
+      <span id="gprogT" style="color:var(--dim);font-size:.8rem">0 / 0</span>
+    </div>
+  </div>
+  <div class="glayout">
+    <div class="room-outer" id="roomOuter">
+      <img id="roomImg" class="room-img" src="" alt="комната" draggable="false">
+      <div class="pins-layer" id="pinsLayer"></div>
+    </div>
+    <div class="sidebar">
+      <div class="wpool">
+        <h3>📝 Слова</h3>
+        <div id="poolList"></div>
+      </div>
+      <button class="btn btn-g" id="doneBtn" onclick="finishPlace()" style="width:100%;justify-content:center" disabled>✅ Запомнил!</button>
+      <button class="btn" onclick="resetPlace()" style="width:100%;justify-content:center">🔄 Сбросить</button>
+    </div>
+  </div>
+  <p class="hint" id="hintText">💡 Нажми на слово в списке — оно подсветится. Затем кликни на любое место в комнате. Или перетащи слово прямо в комнату.</p>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="screen-quiz">
+  <div class="qcard">
+    <div class="qdots" id="qdots"></div>
+    <div class="qbadge" id="qbadge"></div>
+    <div class="qq" id="qq"></div>
+    <div id="qcontent"></div>
+    <div class="fb" id="qfb"></div>
+    <div class="qnav"><button class="btn btn-a" id="qnext" onclick="nextQ()" style="display:none">Далее →</button></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="rcard">
+    <div style="font-family:'Cinzel',serif;font-size:1rem;color:var(--accent2)">🏛️ Тренировка завершена!</div>
+    <div class="rscore" id="rscore">0/0</div>
+    <div class="rstars" id="rstars">⭐</div>
+    <div class="rlabel" id="rlabel"></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-a" onclick="saveRes()">💾 Сохранить</button>
+      <button class="btn" onclick="startAgain()">🔄 Снова</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="screen" id="screen-leaderboard">
+  <div class="lbcard">
+    <h3>🏅 Рейтинг игроков</h3>
+    <div id="lbList"></div>
+    <hr class="sep">
+    <button class="btn" onclick="showScreen('settings')" style="width:100%;justify-content:center">← Назад</button>
+  </div>
+</div>
+</div>
+
+<!-- RULES MODAL -->
+<div class="mover" id="rulesM" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="mclose" onclick="document.getElementById('rulesM').classList.remove('open')">✕</button>
+    <h2>📖 Правила</h2>
+    <p><strong style="color:var(--accent)">Палаццо Памяти</strong> — тренажёр по технике «Дворец памяти» (метод локусов).</p>
+    <ul>
+      <li><strong>Шаг 1.</strong> Выбери тему и количество слов.</li>
+      <li><strong>Шаг 2.</strong> Нажми слово в списке — оно подсветится синим. Затем кликни любое место в комнате.</li>
+      <li><strong>Шаг 3.</strong> Можно и иначе: просто перетащи слово из списка прямо на картинку.</li>
+      <li><strong>Шаг 4.</strong> Готово — нажми «Запомнил!» и ответь на вопросы.</li>
+      <li><strong>✕</strong> на булавке убирает слово. «Сбросить» — убрать всё.</li>
+    </ul>
+    <hr class="sep">
+    <p style="color:var(--accent2)"><strong>🧠 Совет:</strong> Представь яркую, смешную картинку — как слово «живёт» в этом месте. Так запомнишь лучше!</p>
+  </div>
+</div>
+
+<!-- NAME MODAL -->
+<div class="mover" id="nameM">
+  <div class="modal">
+    <h2>💾 Сохранить результат</h2>
+    <p>Введи своё имя:</p>
+    <input class="ninput" id="pname" maxlength="20" placeholder="Твоё имя...">
+    <div style="display:flex;gap:9px">
+      <button class="btn btn-a" style="flex:1;justify-content:center" onclick="confirmSave()">Сохранить</button>
+      <button class="btn" style="flex:1;justify-content:center" onclick="document.getElementById('nameM').classList.remove('open')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">КОТВИЦКАЯ</div>
+
+<script>
+// ===== WORD BANKS =====
+const WB={
+  food:['Пицца','Борщ','Суши','Шоколад','Арбуз','Мороженое','Блины','Пельмени','Лимон','Торт','Яблоко','Банан','Котлета','Суп','Омлет','Клубника','Груша','Огурец','Помидор','Печенье'],
+  nature:['Гора','Лес','Река','Облако','Роса','Ветер','Берёза','Гриб','Радуга','Закат','Камень','Волна','Снег','Ручей','Листья','Туман','Поле','Скала','Дождь','Луна'],
+  toys:['Кубики','Машинка','Мяч','Кукла','Пазл','Робот','Конструктор','Юла','Скакалка','Лего','Мишка','Самолётик','Кораблик','Трансформер','Кегли','Тетрис','Рогатка','Домино','Вертушка','Шашки'],
+  jobs:['Врач','Повар','Пилот','Учитель','Пожарный','Художник','Инженер','Музыкант','Космонавт','Водолаз','Архитектор','Программист','Фотограф','Ветеринар','Журналист','Агроном','Дизайнер','Переводчик','Геолог','Скрипач'],
+};
+
+// Free Unsplash room photos (direct CDN links, no auth needed)
+const ROOMS=[
+  'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=900&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=900&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=900&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=900&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=900&q=75&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=900&q=75&auto=format&fit=crop',
+];
+
+// ===== STATE =====
+let G={
+  theme:'food',wordCount:5,words:[],placed:{},
+  activePick:null,quizQs:[],qi:0,qscore:0,totalScore:0
+};
+let lb=JSON.parse(localStorage.getItem('palazzo_lb3')||'[]');
+let myId=localStorage.getItem('palazzo_id3')||(()=>{const id=Math.random().toString(36).slice(2);localStorage.setItem('palazzo_id3',id);return id})();
+
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+// ===== SETTINGS =====
+function selTheme(el,t){document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');G.theme=t}
+function showScreen(n){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+n).classList.add('active');if(n==='leaderboard')renderLB()}
+function showRules(){document.getElementById('rulesM').classList.add('open')}
+
+// ===== START =====
+function startGame(){
+  G.wordCount=parseInt(document.getElementById('wc').value);
+  G.placed={};G.activePick=null;
+  let pool=G.theme==='all'?[...WB.food,...WB.nature,...WB.toys,...WB.jobs]:[...WB[G.theme]];
+  G.words=shuf(pool).slice(0,G.wordCount);
+  document.getElementById('roomImg').src=ROOMS[Math.floor(Math.random()*ROOMS.length)];
+  showScreen('game');
+  renderPool();updateProg();renderPins();
+}
+
+function renderPool(){
+  const list=document.getElementById('poolList');list.innerHTML='';
+  G.words.forEach((w,i)=>{
+    const d=document.createElement('div');
+    d.className='pw'+(G.placed[w]?' placed':G.activePick===w?' active-pick':'');
+    d.innerHTML=`<span class="pn">${i+1}.</span>${w}`;
+    d.dataset.word=w;
+    if(!G.placed[w]){
+      d.addEventListener('pointerdown',e=>{
+        e.preventDefault();e.stopPropagation();
+        // check if it's a drag or just a click — start drag
+        startPoolDrag(e,w,d);
+      },{passive:false});
+    }
+    list.appendChild(d);
+  });
+}
+
+function updateProg(){
+  const n=Object.keys(G.placed).length,t=G.words.length;
+  document.getElementById('gprog').style.width=(n/t*100)+'%';
+  document.getElementById('gprogT').textContent=n+' / '+t;
+  document.getElementById('doneBtn').disabled=n<t;
+}
+
+// ===== DRAG FROM POOL =====
+function startPoolDrag(e,word,el){
+  let moved=false;
+  const sx=e.clientX,sy=e.clientY;
+
+  // Ghost
+  const ghost=document.createElement('div');
+  ghost.className='pin';ghost.style.cssText='position:fixed;z-index:999;pointer-events:none;opacity:.9;transition:none;';
+  ghost.innerHTML=`<span class="pdot"></span>${word}`;
+  ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';
+  ghost.style.transform='translate(-50%,-50%)';
+  document.body.appendChild(ghost);
+
+  function move(ev){
+    if(!moved&&(Math.abs(ev.clientX-sx)>4||Math.abs(ev.clientY-sy)>4))moved=true;
+    ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';
+  }
+  function up(ev){
+    document.removeEventListener('pointermove',move);
+    document.removeEventListener('pointerup',up);
+    ghost.remove();
+    if(!moved){
+      // Toggle select
+      G.activePick=G.activePick===word?null:word;
+      renderPool();
+    } else {
+      // drop on room
+      dropOnRoom(ev.clientX,ev.clientY,word);
+    }
+  }
+  document.addEventListener('pointermove',move,{passive:true});
+  document.addEventListener('pointerup',up);
+}
+
+// ===== CLICK ON ROOM TO PLACE ACTIVE PICK =====
+document.getElementById('pinsLayer').addEventListener('pointerdown',function(e){
+  if(!G.activePick)return;
+  if(e.target.closest('.pin'))return; // let pin handle it
+  placeAt(e.clientX,e.clientY,G.activePick);
+  G.activePick=null;
+  renderPool();
+},{passive:false});
+
+document.getElementById('roomImg').addEventListener('pointerdown',function(e){
+  if(!G.activePick)return;
+  placeAt(e.clientX,e.clientY,G.activePick);
+  G.activePick=null;
+  renderPool();
+},{passive:false});
+
+function dropOnRoom(cx,cy,word){
+  const layer=document.getElementById('pinsLayer');
+  const r=layer.getBoundingClientRect();
+  if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){
+    placeAt(cx,cy,word);
+  }
+}
+
+function placeAt(cx,cy,word){
+  const layer=document.getElementById('pinsLayer');
+  const r=layer.getBoundingClientRect();
+  const xp=((cx-r.left)/r.width*100).toFixed(2);
+  const yp=((cy-r.top)/r.height*100).toFixed(2);
+  G.placed[word]={x:parseFloat(xp),y:parseFloat(yp)};
+  renderPool();updateProg();renderPins();
+}
+
+// ===== RENDER PINS =====
+function renderPins(){
+  const layer=document.getElementById('pinsLayer');
+  layer.querySelectorAll('.pin').forEach(p=>p.remove());
+  Object.entries(G.placed).forEach(([word,pos])=>{
+    const pin=document.createElement('div');
+    pin.className='pin';
+    pin.style.left=pos.x+'%';pin.style.top=pos.y+'%';pin.style.transform='translate(-50%,-50%)';
+    pin.innerHTML=`<span class="pdot"></span>${word}<span class="px" data-word="${word}">✕</span>`;
+
+    // Remove
+    pin.querySelector('.px').addEventListener('pointerdown',e=>{
+      e.stopPropagation();e.preventDefault();
+      delete G.placed[word];renderPool();updateProg();renderPins();
+    },{passive:false});
+
+    // Drag pin to move
+    pin.addEventListener('pointerdown',function(e){
+      if(e.target.classList.contains('px'))return;
+      e.stopPropagation();e.preventDefault();
+      pin.classList.add('dragging-now');
+      let moved=false;
+      const sx=e.clientX,sy=e.clientY;
+
+      function move(ev){
+        if(!moved&&(Math.abs(ev.clientX-sx)>3||Math.abs(ev.clientY-sy)>3))moved=true;
+        if(moved){
+          const r=layer.getBoundingClientRect();
+          const xp=Math.max(0,Math.min(100,((ev.clientX-r.left)/r.width*100)));
+          const yp=Math.max(0,Math.min(100,((ev.clientY-r.top)/r.height*100)));
+          pin.style.left=xp+'%';pin.style.top=yp+'%';
+        }
+      }
+      function up(ev){
+        document.removeEventListener('pointermove',move);
+        document.removeEventListener('pointerup',up);
+        pin.classList.remove('dragging-now');
+        if(moved){
+          const r=layer.getBoundingClientRect();
+          G.placed[word]={x:parseFloat(((ev.clientX-r.left)/r.width*100).toFixed(2)),y:parseFloat(((ev.clientY-r.top)/r.height*100).toFixed(2))};
+        }
+      }
+      document.addEventListener('pointermove',move,{passive:true});
+      document.addEventListener('pointerup',up);
+    },{passive:false});
+
+    layer.appendChild(pin);
+  });
+}
+
+function resetPlace(){G.placed={};G.activePick=null;renderPool();updateProg();renderPins()}
+
+// ===== QUIZ =====
+function finishPlace(){buildQuiz();showScreen('quiz');G.qi=0;G.qscore=0;renderQ()}
+
+function getZone(x,y){
+  if(x<35&&y<45)return'левый верхний угол';
+  if(x>65&&y<45)return'правый верхний угол';
+  if(x<35&&y>55)return'левый нижний угол';
+  if(x>65&&y>55)return'правый нижний угол';
+  if(y<33)return'верхняя часть';
+  if(y>67)return'нижняя часть';
+  return'центр';
+}
+
+function buildQuiz(){
+  const W=G.words,P=G.placed,Qs=[];
+  const allPool=G.theme==='all'?[...WB.food,...WB.nature,...WB.toys,...WB.jobs]:[...WB[G.theme]];
+  const notUsed=shuf(allPool.filter(w=>!W.includes(w)));
+
+  // Q1 — multi-select 3 words
+  const pick3=shuf([...W]).slice(0,Math.min(3,W.length));
+  const fakes=notUsed.slice(0,3);
+  Qs.push({type:'multi',q:'Выбери 3 слова, которые были в этой тренировке:',opts:shuf([...pick3,...fakes]),correct:pick3});
+
+  // Q2 — where was a word
+  const w2=W[Math.floor(Math.random()*W.length)];
+  const cz=getZone(P[w2].x,P[w2].y);
+  const allZ=['левый верхний угол','правый верхний угол','левый нижний угол','правый нижний угол','верхняя часть','нижняя часть','центр'];
+  const fzones=shuf(allZ.filter(z=>z!==cz)).slice(0,3);
+  Qs.push({type:'choice',q:`Где находилось слово «${w2}»?`,opts:shuf([cz,...fzones]),correct:cz});
+
+  // Q3 — sort
+  const sw=W.slice(0,Math.min(5,W.length));
+  Qs.push({type:'sort',q:'Расставь слова в том порядке, в котором запоминал (как они шли в списке):',items:shuf([...sw]),correct:sw});
+
+  // Q4 — which word in zone
+  if(W.length>=3){
+    const entries=Object.entries(P);
+    const tgt=entries[Math.floor(Math.random()*entries.length)];
+    const tz=getZone(tgt[1].x,tgt[1].y);
+    const wOpts=shuf([tgt[0],...shuf(W.filter(x=>x!==tgt[0])).slice(0,3)]);
+    Qs.push({type:'choice',q:`Какое слово находилось в зоне «${tz}»?`,opts:wOpts,correct:tgt[0]});
+  }
+  G.quizQs=Qs;
+}
+
+function renderQ(){
+  const Qs=G.quizQs,qi=G.qi;
+  document.getElementById('qdots').innerHTML=Qs.map((_,i)=>`<div class="qdot ${i<qi?'done':i===qi?'active':''}"></div>`).join('');
+  if(qi>=Qs.length){showResults();return}
+  const q=Qs[qi];
+  document.getElementById('qq').textContent=q.q;
+  document.getElementById('qfb').className='fb';
+  document.getElementById('qnext').style.display='none';
+  const bdgs={choice:'🎯 Один верный ответ',multi:'☑️ Выбери три',sort:'🔀 Перетащи в нужный порядок'};
+  document.getElementById('qbadge').textContent=bdgs[q.type]||'';
+  const cnt=document.getElementById('qcontent');cnt.innerHTML='';
+
+  if(q.type==='choice'){
+    const d=document.createElement('div');d.className='choices';
+    const L=['А','Б','В','Г'];
+    q.opts.forEach((o,i)=>{
+      const b=document.createElement('button');b.className='cbtn';
+      b.innerHTML=`<span class="cl">${L[i]}</span>${o}`;
+      b.onclick=()=>{
+        d.querySelectorAll('.cbtn').forEach(x=>x.disabled=true);
+        if(o===q.correct){b.classList.add('ok');G.qscore++;setFB(true,'✅ Правильно!')}
+        else{b.classList.add('bad');d.querySelectorAll('.cbtn').forEach(x=>{if(x.textContent.includes(q.correct))x.classList.add('ok')});setFB(false,'❌ Неверно. Правильный ответ: '+q.correct)}
+        document.getElementById('qnext').style.display='block';
+      };d.appendChild(b);
+    });cnt.appendChild(d);
+  }
+  else if(q.type==='multi'){
+    const d=document.createElement('div');d.className='mc-grid';
+    let sel=[];
+    q.opts.forEach(o=>{
+      const b=document.createElement('button');b.className='mc';b.dataset.v=o;
+      b.innerHTML=`<span class="mchk"></span>${o}`;
+      b.onclick=()=>{
+        if(b.disabled)return;
+        if(sel.includes(o)){sel=sel.filter(s=>s!==o);b.classList.remove('sel');b.querySelector('.mchk').textContent=''}
+        else{sel.push(o);b.classList.add('sel');b.querySelector('.mchk').textContent='✓'}
+        if(sel.length===3){
+          d.querySelectorAll('.mc').forEach(x=>x.disabled=true);
+          let ok=0;
+          d.querySelectorAll('.mc').forEach(x=>{
+            const v=x.dataset.v;
+            if(q.correct.includes(v)&&sel.includes(v)){x.classList.add('ok');ok++}
+            else if(sel.includes(v)){x.classList.add('bad')}
+            else if(q.correct.includes(v)){x.classList.add('ok')}
+          });
+          if(ok===3)G.qscore++;
+          setFB(ok===3,ok===3?'✅ Все три слова верно!':'❌ Правильных: '+ok+'/3. Верные выделены зелёным.');
+          document.getElementById('qnext').style.display='block';
+        }
+      };d.appendChild(b);
+    });cnt.appendChild(d);
+  }
+  else if(q.type==='sort'){
+    let items=[...q.items];
+    const list=document.createElement('div');list.className='slist';
+    let dsrc=null;
+    const rend=()=>{
+      list.innerHTML='';
+      items.forEach((it,i)=>{
+        const d=document.createElement('div');d.className='si';d.draggable=true;
+        d.innerHTML=`<span class="sh">⠿</span><span>${it}</span>`;d.dataset.i=i;
+        d.addEventListener('dragstart',()=>{dsrc=i;d.classList.add('dragging')});
+        d.addEventListener('dragend',()=>d.classList.remove('dragging'));
+        d.addEventListener('dragover',e=>{e.preventDefault();d.classList.add('over')});
+        d.addEventListener('dragleave',()=>d.classList.remove('over'));
+        d.addEventListener('drop',e=>{e.preventDefault();d.classList.remove('over');if(dsrc!==null&&dsrc!==i){[items[dsrc],items[i]]=[items[i],items[dsrc]];rend()}});
+        list.appendChild(d);
+      });
+    };rend();cnt.appendChild(list);
+    const sb=document.createElement('button');sb.className='btn btn-a';sb.style.cssText='width:100%;justify-content:center;margin-top:4px';sb.textContent='Проверить порядок';
+    sb.onclick=()=>{
+      sb.disabled=true;list.querySelectorAll('.si').forEach(x=>x.draggable=false);
+      const right=items.every((w,i)=>w===q.correct[i]);
+      if(right)G.qscore++;
+      setFB(right,right?'✅ Порядок верный!':'❌ Верный порядок: '+q.correct.join(' → '));
+      document.getElementById('qnext').style.display='block';
+    };cnt.appendChild(sb);
+  }
+}
+
+function setFB(ok,msg){const f=document.getElementById('qfb');f.className='fb show '+(ok?'ok':'bad');f.textContent=msg}
+function nextQ(){G.qi++;renderQ()}
+
+// ===== RESULTS =====
+function showResults(){
+  const s=G.qscore,t=G.quizQs.length,p=s/t;
+  document.getElementById('rscore').textContent=s+' / '+t;
+  let stars='⭐',label='Продолжай практиковаться!';
+  if(p>=.9){stars='⭐⭐⭐';label='Невероятно! Настоящий мастер памяти!'}
+  else if(p>=.7){stars='⭐⭐';label='Хорошая работа! Память растёт!'}
+  else if(p>=.5){stars='⭐';label='Неплохо! Ещё немного практики!'}
+  document.getElementById('rstars').textContent=stars;
+  document.getElementById('rlabel').textContent=label;
+  G.totalScore=Math.round(p*100*G.wordCount);
+  document.getElementById('scoreDisp').textContent='🏆 '+G.totalScore;
+  showScreen('results');
+}
+
+function saveRes(){document.getElementById('nameM').classList.add('open');document.getElementById('pname').value='';setTimeout(()=>document.getElementById('pname').focus(),220)}
+function confirmSave(){
+  const name=document.getElementById('pname').value.trim()||'Аноним';
+  lb.push({id:myId,name,score:G.totalScore,words:G.wordCount,theme:G.theme,date:new Date().toLocaleDateString('ru')});
+  lb.sort((a,b)=>b.score-a.score);if(lb.length>50)lb=lb.slice(0,50);
+  localStorage.setItem('palazzo_lb3',JSON.stringify(lb));
+  document.getElementById('nameM').classList.remove('open');
+  showScreen('leaderboard');
+}
+function startAgain(){showScreen('settings')}
+
+// ===== LEADERBOARD =====
+function renderLB(){
+  const list=document.getElementById('lbList');
+  if(!lb.length){list.innerHTML='<p style="color:var(--dim);text-align:center;padding:16px">Рейтинг пуст — сыграй первым!</p>';return}
+  list.innerHTML='';
+  lb.slice(0,20).forEach((e,i)=>{
+    const row=document.createElement('div');row.className='lbrow'+(e.id===myId?' mine':'');
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+    row.innerHTML=`<span class="lbrank">${medal}</span><span class="lbname">${e.name}${e.id===myId?' <span style="color:var(--accent2);font-size:.72rem">(ты)</span>':''}</span><span style="color:var(--dim);font-size:.72rem">${e.words}сл·${e.date}</span><span class="lbsc">${e.score}</span>${e.id===myId?`<button class="lbdel" onclick="delEntry(${i})">🗑</button>`:''}`;
+    list.appendChild(row);
+  });
+}
+function delEntry(i){if(lb[i]?.id===myId){lb.splice(i,1);localStorage.setItem('palazzo_lb3',JSON.stringify(lb));renderLB()}}
+</script>
+</body>
+</html>
