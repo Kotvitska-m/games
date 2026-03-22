@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ментальная арифметика</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1c1208;
+  --parchment: #f2e8d5;
+  --paper: #ede0c4;
+  --red: #b5302a;
+  --gold: #9a7020;
+  --darkgold: #7a5510;
+  --green: #4a7040;
+  --mist: #e8dcc8;
+  --textdark: #2a1a08;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Noto Serif JP', serif;
+  background: var(--paper);
+  min-height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* ====== PAPYRUS BACKGROUND ====== */
+.bg-papyrus {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(160,120,60,0.04) 0px, transparent 2px, transparent 18px),
+    repeating-linear-gradient(180deg, rgba(140,100,40,0.06) 0px, transparent 1px, transparent 22px),
+    radial-gradient(ellipse at 30% 20%, rgba(210,170,90,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 70%, rgba(180,140,70,0.14) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, #ede0c4 0%, #e0cfaa 100%);
+}
+
+.bg-ink-art {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.13;
+}
+
+/* ====== LAYOUT ====== */
+.app {
+  position: relative; z-index: 2;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 36px 20px 90px;
+}
+
+/* ====== HEADER ====== */
+.header { text-align: center; margin-bottom: 32px; animation: fadeDown 0.9s ease both; }
+.header-sub {
+  font-size: 11px; letter-spacing: 6px; color: var(--darkgold); opacity: 0.8;
+  margin-bottom: 6px; display: block;
+  font-family: 'Noto Sans JP', sans-serif; font-weight: 300; text-transform: uppercase;
+}
+.title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(26px, 5vw, 50px); font-weight: 700;
+  color: var(--textdark); letter-spacing: 1px; line-height: 1.1;
+  display: inline-block; position: relative;
+}
+.title::after {
+  content: ''; display: block; height: 2px; margin-top: 10px;
+  background: linear-gradient(90deg, transparent, var(--red), var(--gold), transparent);
+}
+.stamp {
+  width: 44px; height: 44px; border: 2.5px solid var(--red); border-radius: 3px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin: 10px auto 0; transform: rotate(6deg); background: rgba(181,48,42,0.07);
+}
+
+/* ====== NAV ====== */
+.nav {
+  display: flex; gap: 14px; margin-bottom: 32px;
+  flex-wrap: wrap; justify-content: center;
+  animation: fadeUp 0.9s ease 0.2s both;
+}
+.nav-btn {
+  position: relative; padding: 11px 26px;
+  background: rgba(237,224,196,0.6);
+  border: 1px solid rgba(154,112,32,0.4);
+  color: var(--textdark);
+  font-family: 'Playfair Display', serif; font-size: 15px; letter-spacing: 1px;
+  cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(2px);
+}
+.nav-btn::after {
+  content: ''; position: absolute; left: 0; bottom: 0;
+  width: 0; height: 2px;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  transition: width 0.3s ease;
+}
+.nav-btn:hover, .nav-btn.active {
+  background: rgba(181,48,42,0.08); border-color: var(--red); color: var(--red);
+}
+.nav-btn:hover::after, .nav-btn.active::after { width: 100%; }
+.btn-n {
+  display: inline-block; font-size: 11px; font-family: 'Noto Sans JP'; opacity: 0.6;
+  margin-right: 6px; border: 1px solid currentColor; border-radius: 50%;
+  width: 18px; height: 18px; text-align: center; line-height: 16px;
+}
+
+/* ====== PANEL ====== */
+.panel {
+  width: 100%; max-width: 860px;
+  background: rgba(245,238,220,0.85);
+  border: 1px solid rgba(154,112,32,0.3);
+  box-shadow: 0 4px 30px rgba(44,28,8,0.12), inset 0 0 60px rgba(200,170,100,0.08);
+  position: relative; overflow: hidden; backdrop-filter: blur(4px);
+}
+.panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--red), var(--gold), var(--green), var(--gold), var(--red));
+}
+
+/* ====== HOME ====== */
+.home-screen {
+  padding: 50px 40px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+.home-icon { width: 90px; height: 90px; opacity: 0.14; }
+.home-text {
+  color: var(--textdark); font-size: 15px; line-height: 2; max-width: 480px;
+  font-weight: 300; font-family: 'Noto Sans JP', sans-serif; opacity: 0.85;
+}
+.home-hint { color: var(--darkgold); font-size: 12px; letter-spacing: 3px; opacity: 0.6; }
+
+/* ====== HISTORY ====== */
+.history-wrap { display: flex; flex-direction: column; }
+.slide { display: none; padding: 38px 38px 28px; animation: slideFade 0.45s ease both; }
+.slide.active { display: flex; gap: 28px; align-items: flex-start; }
+.slide-visual {
+  flex: 0 0 200px; height: 190px;
+  border: 1px solid rgba(154,112,32,0.25);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; background: rgba(237,224,196,0.5);
+}
+.slide-visual svg { width: 100%; height: 100%; }
+.slide-content { flex: 1; min-width: 0; }
+.slide-num {
+  font-size: 10px; letter-spacing: 4px; color: var(--darkgold); opacity: 0.7;
+  margin-bottom: 6px; font-family: 'Noto Sans JP'; font-weight: 300;
+}
+.slide-title {
+  font-family: 'Playfair Display', serif; font-size: 20px;
+  color: var(--textdark); margin-bottom: 14px; line-height: 1.25;
+}
+.slide-text {
+  font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+  line-height: 2; color: rgba(44,28,8,0.8); font-weight: 300;
+}
+.slide-text strong { color: var(--red); font-weight: 400; }
+.slide-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 38px; border-top: 1px solid rgba(154,112,32,0.18);
+}
+.slide-arrow {
+  background: none; border: 1px solid rgba(154,112,32,0.4); color: var(--darkgold);
+  width: 34px; height: 34px; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center; transition: all 0.25s;
+}
+.slide-arrow:hover { background: rgba(154,112,32,0.1); }
+.slide-arrow:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+.dots { display: flex; gap: 7px; }
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(154,112,32,0.25); cursor: pointer; transition: all 0.25s;
+}
+.dot.active { background: var(--red); transform: scale(1.4); }
+
+/* ====== INFLUENCE ====== */
+.influence-grid {
+  padding: 34px 34px 28px;
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 18px;
+}
+.inf-card {
+  padding: 20px 16px; border: 1px solid rgba(154,112,32,0.2);
+  background: rgba(255,250,240,0.5);
+  transition: border-color 0.3s, box-shadow 0.3s;
+  animation: fadeUp 0.5s ease both;
+}
+.inf-card:hover { border-color: rgba(181,48,42,0.4); box-shadow: 0 2px 12px rgba(181,48,42,0.08); }
+.inf-card:nth-child(1){animation-delay:.04s}.inf-card:nth-child(2){animation-delay:.08s}
+.inf-card:nth-child(3){animation-delay:.12s}.inf-card:nth-child(4){animation-delay:.16s}
+.inf-card:nth-child(5){animation-delay:.20s}.inf-card:nth-child(6){animation-delay:.24s}
+.inf-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+.inf-title { font-family: 'Playfair Display', serif; font-size: 14px; color: var(--red); margin-bottom: 6px; }
+.inf-desc { font-family: 'Noto Sans JP', sans-serif; font-size: 11.5px; line-height: 1.9; color: rgba(44,28,8,0.7); font-weight: 300; }
+
+/* ====== SOROBAN ====== */
+.soroban-screen {
+  padding: 34px 34px 28px;
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+.soroban-sub {
+  font-size: 11px; letter-spacing: 4px; color: var(--darkgold); opacity: 0.7;
+  text-align: center; font-family: 'Noto Sans JP'; font-weight: 300; text-transform: uppercase;
+}
+.soroban-diagram { width: 100%; max-width: 720px; display:flex; justify-content:center; }
+
+/* ====== FOOTER ====== */
+.footer {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+  background: linear-gradient(transparent, rgba(237,224,196,0.96) 40%);
+  padding: 8px 20px 10px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.footer-ai {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, #c0392b, #9a7020);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.footer-divider { width: 1px; height: 16px; background: rgba(154,112,32,0.4); }
+.footer-name {
+  font-family: 'Playfair Display', serif; font-size: 13px;
+  letter-spacing: 3px; color: var(--darkgold); opacity: 0.85;
+}
+
+/* ====== ANIMATIONS ====== */
+@keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp   { from{opacity:0;transform:translateY(16px)}  to{opacity:1;transform:translateY(0)} }
+@keyframes slideFade{ from{opacity:0;transform:translateX(14px)}  to{opacity:1;transform:translateX(0)} }
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 640px) {
+  .influence-grid { grid-template-columns: 1fr 1fr; padding: 20px; gap: 14px; }
+  .slide.active { flex-direction: column; }
+  .slide-visual { flex: none; width: 100%; height: 150px; }
+  .slide, .home-screen, .soroban-screen { padding: 22px 18px 18px; }
+  .slide-nav { padding: 12px 18px; }
+  .soroban-diagram { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- Papyrus texture -->
+<div class="bg-papyrus"></div>
+
+<!-- Ink wash painting background -->
+<svg class="bg-ink-art" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <g fill="none" stroke="#2a1a08">
+    <!-- Mount Fuji -->
+    <path d="M620 820 Q680 580 740 490 Q800 580 860 820 Z" fill="rgba(44,28,8,0.22)" stroke="none"/>
+    <path d="M716 490 Q740 467 764 490" fill="white" stroke="rgba(44,28,8,0.28)" stroke-width="1"/>
+    <!-- Second peak -->
+    <path d="M820 820 Q870 650 920 565 Q970 650 1020 820 Z" fill="rgba(44,28,8,0.1)" stroke="none"/>
+    <!-- Distant hills -->
+    <path d="M0 820 Q200 730 400 785 Q500 755 600 820" fill="rgba(44,28,8,0.08)" stroke="none"/>
+    <path d="M1000 820 Q1150 735 1280 782 Q1370 752 1440 795 L1440 820Z" fill="rgba(44,28,8,0.08)" stroke="none"/>
+    <!-- Pine tree left -->
+    <line x1="140" y1="820" x2="140" y2="575" stroke="#2a1a08" stroke-width="3.5"/>
+    <path d="M140 618 Q108 658 78 668 M140 618 Q172 658 202 666" stroke="#2a1a08" stroke-width="2.5"/>
+    <path d="M140 658 Q100 698 64 712 M140 658 Q182 698 218 708" stroke="#2a1a08" stroke-width="2"/>
+    <path d="M140 700 Q90 745 50 756 M140 700 Q192 742 232 752" stroke="#2a1a08" stroke-width="1.8"/>
+    <path d="M140 742 Q80 780 42 790 M140 742 Q200 777 238 786" stroke="#2a1a08" stroke-width="1.5"/>
+    <!-- Pine tree right -->
+    <line x1="1300" y1="820" x2="1300" y2="608" stroke="#2a1a08" stroke-width="3"/>
+    <path d="M1300 644 Q1270 678 1246 685 M1300 644 Q1330 678 1354 682" stroke="#2a1a08" stroke-width="2"/>
+    <path d="M1300 686 Q1264 718 1236 726 M1300 686 Q1338 715 1364 720" stroke="#2a1a08" stroke-width="1.8"/>
+    <path d="M1300 726 Q1256 756 1226 762 M1300 726 Q1346 752 1372 757" stroke="#2a1a08" stroke-width="1.5"/>
+    <!-- Bamboo left -->
+    <line x1="58" y1="820" x2="56" y2="535" stroke="#3a5a2a" stroke-width="4"/>
+    <line x1="75" y1="820" x2="73" y2="558" stroke="#3a5a2a" stroke-width="3.5"/>
+    <line x1="90" y1="820" x2="88" y2="578" stroke="#3a5a2a" stroke-width="3"/>
+    <line x1="54" y1="600" x2="60" y2="600" stroke="#2a4a1a" stroke-width="2.2"/>
+    <line x1="54" y1="655" x2="60" y2="655" stroke="#2a4a1a" stroke-width="2.2"/>
+    <line x1="54" y1="710" x2="60" y2="710" stroke="#2a4a1a" stroke-width="2.2"/>
+    <line x1="54" y1="765" x2="60" y2="765" stroke="#2a4a1a" stroke-width="2.2"/>
+    <line x1="71" y1="622" x2="77" y2="622" stroke="#2a4a1a" stroke-width="2"/>
+    <line x1="71" y1="684" x2="77" y2="684" stroke="#2a4a1a" stroke-width="2"/>
+    <line x1="71" y1="744" x2="77" y2="744" stroke="#2a4a1a" stroke-width="2"/>
+    <!-- Bamboo leaves -->
+    <path d="M60 600 Q78 588 92 572" stroke="#3a5a2a" stroke-width="1.5"/>
+    <path d="M60 655 Q46 638 40 620" stroke="#3a5a2a" stroke-width="1.5"/>
+    <path d="M77 622 Q95 608 108 592" stroke="#3a5a2a" stroke-width="1.5"/>
+    <!-- Water ripples -->
+    <path d="M0 848 Q360 838 720 846 Q1080 838 1440 846" stroke="#2a3a5a" stroke-width="1.5" opacity="0.5"/>
+    <path d="M0 858 Q360 850 720 856 Q1080 850 1440 856" stroke="#2a3a5a" stroke-width="1" opacity="0.3"/>
+    <!-- Cranes top right -->
+    <g transform="translate(1100,118) rotate(-8)" opacity="0.72">
+      <path d="M0 0 Q20-12 40 0" stroke="#2a1a08" stroke-width="1.8"/>
+      <path d="M0 0 Q-8 8 -18 4" stroke="#2a1a08" stroke-width="1.5"/>
+      <path d="M40 0 Q50 6 58 2" stroke="#2a1a08" stroke-width="1.5"/>
+      <line x1="20" y1="0" x2="20" y2="14" stroke="#2a1a08" stroke-width="1.5"/>
+      <path d="M20 14 Q14 20 10 26 M20 14 Q26 20 30 26" stroke="#2a1a08" stroke-width="1.2"/>
+    </g>
+    <g transform="translate(1155,86) rotate(-5)" opacity="0.48">
+      <path d="M0 0 Q18-10 36 0" stroke="#2a1a08" stroke-width="1.5"/>
+      <path d="M0 0 Q-7 7 -14 4" stroke="#2a1a08" stroke-width="1.2"/>
+      <path d="M36 0 Q44 5 50 2" stroke="#2a1a08" stroke-width="1.2"/>
+      <line x1="18" y1="0" x2="18" y2="12" stroke="#2a1a08" stroke-width="1.2"/>
+      <path d="M18 12 Q12 18 8 23 M18 12 Q24 18 28 23" stroke="#2a1a08" stroke-width="1"/>
+    </g>
+    <!-- Pagoda right -->
+    <g transform="translate(1345,305)" opacity="0.45">
+      <rect x="-18" y="58" width="36" height="8" fill="rgba(44,28,8,0.4)" rx="1"/>
+      <polygon points="-22,58 0,40 22,58" fill="rgba(44,28,8,0.35)"/>
+      <rect x="-14" y="98" width="28" height="8" fill="rgba(44,28,8,0.4)" rx="1"/>
+      <polygon points="-18,98 0,82 18,98" fill="rgba(44,28,8,0.35)"/>
+      <rect x="-10" y="132" width="20" height="8" fill="rgba(44,28,8,0.4)" rx="1"/>
+      <polygon points="-14,132 0,118 14,132" fill="rgba(44,28,8,0.35)"/>
+      <rect x="-8" y="140" width="16" height="30" fill="rgba(44,28,8,0.3)"/>
+    </g>
+    <!-- Cherry blossom branch top left -->
+    <path d="M0 76 Q60 98 120 138 Q155 158 178 198" stroke="#5a2a2a" stroke-width="2.5"/>
+    <path d="M120 138 Q140 118 155 103" stroke="#5a2a2a" stroke-width="2"/>
+    <path d="M155 103 Q165 88 170 76" stroke="#5a2a2a" stroke-width="1.5"/>
+    <circle cx="158" cy="106" r="5.5" fill="rgba(181,48,42,0.38)"/>
+    <circle cx="163" cy="98" r="4.5" fill="rgba(181,48,42,0.3)"/>
+    <circle cx="170" cy="78" r="5" fill="rgba(181,48,42,0.33)"/>
+    <circle cx="176" cy="91" r="3.5" fill="rgba(181,48,42,0.28)"/>
+    <circle cx="148" cy="116" r="4" fill="rgba(181,48,42,0.28)"/>
+    <circle cx="131" cy="140" r="3.5" fill="rgba(181,48,42,0.22)"/>
+    <circle cx="182" cy="198" r="4" fill="rgba(181,48,42,0.18)"/>
+  </g>
+</svg>
+
+<div class="app">
+  <header class="header">
+    <span class="header-sub">Ментальная арифметика · Соробан</span>
+    <h1 class="title">Ментальная арифметика</h1>
+    <div style="display:flex;justify-content:center;margin-top:10px">
+      <div class="stamp">
+        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg" width="26" height="26">
+          <path d="M13 3 L23 13 L13 23 L3 13 Z" stroke="#b5302a" stroke-width="1.5"/>
+          <circle cx="13" cy="13" r="4" stroke="#b5302a" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showSection('home',this)">Главная</button>
+    <button class="nav-btn" onclick="showSection('history',this)"><span class="btn-n">1</span>История</button>
+    <button class="nav-btn" onclick="showSection('influence',this)"><span class="btn-n">2</span>Влияние</button>
+    <button class="nav-btn" onclick="showSection('soroban',this)"><span class="btn-n">3</span>Соробан</button>
+  </nav>
+
+  <div class="panel" id="panel">
+
+    <!-- HOME -->
+    <div id="sec-home" class="home-screen">
+      <svg class="home-icon" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="10" width="70" height="70" rx="4" fill="none" stroke="#2a1a08" stroke-width="3"/>
+        <line x1="10" y1="38" x2="80" y2="38" stroke="#2a1a08" stroke-width="3"/>
+        <line x1="25" y1="10" x2="25" y2="70" stroke="#2a1a08" stroke-width="2"/>
+        <line x1="45" y1="10" x2="45" y2="70" stroke="#2a1a08" stroke-width="2"/>
+        <line x1="65" y1="10" x2="65" y2="70" stroke="#2a1a08" stroke-width="2"/>
+        <ellipse cx="25" cy="30" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="45" cy="30" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="65" cy="30" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="25" cy="50" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="25" cy="62" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="45" cy="50" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="45" cy="62" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="65" cy="50" rx="8" ry="5" fill="#2a1a08"/>
+        <ellipse cx="65" cy="62" rx="8" ry="5" fill="#2a1a08"/>
+      </svg>
+      <p class="home-text">Добро пожаловать в мир, где древние счёты открывают безграничные возможности разума.<br>Выберите раздел для изучения.</p>
+      <div class="home-hint">— выберите раздел выше —</div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="sec-history" style="display:none" class="history-wrap">
+
+      <div class="slide active" id="slide-0">
+        <div class="slide-visual">
+          <svg viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg">
+            <rect x="30" y="20" width="140" height="150" rx="8" fill="rgba(180,140,80,0.12)" stroke="rgba(44,28,8,0.3)" stroke-width="1.5"/>
+            <line x1="50" y1="50" x2="150" y2="50" stroke="rgba(44,28,8,0.25)" stroke-width="1"/>
+            <line x1="50" y1="70" x2="150" y2="70" stroke="rgba(44,28,8,0.25)" stroke-width="1"/>
+            <line x1="50" y1="90" x2="150" y2="90" stroke="rgba(44,28,8,0.25)" stroke-width="1"/>
+            <line x1="50" y1="110" x2="150" y2="110" stroke="rgba(44,28,8,0.25)" stroke-width="1"/>
+            <path d="M60 42 L65 48 M63 42 L63 50" stroke="#2a1a08" stroke-width="1.5" fill="none"/>
+            <path d="M80 42 L85 48 M83 44 L78 48" stroke="#2a1a08" stroke-width="1.5" fill="none"/>
+            <path d="M100 44 L108 44 M102 44 L102 50" stroke="#2a1a08" stroke-width="1.5" fill="none"/>
+            <path d="M120 42 L128 46 M120 48 L128 44" stroke="#2a1a08" stroke-width="1.5" fill="none"/>
+            <circle cx="60" cy="62" r="3.5" fill="rgba(44,28,8,0.5)"/><circle cx="72" cy="62" r="3.5" fill="rgba(44,28,8,0.5)"/><circle cx="84" cy="62" r="3.5" fill="rgba(44,28,8,0.5)"/>
+            <circle cx="60" cy="82" r="3.5" fill="rgba(44,28,8,0.5)"/><circle cx="72" cy="82" r="3.5" fill="rgba(44,28,8,0.5)"/>
+            <circle cx="60" cy="102" r="3.5" fill="rgba(44,28,8,0.5)"/><circle cx="72" cy="102" r="3.5" fill="rgba(44,28,8,0.5)"/><circle cx="84" cy="102" r="3.5" fill="rgba(44,28,8,0.5)"/><circle cx="96" cy="102" r="3.5" fill="rgba(44,28,8,0.5)"/>
+          </svg>
+        </div>
+        <div class="slide-content">
+          <div class="slide-num">01 / 04 · ИСТОКИ</div>
+          <h2 class="slide-title">Рождение счёта · Месопотамия</h2>
+          <p class="slide-text">Более <strong>5000 лет назад</strong> в Древней Месопотамии люди использовали камешки на разграфлённых досках — первые прообразы счётов. Слово «калькулус» происходит от латинского <em>calculus</em> — «камешек».<br><br>В Египте, Греции и Риме существовали схожие инструменты — абаки. Счёт был привилегией торговцев и жрецов.</p>
+        </div>
+      </div>
+
+      <div class="slide" id="slide-1">
+        <div class="slide-visual">
+          <svg viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg">
+            <rect x="25" y="25" width="150" height="140" rx="5" fill="none" stroke="#2a1a08" stroke-width="3"/>
+            <line x1="25" y1="70" x2="175" y2="70" stroke="#2a1a08" stroke-width="2.5"/>
+            <line x1="55" y1="25" x2="55" y2="165" stroke="#5a3a1a" stroke-width="1.5"/>
+            <line x1="90" y1="25" x2="90" y2="165" stroke="#5a3a1a" stroke-width="1.5"/>
+            <line x1="125" y1="25" x2="125" y2="165" stroke="#5a3a1a" stroke-width="1.5"/>
+            <line x1="155" y1="25" x2="155" y2="165" stroke="#5a3a1a" stroke-width="1.5"/>
+            <ellipse cx="55" cy="47" rx="14" ry="9" fill="rgba(44,28,8,0.55)"/><ellipse cx="55" cy="61" rx="14" ry="9" fill="rgba(44,28,8,0.55)"/>
+            <ellipse cx="90" cy="47" rx="14" ry="9" fill="rgba(44,28,8,0.55)"/><ellipse cx="90" cy="61" rx="14" ry="9" fill="rgba(44,28,8,0.55)"/>
+            <ellipse cx="125" cy="47" rx="14" ry="9" fill="rgba(44,28,8,0.55)"/><ellipse cx="125" cy="61" rx="14" ry="9" fill="rgba(44,28,8,0.55)"/>
+            <ellipse cx="55" cy="82" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="55" cy="97" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="55" cy="112" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="55" cy="127" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="55" cy="142" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/>
+            <ellipse cx="90" cy="82" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="90" cy="97" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="90" cy="112" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="90" cy="127" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/><ellipse cx="90" cy="142" rx="14" ry="8" fill="rgba(44,28,8,0.45)"/>
+          </svg>
+        </div>
+        <div class="slide-content">
+          <div class="slide-num">02 / 04 · КИТАЙ</div>
+          <h2 class="slide-title">Суаньпань · Китайские счёты</h2>
+          <p class="slide-text">В <strong>II веке до н.э.</strong> в Китае появился <em>суаньпань</em>. В верхней секции — 2 «небесные» косточки (по 5 единиц), в нижней — 5 «земных» (по 1 единице).<br><br>Суаньпань применялся в торговле и астрономии на протяжении более <strong>двух тысячелетий</strong>. Именно он стал предком японских счётов.</p>
+        </div>
+      </div>
+
+      <div class="slide" id="slide-2">
+        <div class="slide-visual">
+          <svg viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sf" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#8b5a20"/><stop offset="50%" stop-color="#c4843a"/><stop offset="100%" stop-color="#6a3e10"/>
+              </linearGradient>
+              <linearGradient id="sh" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e8c870"/><stop offset="100%" stop-color="#b06010"/>
+              </linearGradient>
+              <linearGradient id="se" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f0d898"/><stop offset="100%" stop-color="#c88018"/>
+              </linearGradient>
+            </defs>
+            <!-- Frame -->
+            <rect x="14" y="12" width="172" height="166" rx="5" fill="url(#sf)"/>
+            <rect x="22" y="20" width="156" height="150" rx="3" fill="#f5eedd"/>
+            <rect x="14" y="12" width="172" height="18" rx="5" fill="url(#sf)"/>
+            <rect x="14" y="160" width="172" height="18" rx="5" fill="url(#sf)"/>
+            <rect x="14" y="12" width="8" height="166" rx="3" fill="url(#sf)"/>
+            <rect x="178" y="12" width="8" height="166" rx="3" fill="url(#sf)"/>
+            <!-- Planka -->
+            <rect x="14" y="75" width="172" height="9" fill="#7a4a18"/>
+            <!-- Rods: x = 44,72,100,128,156 -->
+            <line x1="44" y1="22" x2="44" y2="172" stroke="#6a3e10" stroke-width="1.8"/>
+            <line x1="72" y1="22" x2="72" y2="172" stroke="#6a3e10" stroke-width="1.8"/>
+            <line x1="100" y1="22" x2="100" y2="172" stroke="#6a3e10" stroke-width="1.8"/>
+            <line x1="128" y1="22" x2="128" y2="172" stroke="#6a3e10" stroke-width="1.8"/>
+            <line x1="156" y1="22" x2="156" y2="172" stroke="#6a3e10" stroke-width="1.8"/>
+            <!-- Heaven beads (1 each, sitting just above planka) -->
+            <ellipse cx="44" cy="66" rx="14" ry="8" fill="url(#sh)"/>
+            <ellipse cx="72" cy="66" rx="14" ry="8" fill="url(#sh)"/>
+            <ellipse cx="100" cy="66" rx="14" ry="8" fill="url(#sh)"/>
+            <ellipse cx="128" cy="66" rx="14" ry="8" fill="url(#sh)"/>
+            <ellipse cx="156" cy="66" rx="14" ry="8" fill="url(#sh)"/>
+            <!-- Highlights -->
+            <ellipse cx="44" cy="63" rx="5" ry="2.5" fill="rgba(255,248,180,0.6)"/>
+            <ellipse cx="72" cy="63" rx="5" ry="2.5" fill="rgba(255,248,180,0.6)"/>
+            <ellipse cx="100" cy="63" rx="5" ry="2.5" fill="rgba(255,248,180,0.6)"/>
+            <ellipse cx="128" cy="63" rx="5" ry="2.5" fill="rgba(255,248,180,0.6)"/>
+            <ellipse cx="156" cy="63" rx="5" ry="2.5" fill="rgba(255,248,180,0.6)"/>
+            <!-- Earth beads (4 each, sitting just below planka) -->
+            <!-- Rod 1 -->
+            <ellipse cx="44" cy="94" rx="14" ry="8" fill="url(#se)"/><ellipse cx="44" cy="109" rx="14" ry="8" fill="url(#se)"/>
+            <ellipse cx="44" cy="124" rx="14" ry="8" fill="url(#se)"/><ellipse cx="44" cy="139" rx="14" ry="8" fill="url(#se)"/>
+            <!-- Rod 2 -->
+            <ellipse cx="72" cy="94" rx="14" ry="8" fill="url(#se)"/><ellipse cx="72" cy="109" rx="14" ry="8" fill="url(#se)"/>
+            <ellipse cx="72" cy="124" rx="14" ry="8" fill="url(#se)"/><ellipse cx="72" cy="139" rx="14" ry="8" fill="url(#se)"/>
+            <!-- Rod 3 -->
+            <ellipse cx="100" cy="94" rx="14" ry="8" fill="url(#se)"/><ellipse cx="100" cy="109" rx="14" ry="8" fill="url(#se)"/>
+            <ellipse cx="100" cy="124" rx="14" ry="8" fill="url(#se)"/><ellipse cx="100" cy="139" rx="14" ry="8" fill="url(#se)"/>
+            <!-- Rod 4 -->
+            <ellipse cx="128" cy="94" rx="14" ry="8" fill="url(#se)"/><ellipse cx="128" cy="109" rx="14" ry="8" fill="url(#se)"/>
+            <ellipse cx="128" cy="124" rx="14" ry="8" fill="url(#se)"/><ellipse cx="128" cy="139" rx="14" ry="8" fill="url(#se)"/>
+            <!-- Rod 5 -->
+            <ellipse cx="156" cy="94" rx="14" ry="8" fill="url(#se)"/><ellipse cx="156" cy="109" rx="14" ry="8" fill="url(#se)"/>
+            <ellipse cx="156" cy="124" rx="14" ry="8" fill="url(#se)"/><ellipse cx="156" cy="139" rx="14" ry="8" fill="url(#se)"/>
+            <!-- Highlights earth -->
+            <ellipse cx="44" cy="91" rx="5" ry="2" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="72" cy="91" rx="5" ry="2" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="100" cy="91" rx="5" ry="2" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="128" cy="91" rx="5" ry="2" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="156" cy="91" rx="5" ry="2" fill="rgba(255,248,190,0.5)"/>
+          </svg>
+        </div>
+        <div class="slide-content">
+          <div class="slide-num">03 / 04 · ЯПОНИЯ</div>
+          <h2 class="slide-title">Соробан · Японское совершенство</h2>
+          <p class="slide-text">В <strong>XVI веке</strong> суаньпань проник в Японию. К XVII веку японцы усовершенствовали его: убрали лишние косточки — оставили <strong>1 небесную</strong> и <strong>4 земных</strong>. Так родился <em>соробан</em>.<br><br>В 1938 году соробанист Кию Матузаки победил в состязании с механическим калькулятором — и эта победа вошла в историю.</p>
+        </div>
+      </div>
+
+      <div class="slide" id="slide-3">
+        <div class="slide-visual">
+          <svg viewBox="0 0 200 190" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="90" r="58" fill="none" stroke="rgba(44,28,8,0.35)" stroke-width="2"/>
+            <ellipse cx="100" cy="90" rx="58" ry="19" fill="none" stroke="rgba(44,28,8,0.2)" stroke-width="1"/>
+            <line x1="100" y1="32" x2="100" y2="148" stroke="rgba(44,28,8,0.2)" stroke-width="1"/>
+            <path d="M56 60 Q100 50 144 60" stroke="rgba(44,28,8,0.2)" stroke-width="1" fill="none"/>
+            <path d="M45 90 Q100 80 155 90" stroke="rgba(44,28,8,0.2)" stroke-width="1" fill="none"/>
+            <path d="M56 120 Q100 110 144 120" stroke="rgba(44,28,8,0.2)" stroke-width="1" fill="none"/>
+            <circle cx="75" cy="74" r="4" fill="rgba(181,48,42,0.6)"/>
+            <circle cx="120" cy="70" r="4" fill="rgba(181,48,42,0.6)"/>
+            <circle cx="90" cy="106" r="4" fill="rgba(181,48,42,0.6)"/>
+            <circle cx="130" cy="100" r="4" fill="rgba(181,48,42,0.6)"/>
+            <circle cx="68" cy="100" r="4" fill="rgba(181,48,42,0.6)"/>
+            <text x="80" y="97" fill="rgba(44,28,8,0.6)" font-size="17" font-family="serif" font-weight="bold">80+</text>
+          </svg>
+        </div>
+        <div class="slide-content">
+          <div class="slide-num">04 / 04 · СОВРЕМЕННОСТЬ</div>
+          <h2 class="slide-title">Ментальная арифметика · Мир</h2>
+          <p class="slide-text">В <strong>1993 году</strong> в Малайзии Юкундас Камилу создал программу <em>UCMAS</em>, объединив соробан с техниками ментального счёта. Сегодня методика распространена в <strong>более чем 80 странах</strong>.<br><br>В Европе ментальная арифметика активно развивается с 2000-х годов. Центры обучения открыты в Германии, Франции, Великобритании и других странах — дети учатся считать силой воображения.</p>
+        </div>
+      </div>
+
+      <div class="slide-nav">
+        <button class="slide-arrow" id="btn-prev" onclick="changeSlide(-1)" disabled>◀</button>
+        <div class="dots">
+          <div class="dot active" onclick="goSlide(0)"></div>
+          <div class="dot" onclick="goSlide(1)"></div>
+          <div class="dot" onclick="goSlide(2)"></div>
+          <div class="dot" onclick="goSlide(3)"></div>
+        </div>
+        <button class="slide-arrow" id="btn-next" onclick="changeSlide(1)">▶</button>
+      </div>
+    </div>
+
+    <!-- INFLUENCE -->
+    <div id="sec-influence" style="display:none">
+      <div class="influence-grid">
+        <div class="inf-card"><span class="inf-icon">🧠</span><div class="inf-title">Оба полушария</div><p class="inf-desc">Работа с соробаном активирует оба полушария мозга. Левое — логика, правое — пространственный образ.</p></div>
+        <div class="inf-card"><span class="inf-icon">⚡</span><div class="inf-title">Скорость мышления</div><p class="inf-desc">Скорость вычислений возрастает в 5–10 раз. Ученики мгновенно обрабатывают числовую информацию.</p></div>
+        <div class="inf-card"><span class="inf-icon">🎯</span><div class="inf-title">Концентрация</div><p class="inf-desc">Занятия тренируют способность удерживать внимание длительное время — ключевой навык для учёбы.</p></div>
+        <div class="inf-card"><span class="inf-icon">🗃️</span><div class="inf-title">Память</div><p class="inf-desc">Мысленный образ соробана развивает фотографическую и рабочую память. Дети легче запоминают информацию.</p></div>
+        <div class="inf-card"><span class="inf-icon">✨</span><div class="inf-title">Уверенность</div><p class="inf-desc">Умение считать быстрее взрослых наполняет детей гордостью и формирует любовь к математике.</p></div>
+        <div class="inf-card"><span class="inf-icon">🎨</span><div class="inf-title">Воображение</div><p class="inf-desc">Мысленное движение косточек развивает пространственное мышление — основу инженерных и творческих способностей.</p></div>
+      </div>
+    </div>
+
+    <!-- SOROBAN -->
+    <div id="sec-soroban" style="display:none">
+      <div class="soroban-screen">
+        <div class="soroban-sub">Строение соробана</div>
+        <div class="soroban-diagram">
+          <!--
+            LAYOUT (viewBox 0 0 640 510):
+            Soroban frame: x=160..480  (width=320, centered at x=320)
+            Left labels:   x=0..145
+            Right labels:  x=490..640
+            6 rods at x: 192,234,276,318,360,402  (step=42, first at frame_left+32)
+          -->
+          <svg viewBox="0 0 640 510" xmlns="http://www.w3.org/2000/svg"
+               font-family="'Playfair Display','Noto Sans JP',serif"
+               style="display:block;margin:0 auto;width:100%;max-width:720px">
+            <defs>
+              <linearGradient id="fG2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#8b5a20"/>
+                <stop offset="40%" stop-color="#c4843a"/>
+                <stop offset="100%" stop-color="#6a3e10"/>
+              </linearGradient>
+              <linearGradient id="hG2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e8c870"/>
+                <stop offset="100%" stop-color="#b06010"/>
+              </linearGradient>
+              <linearGradient id="eG2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f0d898"/>
+                <stop offset="100%" stop-color="#c88018"/>
+              </linearGradient>
+              <filter id="ws2"><feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,0.28)"/></filter>
+              <filter id="bs2"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="rgba(0,0,0,0.22)"/></filter>
+            </defs>
+
+            <!-- ══ FRAME (x=160..480, y=50..400) ══ -->
+            <rect x="160" y="50" width="320" height="350" rx="7" fill="url(#fG2)" filter="url(#ws2)"/>
+            <!-- Inner area -->
+            <rect x="176" y="66" width="288" height="318" rx="3" fill="#f5eedd"/>
+            <!-- Top/bottom bars -->
+            <rect x="160" y="50"  width="320" height="22" rx="7" fill="url(#fG2)"/>
+            <rect x="160" y="378" width="320" height="22" rx="7" fill="url(#fG2)"/>
+            <!-- Side bars -->
+            <rect x="160" y="50" width="16" height="350" rx="3" fill="url(#fG2)"/>
+            <rect x="464" y="50" width="16" height="350" rx="3" fill="url(#fG2)"/>
+
+            <!-- ══ PLANKA at y=168 ══ -->
+            <rect x="160" y="168" width="320" height="14" fill="#7a4a18"/>
+            <rect x="160" y="169" width="320" height="2"  fill="rgba(255,210,130,0.28)"/>
+            <rect x="160" y="179" width="320" height="2"  fill="rgba(0,0,0,0.16)"/>
+
+            <!-- ══ RODS — 6 rods, x: 200,242,284,326,368,410 ══ -->
+            <line x1="200" y1="68" x2="200" y2="392" stroke="#6a3e10" stroke-width="2.5"/>
+            <line x1="242" y1="68" x2="242" y2="392" stroke="#6a3e10" stroke-width="2.5"/>
+            <line x1="284" y1="68" x2="284" y2="392" stroke="#6a3e10" stroke-width="2.5"/>
+            <line x1="326" y1="68" x2="326" y2="392" stroke="#6a3e10" stroke-width="2.5"/>
+            <line x1="368" y1="68" x2="368" y2="392" stroke="#6a3e10" stroke-width="2.5"/>
+            <line x1="410" y1="68" x2="410" y2="392" stroke="#6a3e10" stroke-width="2.5"/>
+
+            <!-- ══ HEAVEN BEADS — 1 per rod, touching planka from above (cy=152) ══ -->
+            <ellipse cx="200" cy="152" rx="19" ry="12" fill="url(#hG2)" filter="url(#bs2)"/>
+            <ellipse cx="242" cy="152" rx="19" ry="12" fill="url(#hG2)" filter="url(#bs2)"/>
+            <ellipse cx="284" cy="152" rx="19" ry="12" fill="url(#hG2)" filter="url(#bs2)"/>
+            <ellipse cx="326" cy="152" rx="19" ry="12" fill="url(#hG2)" filter="url(#bs2)"/>
+            <ellipse cx="368" cy="152" rx="19" ry="12" fill="url(#hG2)" filter="url(#bs2)"/>
+            <ellipse cx="410" cy="152" rx="19" ry="12" fill="url(#hG2)" filter="url(#bs2)"/>
+            <ellipse cx="200" cy="147" rx="8" ry="3.5" fill="rgba(255,248,180,0.55)"/>
+            <ellipse cx="242" cy="147" rx="8" ry="3.5" fill="rgba(255,248,180,0.55)"/>
+            <ellipse cx="284" cy="147" rx="8" ry="3.5" fill="rgba(255,248,180,0.55)"/>
+            <ellipse cx="326" cy="147" rx="8" ry="3.5" fill="rgba(255,248,180,0.55)"/>
+            <ellipse cx="368" cy="147" rx="8" ry="3.5" fill="rgba(255,248,180,0.55)"/>
+            <ellipse cx="410" cy="147" rx="8" ry="3.5" fill="rgba(255,248,180,0.55)"/>
+
+            <!-- ══ EARTH BEADS — 4 per rod, touching planka from below, cy: 196,222,248,274 ══ -->
+            <!-- Rod 1 x=200 -->
+            <ellipse cx="200" cy="196" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="200" cy="222" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="200" cy="248" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="200" cy="274" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <!-- Rod 2 x=242 -->
+            <ellipse cx="242" cy="196" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="242" cy="222" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="242" cy="248" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="242" cy="274" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <!-- Rod 3 x=284 -->
+            <ellipse cx="284" cy="196" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="284" cy="222" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="284" cy="248" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="284" cy="274" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <!-- Rod 4 x=326 -->
+            <ellipse cx="326" cy="196" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="326" cy="222" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="326" cy="248" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="326" cy="274" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <!-- Rod 5 x=368 -->
+            <ellipse cx="368" cy="196" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="368" cy="222" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="368" cy="248" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="368" cy="274" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <!-- Rod 6 x=410 -->
+            <ellipse cx="410" cy="196" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="410" cy="222" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="410" cy="248" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <ellipse cx="410" cy="274" rx="19" ry="11" fill="url(#eG2)" filter="url(#bs2)"/>
+            <!-- Highlights earth -->
+            <ellipse cx="200" cy="192" rx="7" ry="3" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="242" cy="192" rx="7" ry="3" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="284" cy="192" rx="7" ry="3" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="326" cy="192" rx="7" ry="3" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="368" cy="192" rx="7" ry="3" fill="rgba(255,248,190,0.5)"/>
+            <ellipse cx="410" cy="192" rx="7" ry="3" fill="rgba(255,248,190,0.5)"/>
+
+            <!-- ══ ANNOTATIONS ══ -->
+
+            <!-- СПИЦА — top center -->
+            <line x1="305" y1="68" x2="305" y2="38" stroke="#9a7020" stroke-width="1.2" stroke-dasharray="4,3"/>
+            <circle cx="305" cy="68" r="3" fill="#9a7020"/>
+            <text x="248" y="30" fill="#9a7020" font-size="12" font-weight="600" text-anchor="middle">Спица</text>
+            <text x="248" y="44" fill="#9a7020" font-size="10" opacity="0.75" text-anchor="middle">(столбец)</text>
+
+            <!-- НЕБЕСНЫЕ — left, arrow from left edge of bead (cx=200-19=181) to label -->
+            <line x1="181" y1="152" x2="145" y2="138" stroke="#9a7020" stroke-width="1.3" stroke-dasharray="5,3"/>
+            <circle cx="181" cy="152" r="3.5" fill="#9a7020"/>
+            <text x="140" y="120" fill="#9a7020" font-size="13" font-weight="600" text-anchor="end">Небесные</text>
+            <text x="140" y="136" fill="#9a7020" font-size="13" font-weight="600" text-anchor="end">косточки</text>
+            <text x="140" y="150" fill="#9a7020" font-size="10" opacity="0.7" text-anchor="end">× 1 = 5 единиц</text>
+
+            <!-- ЗЕМНЫЕ — left, arrow from left edge of 2nd bead group -->
+            <line x1="181" y1="235" x2="145" y2="250" stroke="#4a7040" stroke-width="1.3" stroke-dasharray="5,3"/>
+            <circle cx="181" cy="235" r="3.5" fill="#4a7040"/>
+            <text x="140" y="232" fill="#4a7040" font-size="13" font-weight="600" text-anchor="end">Земные</text>
+            <text x="140" y="248" fill="#4a7040" font-size="13" font-weight="600" text-anchor="end">косточки</text>
+            <text x="140" y="262" fill="#4a7040" font-size="10" opacity="0.7" text-anchor="end">× 4 = 1 единица</text>
+
+            <!-- ПЛАНКА — right, arrow from right edge of planka -->
+            <line x1="480" y1="175" x2="496" y2="175" stroke="#b5302a" stroke-width="1.3" stroke-dasharray="5,3"/>
+            <circle cx="480" cy="175" r="3.5" fill="#b5302a"/>
+            <text x="500" y="171" fill="#b5302a" font-size="13" font-weight="600">Планка</text>
+            <text x="500" y="186" fill="#b5302a" font-size="10" opacity="0.7">разделитель</text>
+
+            <!-- РАМКА — right, arrow from right side mid -->
+            <line x1="480" y1="310" x2="496" y2="310" stroke="#7a5510" stroke-width="1.3" stroke-dasharray="5,3"/>
+            <circle cx="480" cy="310" r="3.5" fill="#7a5510"/>
+            <text x="500" y="306" fill="#7a5510" font-size="13" font-weight="600">Рамка</text>
+            <text x="500" y="321" fill="#7a5510" font-size="10" opacity="0.7">корпус</text>
+
+            <!-- РАЗРЯДЫ — bottom bracket -->
+            <line x1="200" y1="398" x2="200" y2="416" stroke="#5a3a5a" stroke-width="1.2" stroke-dasharray="4,3"/>
+            <line x1="410" y1="398" x2="410" y2="416" stroke="#5a3a5a" stroke-width="1.2" stroke-dasharray="4,3"/>
+            <line x1="200" y1="416" x2="410" y2="416" stroke="#5a3a5a" stroke-width="1.3"/>
+            <line x1="305" y1="416" x2="305" y2="432" stroke="#5a3a5a" stroke-width="1.3"/>
+            <circle cx="305" cy="432" r="3" fill="#5a3a5a"/>
+            <text x="305" y="450" fill="#5a3a5a" font-size="12" font-weight="600" text-anchor="middle">Разряды (столбцы)</text>
+            <text x="305" y="466" fill="#5a3a5a" font-size="10" opacity="0.7" text-anchor="middle">единицы · десятки · сотни · тысячи ···</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel -->
+</div><!-- /app -->
+
+<!-- Footer: AI icon + divider + name -->
+<footer class="footer">
+  <div class="footer-ai">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5"/>
+      <path d="M8 12 Q12 6 16 12 Q12 18 8 12Z" fill="white" opacity="0.9"/>
+    </svg>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="footer-name">Котвицкая</div>
+</footer>
+
+<script>
+  let currentSlide = 0;
+  const totalSlides = 4;
+
+  function showSection(name, btn) {
+    ['home','history','influence','soroban'].forEach(s => {
+      const el = document.getElementById('sec-' + s);
+      if (el) el.style.display = 'none';
+    });
+    const target = document.getElementById('sec-' + name);
+    if (target) target.style.display = 'block';
+
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    if (name === 'history') { currentSlide = 0; updateSlides(); }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function changeSlide(dir) {
+    currentSlide = Math.max(0, Math.min(totalSlides - 1, currentSlide + dir));
+    updateSlides();
+  }
+
+  function goSlide(idx) { currentSlide = idx; updateSlides(); }
+
+  function updateSlides() {
+    for (let i = 0; i < totalSlides; i++) {
+      const el = document.getElementById('slide-' + i);
+      if (el) el.classList.toggle('active', i === currentSlide);
+    }
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+    document.getElementById('btn-prev').disabled = currentSlide === 0;
+    document.getElementById('btn-next').disabled = currentSlide === totalSlides - 1;
+  }
+</script>
+</body>
+</html>
