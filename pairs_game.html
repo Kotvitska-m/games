@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПАРОЧКИ!</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #FFE600;
+    --red: #FF2D2D;
+    --blue: #1A6FFF;
+    --green: #00C853;
+    --purple: #9B00FF;
+    --orange: #FF6B00;
+    --black: #111;
+    --white: #FFFDF0;
+    --panel-bg: #FFFDF0;
+    --border: 4px solid var(--black);
+    --shadow: 6px 6px 0 var(--black);
+    --shadow-sm: 3px 3px 0 var(--black);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Comic Neue', cursive;
+    background: var(--yellow);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Comic background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(0,0,0,0.07) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Floating background doodles */
+  .bg-doodles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .doodle {
+    position: absolute;
+    font-size: 2.5rem;
+    opacity: 0.13;
+    animation: floatDoodle linear infinite;
+    user-select: none;
+  }
+
+  @keyframes floatDoodle {
+    0% { transform: translateY(100vh) rotate(0deg); }
+    100% { transform: translateY(-120px) rotate(360deg); }
+  }
+
+  /* Main container */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 16px 12px 40px;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .title-wrap {
+    display: inline-block;
+    background: var(--red);
+    border: var(--border);
+    box-shadow: var(--shadow);
+    padding: 8px 32px 4px;
+    transform: rotate(-1.5deg);
+    margin-bottom: 6px;
+  }
+
+  h1 {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(3rem, 10vw, 5.5rem);
+    color: var(--yellow);
+    letter-spacing: 4px;
+    text-shadow: 4px 4px 0 var(--black);
+    line-height: 1;
+  }
+
+  .subtitle {
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    color: var(--black);
+    letter-spacing: 2px;
+    opacity: 0.75;
+  }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+
+  .btn {
+    font-family: 'Bangers', cursive;
+    font-size: 1.25rem;
+    letter-spacing: 1.5px;
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 8px 22px;
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.08s;
+    text-transform: uppercase;
+    outline: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn:active { transform: translate(3px,3px); box-shadow: none; }
+
+  .btn-red { background: var(--red); color: var(--white); }
+  .btn-blue { background: var(--blue); color: var(--white); }
+  .btn-green { background: var(--green); color: var(--black); }
+  .btn-purple { background: var(--purple); color: var(--white); }
+  .btn-orange { background: var(--orange); color: var(--white); }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.18);
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  .btn:hover::after { opacity: 1; }
+
+  /* Slider panel */
+  .slider-panel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 8px 16px;
+    border-radius: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .slider-label {
+    font-family: 'Bangers', cursive;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 130px;
+    height: 10px;
+    background: var(--black);
+    border: 2px solid var(--black);
+    border-radius: 4px;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    background: var(--red);
+    border: 3px solid var(--black);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--black);
+  }
+
+  .pair-count-badge {
+    font-family: 'Bangers', cursive;
+    font-size: 1.4rem;
+    background: var(--yellow);
+    border: 3px solid var(--black);
+    box-shadow: var(--shadow-sm);
+    padding: 2px 12px;
+    min-width: 44px;
+    text-align: center;
+  }
+
+  /* Speech bubble for status */
+  .status-bubble {
+    position: relative;
+    background: var(--white);
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 10px 20px;
+    text-align: center;
+    margin: 0 auto 18px;
+    max-width: 480px;
+    border-radius: 8px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    color: var(--black);
+    display: none;
+  }
+  .status-bubble.show { display: block; }
+  .status-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 16px solid var(--black);
+  }
+  .status-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 12px solid var(--white);
+    z-index: 1;
+  }
+
+  /* Game panel */
+  .game-panel {
+    background: var(--panel-bg);
+    border: var(--border);
+    box-shadow: var(--shadow);
+    padding: 20px 16px;
+    display: none;
+    position: relative;
+  }
+  .game-panel.show { display: block; }
+
+  .pairs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .column-header {
+    font-family: 'Bangers', cursive;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    text-align: center;
+    padding: 6px 4px;
+    margin-bottom: 6px;
+    border: 3px solid var(--black);
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .col-a-header { background: var(--blue); color: var(--white); }
+  .col-b-header { background: var(--orange); color: var(--white); }
+
+  .word-columns {
+    display: contents;
+  }
+
+  .col-a, .col-b {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .word-cell {
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0 8px;
+    border: 3px solid var(--black);
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    position: relative;
+    transition: transform 0.15s;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .word-cell.highlight {
+    animation: wiggle 0.4s ease;
+  }
+
+  /* Input cells */
+  .answer-cell {
+    padding: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 3px solid var(--black);
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .cell-num {
+    font-family: 'Bangers', cursive;
+    font-size: 1rem;
+    color: rgba(0,0,0,0.35);
+    min-width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .answer-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0 8px;
+    border: none;
+    outline: none;
+    background: #FFFFF0;
+    color: var(--black);
+    transition: background 0.15s;
+    text-align: center;
+  }
+  .answer-input:focus {
+    background: #E8F0FF;
+  }
+  .answer-input.correct {
+    background: #C8FFD4;
+    color: #006622;
+  }
+  .answer-input.wrong {
+    background: #FFD0D0;
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    25%{transform:translateX(-5px)}
+    75%{transform:translateX(5px)}
+  }
+
+  @keyframes wiggle {
+    0%,100%{transform:rotate(0)}
+    25%{transform:rotate(-2deg)}
+    75%{transform:rotate(2deg)}
+  }
+
+  /* Score bar */
+  .score-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .score-badge {
+    font-family: 'Bangers', cursive;
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    background: var(--yellow);
+    border: 3px solid var(--black);
+    box-shadow: var(--shadow-sm);
+    padding: 4px 16px;
+  }
+
+  /* Memorize countdown */
+  .countdown-wrap {
+    text-align: center;
+    margin-top: 12px;
+    display: none;
+  }
+  .countdown-wrap.show { display: block; }
+  .countdown-num {
+    font-family: 'Bangers', cursive;
+    font-size: 3rem;
+    color: var(--red);
+    text-shadow: 3px 3px 0 var(--black);
+    animation: popNum 0.4s ease;
+  }
+  @keyframes popNum {
+    0%{transform:scale(0.5);opacity:0}
+    60%{transform:scale(1.3)}
+    100%{transform:scale(1);opacity:1}
+  }
+
+  /* Result screen */
+  .result-screen {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    animation: fadeIn 0.5s ease;
+  }
+  .result-screen.show { display: block; }
+
+  @keyframes fadeIn {
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  .result-title {
+    font-family: 'Bangers', cursive;
+    font-size: clamp(2rem, 8vw, 4rem);
+    letter-spacing: 3px;
+    text-shadow: 4px 4px 0 var(--black);
+    margin-bottom: 8px;
+  }
+
+  .result-score {
+    font-family: 'Bangers', cursive;
+    font-size: 1.8rem;
+    color: var(--black);
+    margin-bottom: 14px;
+  }
+
+  .result-answers {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 400px;
+    margin: 0 auto 16px;
+    text-align: left;
+  }
+
+  .result-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-family: 'Comic Neue', cursive;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 6px 12px;
+    border: 2px solid var(--black);
+  }
+  .result-row.ok { background: #C8FFD4; }
+  .result-row.fail { background: #FFD0D0; }
+  .result-row .icon { font-size: 1.2rem; }
+
+  /* Modal rules */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--white);
+    border: var(--border);
+    box-shadow: 10px 10px 0 var(--black);
+    padding: 28px 24px;
+    max-width: 480px;
+    width: 100%;
+    position: relative;
+    animation: popIn 0.25s ease;
+  }
+
+  @keyframes popIn {
+    from{transform:scale(0.85);opacity:0}
+    to{transform:scale(1);opacity:1}
+  }
+
+  .modal-title {
+    font-family: 'Bangers', cursive;
+    font-size: 2.2rem;
+    color: var(--red);
+    text-shadow: 2px 2px 0 var(--black);
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+
+  .modal p {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    color: var(--black);
+  }
+  .modal p strong {
+    color: var(--blue);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-family: 'Bangers', cursive;
+    font-size: 1.6rem;
+    background: var(--red);
+    color: var(--white);
+    border: 3px solid var(--black);
+    box-shadow: var(--shadow-sm);
+    width: 38px; height: 38px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+
+  /* Music toggle */
+  .music-btn {
+    font-size: 1.5rem;
+    background: var(--purple);
+    color: var(--white);
+    border: var(--border);
+    box-shadow: var(--shadow-sm);
+    width: 46px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.08s;
+    font-family: inherit;
+  }
+  .music-btn:active { transform: translate(3px,3px); box-shadow: none; }
+
+  /* ZAP! effect */
+  .zap {
+    position: fixed;
+    pointer-events: none;
+    z-index: 200;
+    font-family: 'Bangers', cursive;
+    font-size: 2.5rem;
+    color: var(--red);
+    text-shadow: 3px 3px 0 var(--black);
+    animation: zapAnim 0.7s ease forwards;
+  }
+  @keyframes zapAnim {
+    0%{opacity:1;transform:scale(0.5) rotate(-10deg)}
+    50%{opacity:1;transform:scale(1.3) rotate(5deg)}
+    100%{opacity:0;transform:scale(0.8) rotate(-5deg) translateY(-40px)}
+  }
+
+  /* Timer bar */
+  .timer-bar-wrap {
+    height: 10px;
+    background: #ddd;
+    border: 2px solid var(--black);
+    margin-bottom: 12px;
+    display: none;
+    overflow: hidden;
+  }
+  .timer-bar-wrap.show { display: block; }
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+    width: 100%;
+    transition: width 0.5s linear;
+  }
+
+  /* Responsive */
+  @media(max-width: 500px) {
+    .pairs-grid { gap: 6px; }
+    .word-cell { font-size: 0.95rem; padding: 8px 8px; }
+    .answer-input { font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background doodles -->
+<div class="bg-doodles" id="bgDoodles"></div>
+
+<!-- Rules modal -->
+<div class="modal-overlay" id="rulesModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeRules()">✕</button>
+    <div class="modal-title">📖 ПРАВИЛА!</div>
+    <p><strong>1.</strong> Выбери количество пар ползунком (от 5 до 15).</p>
+    <p><strong>2.</strong> Нажми <strong>«СТАРТ»</strong> — на экране появятся два столбца случайных слов-пар.</p>
+    <p><strong>3.</strong> Запомни пары! Когда будешь готов — нажми <strong>«Запомнил!»</strong>.</p>
+    <p><strong>4.</strong> Один из столбцов исчезнет. Твоя задача — вспомнить и вписать пропавшие слова.</p>
+    <p><strong>5.</strong> Нажми <strong>«Проверить»</strong> — узнаешь результат!</p>
+    <p>💡 <em>Слова случайные и никак не связаны — это и делает игру весёлой!</em></p>
+    <br>
+    <button class="btn btn-green" onclick="closeRules()" style="width:100%;font-size:1.4rem;">ПОНЯТНО! 👍</button>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <div class="title-wrap">
+      <h1>ПАРОЧКИ!</h1>
+    </div>
+    <div class="subtitle">тренируй память · играй весело</div>
+  </header>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-red" onclick="openRules()">📖 ПРАВИЛА</button>
+
+    <div class="slider-panel">
+      <span class="slider-label">ПАР:</span>
+      <input type="range" id="pairSlider" min="5" max="15" value="8" oninput="updateSlider()">
+      <div class="pair-count-badge" id="pairCount">8</div>
+    </div>
+
+    <button class="btn btn-blue" id="startBtn" onclick="startGame()">▶ СТАРТ</button>
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Музыка">🎵</button>
+  </div>
+
+  <!-- Status bubble -->
+  <div class="status-bubble" id="statusBubble"></div>
+
+  <!-- Game panel -->
+  <div class="game-panel" id="gamePanel">
+
+    <!-- Memorize phase -->
+    <div id="memorizePhase">
+      <div class="pairs-grid">
+        <div>
+          <div class="column-header col-a-header">🔵 СЛОВО А</div>
+          <div class="col-a" id="colA"></div>
+        </div>
+        <div>
+          <div class="column-header col-b-header">🟠 СЛОВО Б</div>
+          <div class="col-b" id="colB"></div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="btn btn-green" id="memorizedBtn" onclick="onMemorized()" style="font-size:1.5rem;padding:12px 36px;">
+          🧠 ЗАПОМНИЛ!
+        </button>
+      </div>
+      <div class="countdown-wrap" id="countdownWrap">
+        <div class="countdown-num" id="countdownNum">3</div>
+      </div>
+    </div>
+
+    <!-- Recall phase -->
+    <div id="recallPhase" style="display:none;">
+      <div id="recallGrid" class="pairs-grid"></div>
+      <div class="score-bar">
+        <div class="score-badge" id="liveScore">0 / 0</div>
+        <button class="btn btn-orange" onclick="checkAnswers()" style="font-size:1.3rem;">✅ ПРОВЕРИТЬ</button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="resultPhase" class="result-screen">
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-score" id="resultScore"></div>
+      <div class="result-answers" id="resultAnswers"></div>
+      <button class="btn btn-blue" onclick="startGame()" style="font-size:1.4rem;margin-right:8px;">🔄 ЕЩЁ РАЗ</button>
+      <button class="btn btn-red" onclick="newGame()" style="font-size:1.4rem;">🎲 НОВЫЕ СЛОВА</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== WORD BANK =====
+const WORDS_A = [
+  'кот','дерево','облако','замок','велосипед','лопата','банан','фонарь','ракета','зеркало',
+  'шапка','гриб','сапог','трамвай','медведь','телефон','подушка','забор','гитара','корзина',
+  'носок','кнопка','диван','черепаха','паровоз','арбуз','перчатка','часы','лягушка','карандаш',
+  'самолёт','кактус','скрипка','флаг','ласточка','пуговица','торт','лестница','бабочка','молоток',
+  'антенна','снеговик','кегля','мышонок','якорь','зонтик','чайник','тапочек','светофор','петух',
+  'белка','штопор','горшок','рюкзак','тюлень','ключ','трактор','ворона','сундук','ленточка'
+];
+
+const WORDS_B = [
+  'зерно','книга','ракушка','сыр','воздух','свисток','вулкан','нитка','квадрат','тарелка',
+  'провод','мороженое','пружина','серьга','верёвка','кисть','огурец','монета','шнурок','ведро',
+  'колесо','кофта','пятно','рельс','игла','скрепка','вагон','доска','ткань','шишка',
+  'топор','линейка','бублик','цепь','краска','кольцо','стекло','трубка','болт','замок',
+  'паутина','перо','кубик','магнит','пломба','соломинка','клубок','гвоздь','ящик','камень',
+  'парус','поршень','крышка','пряжка','фитиль','шарик','педаль','лента','пробка','клюв'
+];
+
+// State
+let pairs = [];
+let hiddenCol = null; // 'A' or 'B'
+let gameState = 'idle'; // idle, memorize, recall, result
+let pairCount = 8;
+let musicOn = false;
+let audioCtx = null;
+let musicInterval = null;
+
+// ===== BACKGROUND DOODLES =====
+const doodleEmojis = ['💥','⭐','🌟','💫','🎯','🎪','🎨','🌈','🏆','🎭','🎲','🎮','🚀','⚡','🔥','💎','🌀','🎵','🥁','🎉'];
+
+function createDoodles() {
+  const wrap = document.getElementById('bgDoodles');
+  wrap.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const d = document.createElement('div');
+    d.className = 'doodle';
+    d.textContent = doodleEmojis[Math.floor(Math.random() * doodleEmojis.length)];
+    d.style.left = Math.random() * 100 + 'vw';
+    d.style.animationDuration = (12 + Math.random() * 18) + 's';
+    d.style.animationDelay = (-Math.random() * 20) + 's';
+    d.style.fontSize = (1.5 + Math.random() * 2.5) + 'rem';
+    wrap.appendChild(d);
+  }
+}
+createDoodles();
+
+// ===== SLIDER =====
+function updateSlider() {
+  pairCount = parseInt(document.getElementById('pairSlider').value);
+  document.getElementById('pairCount').textContent = pairCount;
+}
+
+// ===== RULES =====
+function openRules() { document.getElementById('rulesModal').classList.add('show'); }
+function closeRules() { document.getElementById('rulesModal').classList.remove('show'); }
+
+// ===== STATUS BUBBLE =====
+function showStatus(msg) {
+  const b = document.getElementById('statusBubble');
+  b.textContent = msg;
+  b.classList.add('show');
+}
+function hideStatus() {
+  document.getElementById('statusBubble').classList.remove('show');
+}
+
+// ===== MUSIC =====
+function toggleMusic() {
+  musicOn = !musicOn;
+  document.getElementById('musicBtn').textContent = musicOn ? '🔊' : '🎵';
+  if (musicOn) { startMusic(); }
+  else { stopMusic(); }
+}
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playNote(freq, start, dur, vol=0.15) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + start);
+  gain.gain.setValueAtTime(vol, ctx.currentTime + start);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+  osc.start(ctx.currentTime + start);
+  osc.stop(ctx.currentTime + start + dur + 0.05);
+}
+
+// Long pleasant background melody (~20 seconds before repeat)
+// Triangle wave, soft volume, gentle rise/fall envelope
+const BG_MELODY = [
+  [523,0],[659,0.4],[784,0.8],[880,1.2],[784,1.7],[659,2.1],[523,2.5],[440,3.0],
+  [494,3.5],[587,3.9],[698,4.3],[784,4.7],[698,5.2],[587,5.6],[494,6.0],[440,6.5],
+  [523,7.0],[659,7.4],[784,7.8],[698,8.3],[659,8.7],[587,9.1],[523,9.6],[494,10.0],
+  [440,10.5],[523,10.9],[659,11.3],[784,11.7],[880,12.2],[784,12.7],[698,13.1],[659,13.5],
+  [587,14.0],[523,14.4],[494,14.8],[440,15.3],[392,15.8],[440,16.3],[494,16.7],[523,17.2],
+  [587,17.7],[659,18.1],[698,18.5],[784,18.9],[659,19.4],[523,19.8]
+];
+const MELODY_DURATION = 20.5;
+
+function playBgMelody() {
+  if (!musicOn) return;
+  const ctx = getAudioCtx();
+  const now = ctx.currentTime;
+  BG_MELODY.forEach(([freq, t]) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + t);
+    gain.gain.setValueAtTime(0, now + t);
+    gain.gain.linearRampToValueAtTime(0.09, now + t + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.38);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + t);
+    osc.stop(now + t + 0.5);
+  });
+  musicInterval = setTimeout(() => { if (musicOn) playBgMelody(); }, MELODY_DURATION * 1000);
+}
+
+function startMusic() {
+  getAudioCtx();
+  playBgMelody();
+}
+
+function stopMusic() {
+  if (musicInterval) { clearTimeout(musicInterval); musicInterval = null; }
+}
+
+function playSfx(type) {
+  try {
+    const ctx = getAudioCtx();
+    if (type === 'start') {
+      [523,659,784,1047].forEach((f,i) => playNote(f, i*0.1, 0.15, 0.2));
+    } else if (type === 'correct') {
+      [659,784,1047].forEach((f,i) => playNote(f, i*0.08, 0.12, 0.2));
+    } else if (type === 'wrong') {
+      [300,220].forEach((f,i) => playNote(f, i*0.1, 0.15, 0.2));
+    } else if (type === 'win') {
+      [523,659,784,1047,784,659,523,659,784,1047].forEach((f,i) => playNote(f, i*0.12, 0.18, 0.18));
+    }
+  } catch(e) {}
+}
+
+// ===== GAME LOGIC =====
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function generatePairs(n) {
+  const wa = shuffle(WORDS_A).slice(0, n);
+  const wb = shuffle(WORDS_B).slice(0, n);
+  return wa.map((w,i) => ({ a: w, b: wb[i] }));
+}
+
+function startGame() {
+  pairCount = parseInt(document.getElementById('pairSlider').value);
+  pairs = generatePairs(pairCount);
+  gameState = 'memorize';
+  hiddenCol = Math.random() < 0.5 ? 'B' : 'A';
+
+  hideStatus();
+  document.getElementById('gamePanel').classList.add('show');
+  document.getElementById('memorizePhase').style.display = 'block';
+  document.getElementById('recallPhase').style.display = 'none';
+  document.getElementById('resultPhase').classList.remove('show');
+  document.getElementById('countdownWrap').classList.remove('show');
+  document.getElementById('memorizedBtn').style.display = 'inline-flex';
+
+  renderMemorize();
+  showStatus('🧠 Запомни все пары и нажми «Запомнил!»');
+  playSfx('start');
+  spawnZap('🎲 НОВАЯ ИГРА!', 300, 200);
+}
+
+function newGame() {
+  startGame();
+}
+
+function renderMemorize() {
+  const colA = document.getElementById('colA');
+  const colB = document.getElementById('colB');
+  colA.innerHTML = '';
+  colB.innerHTML = '';
+  pairs.forEach((p, i) => {
+    const ca = document.createElement('div');
+    ca.className = 'word-cell';
+    ca.style.background = `hsl(${(i * 37) % 360}, 70%, 92%)`;
+    ca.innerHTML = `<span class="cell-num">${i+1}</span><span>${p.a}</span>`;
+    colA.appendChild(ca);
+
+    const cb = document.createElement('div');
+    cb.className = 'word-cell';
+    cb.style.background = `hsl(${(i * 37 + 180) % 360}, 70%, 92%)`;
+    cb.innerHTML = `<span class="cell-num">${i+1}</span><span>${p.b}</span>`;
+    colB.appendChild(cb);
+  });
+}
+
+function onMemorized() {
+  document.getElementById('memorizedBtn').style.display = 'none';
+  const wrap = document.getElementById('countdownWrap');
+  wrap.classList.add('show');
+  let n = 3;
+  function tick() {
+    const el = document.getElementById('countdownNum');
+    el.textContent = n > 0 ? n : '👁️ ЗАПОМИНАЙ!';
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = 'popNum 0.4s ease';
+    if (n <= 0) {
+      setTimeout(startRecall, 600);
+    } else {
+      n--;
+      setTimeout(tick, 800);
+    }
+  }
+  tick();
+}
+
+function startRecall() {
+  gameState = 'recall';
+  document.getElementById('memorizePhase').style.display = 'none';
+  document.getElementById('recallPhase').style.display = 'block';
+
+  const hidden = hiddenCol; // 'A' or 'B'
+  const shown = hidden === 'A' ? 'B' : 'A';
+
+  const grid = document.getElementById('recallGrid');
+  grid.innerHTML = '';
+
+  // Header shown col
+  const shownHeader = document.createElement('div');
+  shownHeader.style.cssText = 'display:flex;flex-direction:column;gap:8px;min-width:0;overflow:hidden;';
+  const sh = document.createElement('div');
+  sh.className = `column-header ${shown === 'A' ? 'col-a-header' : 'col-b-header'}`;
+  sh.textContent = shown === 'A' ? '🔵 СЛОВО А' : '🟠 СЛОВО Б';
+  shownHeader.appendChild(sh);
+
+  pairs.forEach((p, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'word-cell';
+    cell.style.background = `hsl(${(i * 37 + (shown==='A'?0:180)) % 360}, 70%, 92%)`;
+    cell.innerHTML = `<span class="cell-num">${i+1}</span><span>${shown === 'A' ? p.a : p.b}</span>`;
+    shownHeader.appendChild(cell);
+  });
+
+  // Header hidden col (inputs)
+  const hiddenHeader = document.createElement('div');
+  hiddenHeader.style.cssText = 'display:flex;flex-direction:column;gap:8px;min-width:0;overflow:hidden;';
+  const hh = document.createElement('div');
+  hh.className = `column-header ${hidden === 'A' ? 'col-a-header' : 'col-b-header'}`;
+  hh.textContent = (hidden === 'A' ? '🔵 А — ✏️' : '🟠 Б — ✏️');
+  hiddenHeader.appendChild(hh);
+
+  pairs.forEach((p, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'answer-cell';
+    const num = document.createElement('span');
+    num.className = 'cell-num';
+    num.textContent = i + 1;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'answer-input';
+    input.placeholder = '';
+    input.dataset.index = i;
+    input.dataset.answer = hidden === 'A' ? p.a.toLowerCase() : p.b.toLowerCase();
+    input.addEventListener('input', updateLiveScore);
+    wrap.appendChild(num);
+    wrap.appendChild(input);
+    hiddenHeader.appendChild(wrap);
+  });
+
+  // Arrange columns based on which is shown
+  if (shown === 'A') {
+    grid.appendChild(shownHeader);
+    grid.appendChild(hiddenHeader);
+  } else {
+    grid.appendChild(hiddenHeader);
+    grid.appendChild(shownHeader);
+  }
+
+  updateLiveScore();
+  showStatus(`✏️ Впиши пропавшие слова из столбца «${hidden === 'A' ? 'СЛОВО А' : 'СЛОВО Б'}»!`);
+  spawnZap('✏️ ПИШИ!', 400, 250);
+}
+
+function updateLiveScore() {
+  const inputs = document.querySelectorAll('.answer-input');
+  let filled = 0;
+  inputs.forEach(inp => { if (inp.value.trim()) filled++; });
+  document.getElementById('liveScore').textContent = filled + ' / ' + inputs.length;
+}
+
+function normalizeAnswer(s) {
+  return s.toLowerCase().trim()
+    .replace(/ё/g,'е')
+    .replace(/[^а-яa-z0-9]/g,'');
+}
+
+function checkAnswers() {
+  const inputs = document.querySelectorAll('.answer-input');
+  let correct = 0;
+  const results = [];
+
+  inputs.forEach((inp, i) => {
+    const userAns = normalizeAnswer(inp.value);
+    const correctAns = normalizeAnswer(inp.dataset.answer);
+    const isOk = userAns === correctAns;
+    if (isOk) {
+      correct++;
+      inp.classList.add('correct');
+      inp.classList.remove('wrong');
+      playSfx('correct');
+    } else {
+      inp.classList.add('wrong');
+      inp.classList.remove('correct');
+    }
+    results.push({ index: i, correct: isOk, user: inp.value, answer: inp.dataset.answer });
+  });
+
+  setTimeout(() => showResult(correct, inputs.length, results), 400);
+}
+
+function showResult(correct, total, results) {
+  gameState = 'result';
+  document.getElementById('recallPhase').style.display = 'none';
+  const res = document.getElementById('resultPhase');
+  res.classList.add('show');
+
+  const pct = Math.round(correct / total * 100);
+  let emoji, color;
+  if (pct === 100) { emoji = '🏆 ИДЕАЛЬНО!'; color = 'var(--green)'; playSfx('win'); spawnZap('🏆 ПОБЕДА!', 300, 200); }
+  else if (pct >= 70) { emoji = '😎 ОТЛИЧНО!'; color = 'var(--blue)'; playSfx('correct'); }
+  else if (pct >= 40) { emoji = '😅 НЕПЛОХО!'; color = 'var(--orange)'; }
+  else { emoji = '😬 ТРЕНИРУЙСЯ!'; color = 'var(--red)'; playSfx('wrong'); }
+
+  const title = document.getElementById('resultTitle');
+  title.textContent = emoji;
+  title.style.color = color;
+
+  document.getElementById('resultScore').textContent = `${correct} из ${total} (${pct}%)`;
+
+  const answersDiv = document.getElementById('resultAnswers');
+  answersDiv.innerHTML = '';
+
+  const hidden = hiddenCol;
+  const shown = hidden === 'A' ? 'B' : 'A';
+
+  results.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'result-row ' + (r.correct ? 'ok' : 'fail');
+    const shownWord = shown === 'A' ? pairs[r.index].a : pairs[r.index].b;
+    row.innerHTML = `
+      <span class="icon">${r.correct ? '✅' : '❌'}</span>
+      <span style="flex:1"><b>${shownWord}</b> → ${r.correct ? r.answer : `<span style="color:var(--red)">${r.user||'—'}</span> <span style="color:#666;font-size:0.9em">(${r.answer})</span>`}</span>
+    `;
+    answersDiv.appendChild(row);
+  });
+
+  showStatus(emoji + ` ${correct}/${total} правильно!`);
+}
+
+// ===== ZAP EFFECT =====
+function spawnZap(text, x, y) {
+  const el = document.createElement('div');
+  el.className = 'zap';
+  el.textContent = text;
+  el.style.left = (x + Math.random()*200 - 100) + 'px';
+  el.style.top = (y + Math.random()*100 - 50) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('btn') || e.target.classList.contains('music-btn')) {
+    const rect = e.target.getBoundingClientRect();
+    const emojis = ['💥','⚡','✨','🌟','💫'];
+    spawnZap(emojis[Math.floor(Math.random()*emojis.length)],
+      rect.left + rect.width/2, rect.top);
+  }
+});
+
+// Init
+updateSlider();
+</script>
+</body>
+</html>
