@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2 Полушария</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family:'Lora',Georgia,serif; min-height:100vh; overflow:hidden; position:relative; background:#c8dde8; }
+
+.wc-bg {
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 0%,#b8d8f0 0%,transparent 55%),
+    radial-gradient(ellipse 80% 40% at 20% 100%,#a8c890 0%,transparent 50%),
+    radial-gradient(ellipse 70% 35% at 80% 100%,#90b878 0%,transparent 45%),
+    radial-gradient(ellipse 100% 50% at 50% 100%,#b0c898 0%,transparent 55%),
+    radial-gradient(ellipse 60% 40% at 10% 40%,#d0b8c8 0%,transparent 50%),
+    radial-gradient(ellipse 50% 30% at 90% 30%,#c8d8f0 0%,transparent 45%),
+    radial-gradient(ellipse 40% 25% at 50% 55%,#f0e8c8 0%,transparent 50%),
+    linear-gradient(180deg,#d8eaf8 0%,#e8f0d8 45%,#c8d8b0 75%,#a8c090 100%);
+}
+.wc-blob { position:fixed; border-radius:60% 40% 70% 30%/50% 60% 40% 50%; filter:blur(35px); z-index:0; animation:blobDrift 12s ease-in-out infinite alternate; }
+.wc-blob:nth-child(2){width:500px;height:300px;background:rgba(180,210,240,.45);top:-80px;left:-100px;opacity:.7;animation-delay:0s}
+.wc-blob:nth-child(3){width:400px;height:350px;background:rgba(150,200,140,.4);bottom:-60px;right:-80px;opacity:.65;animation-delay:-4s}
+.wc-blob:nth-child(4){width:350px;height:250px;background:rgba(240,220,180,.35);top:30%;left:20%;opacity:.5;animation-delay:-7s}
+.wc-blob:nth-child(5){width:300px;height:280px;background:rgba(210,180,220,.3);top:10%;right:15%;opacity:.45;animation-delay:-2s}
+.wc-blob:nth-child(6){width:280px;height:200px;background:rgba(140,180,160,.35);bottom:15%;left:5%;opacity:.5;animation-delay:-9s}
+@keyframes blobDrift{from{transform:translate(0,0) scale(1) rotate(0deg)}to{transform:translate(25px,18px) scale(1.08) rotate(5deg)}}
+
+.trees{position:fixed;bottom:0;left:0;right:0;z-index:1;pointer-events:none;height:180px}
+.grain{position:fixed;inset:0;z-index:2;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  opacity:.6;mix-blend-mode:multiply}
+
+.screen{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;transition:opacity .45s ease,transform .45s ease}
+.screen.hidden{opacity:0;pointer-events:none;transform:scale(.97)}
+
+/* MENU */
+#menu{gap:22px}
+.logo-brain{font-size:clamp(3rem,8vw,5.5rem);line-height:1;text-align:center;filter:drop-shadow(0 4px 12px rgba(0,0,0,.15));animation:brainPulse 3s ease-in-out infinite}
+@keyframes brainPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.logo-title{font-family:'Caveat',cursive;font-size:clamp(2.4rem,6vw,4.2rem);font-weight:700;color:#2a3a28;text-shadow:2px 3px 0 rgba(255,255,255,.5),0 1px 8px rgba(0,0,0,.1);position:relative;display:inline-block;text-align:center}
+.logo-title::after{content:'';position:absolute;bottom:-4px;left:10%;width:80%;height:2.5px;background:linear-gradient(90deg,transparent,rgba(120,160,90,.7),transparent);border-radius:2px}
+.logo-sub{font-family:'Lora',serif;font-style:italic;font-size:clamp(.75rem,2vw,.95rem);color:rgba(40,55,35,.55);margin-top:6px;letter-spacing:.08em;text-align:center}
+.logo-area{display:flex;flex-direction:column;align-items:center;gap:4px}
+
+.panel{background:rgba(255,255,255,.42);backdrop-filter:blur(16px) saturate(1.4);border:1.5px solid rgba(255,255,255,.72);border-radius:28px;padding:clamp(20px,4vw,32px) clamp(22px,5vw,40px);width:min(500px,94vw);box-shadow:0 8px 48px rgba(0,0,0,.09),inset 0 1px 0 rgba(255,255,255,.85);display:flex;flex-direction:column;gap:22px}
+.opt-label{font-family:'Caveat',cursive;font-size:1.15rem;font-weight:600;color:#2a3a28;margin-bottom:8px}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{flex:1;min-width:44px;padding:9px 6px;border-radius:14px;border:2px solid rgba(255,255,255,.6);background:rgba(255,255,255,.45);cursor:pointer;text-align:center;font-family:'Caveat',cursive;font-size:.95rem;color:#2a3a28;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,.06);user-select:none}
+.chip:hover{background:rgba(255,255,255,.75);transform:translateY(-2px)}
+.chip.on{background:rgba(120,170,90,.25);border-color:rgba(90,140,65,.6);color:#3a6028;font-weight:700}
+.chip.click-chip{flex:2}
+.time-row{display:flex;gap:10px}
+.time-chip{flex:1;padding:11px 8px;border-radius:16px;border:2px solid rgba(255,255,255,.6);background:rgba(255,255,255,.45);cursor:pointer;text-align:center;font-family:'Caveat',cursive;font-size:1.05rem;color:#2a3a28;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,.06);user-select:none}
+.time-chip:hover{background:rgba(255,255,255,.75);transform:translateY(-2px)}
+.time-chip.on{background:rgba(100,160,210,.2);border-color:rgba(70,130,180,.6);color:#1a4a70;font-weight:700}
+.menu-footer{display:flex;justify-content:space-between;align-items:center}
+.btn-rules{padding:10px 22px;border-radius:16px;cursor:pointer;border:2px solid rgba(80,100,70,.3);background:rgba(255,255,255,.45);font-family:'Caveat',cursive;font-size:1.05rem;color:#2a3a28;transition:all .2s}
+.btn-rules:hover{background:rgba(255,255,255,.75);transform:translateY(-1px)}
+.btn-start{padding:13px 36px;border-radius:22px;cursor:pointer;border:none;background:linear-gradient(135deg,rgba(90,155,65,.85),rgba(130,190,95,.85));color:#fff;font-family:'Caveat',cursive;font-size:1.45rem;font-weight:700;box-shadow:0 5px 24px rgba(80,140,55,.38),inset 0 1px 0 rgba(255,255,255,.25);transition:all .22s;letter-spacing:.02em}
+.btn-start:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(80,140,55,.48)}
+.btn-start:active{transform:translateY(0)}
+.sig{font-family:'Caveat',cursive;font-size:.9rem;color:rgba(40,55,35,.4);text-align:center;font-style:italic}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(20,35,15,.4);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .3s}
+.overlay.hidden{opacity:0;pointer-events:none}
+.modal{background:rgba(248,244,234,.97);border-radius:28px;padding:36px 40px;width:min(520px,92vw);max-height:88vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.22);border:2px solid rgba(255,255,255,.8);position:relative}
+.modal h2{font-family:'Caveat',cursive;font-size:2rem;color:#2a3a28;margin-bottom:16px}
+.modal p{font-size:.92rem;line-height:1.75;color:#3a4830;margin-bottom:10px}
+.modal ul{padding-left:18px}
+.modal li{font-size:.92rem;line-height:1.75;color:#3a4830;margin-bottom:6px}
+.modal em{color:#5a8040;font-style:normal;font-weight:600}
+.modal-x{position:absolute;top:16px;right:22px;font-size:1.9rem;cursor:pointer;color:rgba(40,55,35,.4);font-family:'Caveat',cursive;transition:color .2s;line-height:1}
+.modal-x:hover{color:#c05030}
+
+/* GAME */
+#game{gap:16px;justify-content:center}
+.game-top{display:flex;align-items:center;justify-content:space-between;width:min(720px,96vw);background:rgba(255,255,255,.42);backdrop-filter:blur(14px);border:1.5px solid rgba(255,255,255,.72);border-radius:20px;padding:10px 20px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.g-timer{font-family:'Caveat',cursive;font-size:2rem;font-weight:700;color:#2a3a28;min-width:72px;text-align:center;transition:color .3s}
+.g-timer.warn{color:#c04828;animation:timerPulse .6s ease-in-out infinite alternate}
+@keyframes timerPulse{from{opacity:1}to{opacity:.4}}
+.g-hint{font-family:'Lora',serif;font-style:italic;font-size:.88rem;color:rgba(40,55,35,.55);text-align:center;flex:1;padding:0 12px}
+.btn-stop{padding:9px 20px;border-radius:14px;cursor:pointer;border:2px solid rgba(180,60,40,.35);background:rgba(255,255,255,.45);font-family:'Caveat',cursive;font-size:1rem;color:#903020;transition:all .2s}
+.btn-stop:hover{background:rgba(255,220,210,.65);transform:translateY(-1px)}
+.arena{display:flex;align-items:center;justify-content:center;gap:clamp(16px,4vw,52px)}
+
+/* Hand cards — now with circle style like the photo */
+.hand-card{background:rgba(255,255,255,.48);border-radius:32px;padding:clamp(14px,2.5vw,24px);box-shadow:0 8px 48px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.9);border:2px solid rgba(255,255,255,.75);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;gap:10px;width:clamp(155px,36vw,270px);transition:transform .25s,box-shadow .25s;position:relative;overflow:hidden}
+.hand-card::before{content:'';position:absolute;inset:0;border-radius:32px;background:radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.4) 0%,transparent 60%);pointer-events:none}
+.hand-card.clickable{cursor:pointer}
+.hand-card.clickable:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 14px 56px rgba(0,0,0,.14)}
+.hand-card.flash{animation:cardFlash .32s ease}
+@keyframes cardFlash{0%{opacity:1;transform:scale(1)}40%{opacity:.15;transform:scale(.92)}100%{opacity:1;transform:scale(1)}}
+.hand-name{font-family:'Caveat',cursive;font-size:1.1rem;color:rgba(40,55,35,.6);letter-spacing:.06em}
+.hand-svg{width:clamp(120px,25vw,195px);height:clamp(120px,25vw,195px);font-size:clamp(120px,25vw,195px)}
+.hand-svg div{width:100%;height:100%}
+.vs{font-family:'Caveat',cursive;font-size:2.8rem;color:rgba(40,55,35,.22);font-weight:700}
+.click-msg{font-family:'Lora',serif;font-style:italic;font-size:.85rem;color:rgba(40,55,35,.45);text-align:center;animation:fadeUp .6s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Mute button */
+.mute-btn{position:fixed;bottom:18px;right:20px;z-index:50;background:rgba(255,255,255,.5);border:1.5px solid rgba(255,255,255,.7);border-radius:50%;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all .2s;backdrop-filter:blur(8px)}
+.mute-btn:hover{background:rgba(255,255,255,.8);transform:scale(1.1)}
+
+/* END */
+#end{gap:24px}
+.end-panel{background:rgba(255,255,255,.5);backdrop-filter:blur(16px);border-radius:32px;padding:44px 52px;text-align:center;border:2px solid rgba(255,255,255,.75);box-shadow:0 10px 60px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:12px;align-items:center}
+.end-panel h2{font-family:'Caveat',cursive;font-size:3rem;color:#2a3a28}
+.end-time{font-family:'Caveat',cursive;font-size:1.6rem;color:#5a8040}
+.end-panel p{font-size:.9rem;color:rgba(40,55,35,.6);font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="wc-bg"></div>
+<div class="wc-blob"></div><div class="wc-blob"></div><div class="wc-blob"></div>
+<div class="wc-blob"></div><div class="wc-blob"></div>
+
+<svg class="trees" viewBox="0 0 1440 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+  <defs><filter id="wcB"><feGaussianBlur stdDeviation="2.5"/></filter></defs>
+  <ellipse cx="720" cy="195" rx="900" ry="80" fill="rgba(100,140,80,.25)" filter="url(#wcB)"/>
+  <g opacity=".62" filter="url(#wcB)">
+    <polygon points="0,180 32,55 65,180" fill="#5a8050"/>
+    <polygon points="22,180 58,38 95,180" fill="#4a7040"/>
+    <polygon points="60,180 92,72 124,180" fill="#6a9060"/>
+    <polygon points="90,180 120,50 150,180" fill="#507045"/>
+    <polygon points="125,180 155,68 185,180" fill="#4a6838"/>
+    <polygon points="160,180 188,88 216,180" fill="#608855"/>
+  </g>
+  <g opacity=".62" filter="url(#wcB)">
+    <polygon points="1255,180 1287,55 1318,180" fill="#5a8050"/>
+    <polygon points="1292,180 1327,38 1362,180" fill="#4a7040"/>
+    <polygon points="1330,180 1360,70 1392,180" fill="#6a9060"/>
+    <polygon points="1365,180 1397,52 1428,180" fill="#507045"/>
+    <polygon points="1405,180 1435,76 1465,180" fill="#4a6838"/>
+  </g>
+  <g opacity=".42" filter="url(#wcB)">
+    <polygon points="300,180 332,88 364,180" fill="#7aaa68"/>
+    <polygon points="385,180 418,72 450,180" fill="#6a9858"/>
+    <polygon points="608,180 644,62 680,180" fill="#5a8a48"/>
+    <polygon points="785,180 816,98 848,180" fill="#6a9858"/>
+    <polygon points="1005,180 1040,68 1075,180" fill="#7aaa68"/>
+    <polygon points="1122,180 1155,82 1188,180" fill="#5a8a48"/>
+  </g>
+  <ellipse cx="200" cy="185" rx="250" ry="55" fill="rgba(130,170,100,.35)" filter="url(#wcB)"/>
+  <ellipse cx="1240" cy="185" rx="250" ry="55" fill="rgba(130,170,100,.35)" filter="url(#wcB)"/>
+  <ellipse cx="720" cy="190" rx="500" ry="45" fill="rgba(110,155,85,.25)" filter="url(#wcB)"/>
+</svg>
+<div class="grain"></div>
+
+<!-- Mute -->
+<button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="Звук">🔊</button>
+
+<!-- RULES -->
+<div class="overlay hidden" id="rulesOverlay">
+  <div class="modal">
+    <span class="modal-x" onclick="closeRules()">✕</span>
+    <h2>📖 Правила игры</h2>
+    <p>«2 Полушария» — нейрогимнастика для развития межполушарного взаимодействия мозга.</p>
+    <ul>
+      <li>На экране одновременно показываются <em>левая</em> и <em>правая</em> рука в разных позах.</li>
+      <li>Ваша задача — воспроизвести обе позы <em>одновременно</em> своими руками.</li>
+      <li>Позы автоматически меняются с выбранной скоростью — успевайте перестраиваться!</li>
+      <li>В режиме <em>«По клику»</em> — нажмите в любом месте, чтобы сменить обе позы сразу.</li>
+      <li>Левая и правая рука всегда в <em>разных</em> позах — это тренирует оба полушария.</li>
+    </ul>
+    <p style="margin-top:14px;font-style:italic;color:#8a9880;">
+      Совет: начните с медленной скорости. Регулярные тренировки улучшают координацию и концентрацию!
+    </p>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="screen" id="menu">
+  <div class="logo-area">
+    <div class="logo-brain">🧠</div>
+    <div class="logo-title">2 Полушария</div>
+    <div class="logo-sub">нейрогимнастика · межполушарное взаимодействие</div>
+  </div>
+  <div class="panel">
+    <div>
+      <div class="opt-label">⚡ Скорость смены поз</div>
+      <div class="chip-row" id="speedRow">
+        <div class="chip" data-v="1" onclick="pickSpeed(1)">🐢<br><small>медленно</small></div>
+        <div class="chip" data-v="2" onclick="pickSpeed(2)">🐇<br><small>легко</small></div>
+        <div class="chip on" data-v="3" onclick="pickSpeed(3)">🦊<br><small>средне</small></div>
+        <div class="chip" data-v="4" onclick="pickSpeed(4)">🐆<br><small>быстро</small></div>
+        <div class="chip" data-v="5" onclick="pickSpeed(5)">⚡<br><small>турбо</small></div>
+        <div class="chip click-chip" data-v="0" onclick="pickSpeed(0)">👆 По клику</div>
+      </div>
+    </div>
+    <div>
+      <div class="opt-label">⏱ Время игры</div>
+      <div class="time-row" id="timeRow">
+        <div class="time-chip on" data-t="60" onclick="pickTime(60)">1 минута</div>
+        <div class="time-chip" data-t="180" onclick="pickTime(180)">3 минуты</div>
+        <div class="time-chip" data-t="0" onclick="pickTime(0)">♾ Бесконечно</div>
+      </div>
+    </div>
+    <div class="menu-footer">
+      <button class="btn-rules" onclick="playClick();openRules()">📖 Правила</button>
+      <button class="btn-start" onclick="playClick();startGame()">Начать игру ▶</button>
+    </div>
+  </div>
+  <div class="sig">Котвицкая</div>
+</div>
+
+<!-- GAME -->
+<div class="screen hidden" id="game">
+  <div class="game-top">
+    <div class="g-timer" id="gTimer">1:00</div>
+    <div class="g-hint" id="gHint">Воспроизведи обе позы одновременно!</div>
+    <button class="btn-stop" onclick="playClick();endGame(true)">Завершить</button>
+  </div>
+  <div class="arena" id="arena">
+    <div class="hand-card" id="cardL" onclick="handleArenaClick()">
+      <div class="hand-name">Левая рука</div>
+      <div class="hand-svg" id="svgL"></div>
+    </div>
+    <div class="vs">vs</div>
+    <div class="hand-card" id="cardR" onclick="handleArenaClick()">
+      <div class="hand-name">Правая рука</div>
+      <div class="hand-svg" id="svgR"></div>
+    </div>
+  </div>
+  <div class="click-msg" id="clickMsg" style="display:none">👆 Нажми на любую карточку, чтобы сменить обе позы</div>
+  <div class="sig">Котвицкая</div>
+</div>
+
+<!-- END -->
+<div class="screen hidden" id="end">
+  <div class="end-panel">
+    <div style="font-size:3.5rem">🌿</div>
+    <h2>Отлично!</h2>
+    <div class="end-time" id="endTime"></div>
+    <p>Твой мозг благодарит за тренировку!<br>Регулярные занятия укрепляют межполушарные связи.</p>
+  </div>
+  <button class="btn-start" onclick="playClick();goMenu()">← В главное меню</button>
+  <div class="sig">Котвицкая</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// AUDIO ENGINE (Web Audio API — no external files)
+// ═══════════════════════════════════════════════════
+let audioCtx = null;
+let bgGainNode = null;
+let bgOscNodes = [];
+let muted = false;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+// Click sound — short soft tick
+function playClick() {
+  if (muted) return;
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const g   = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.18, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.start(); osc.stop(ctx.currentTime + 0.12);
+  } catch(e){}
+}
+
+// Pose-change swoosh — soft whoosh
+function playSwoosh() {
+  if (muted) return;
+  try {
+    const ctx = getCtx();
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.15, ctx.sampleRate);
+    const d   = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+    const src  = ctx.createBufferSource();
+    const filt = ctx.createBiquadFilter();
+    const g    = ctx.createGain();
+    src.buffer = buf;
+    filt.type = 'bandpass'; filt.frequency.setValueAtTime(1200, ctx.currentTime);
+    filt.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.15);
+    filt.Q.value = 0.8;
+    src.connect(filt); filt.connect(g); g.connect(ctx.destination);
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    src.start(); src.stop(ctx.currentTime + 0.15);
+  } catch(e){}
+}
+
+// Start fanfare — ascending chime
+function playStart() {
+  if (muted) return;
+  try {
+    const ctx = getCtx();
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.12;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.22, t + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+    });
+  } catch(e){}
+}
+
+// End melody — gentle descend
+function playEnd() {
+  if (muted) return;
+  try {
+    const ctx = getCtx();
+    const notes = [784, 659, 523, 392];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.18;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t + 0.06);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      osc.start(t); osc.stop(t + 0.5);
+    });
+  } catch(e){}
+}
+
+// Background ambient music — gentle drone + soft melody
+let bgActive = false;
+let bgNodes = [];
+
+function startBgMusic() {
+  if (muted || bgActive) return;
+  try {
+    const ctx = getCtx();
+    bgActive = true;
+    bgNodes = [];
+
+    // Drone — two low oscillators detuned slightly
+    const droneFreqs = [130.8, 196, 261.6];
+    droneFreqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const g   = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      osc.type = 'sine';
+      osc.frequency.value = f + (i * 0.3);
+      filt.type = 'lowpass'; filt.frequency.value = 600;
+      osc.connect(filt); filt.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.04 - i * 0.008, ctx.currentTime + 2);
+      osc.start();
+      bgNodes.push({osc, g});
+    });
+
+    // Soft melody — pentatonic loop
+    const melody = [523, 587, 659, 784, 880, 784, 659, 587];
+    let step = 0;
+    function playMelodyNote() {
+      if (!bgActive || muted) return;
+      try {
+        const ctx2 = getCtx();
+        const freq = melody[step % melody.length];
+        step++;
+        const osc = ctx2.createOscillator();
+        const g   = ctx2.createGain();
+        const filt = ctx2.createBiquadFilter();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        filt.type = 'lowpass'; filt.frequency.value = 2000;
+        osc.connect(filt); filt.connect(g); g.connect(ctx2.destination);
+        const t = ctx2.currentTime;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.032, t + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+        osc.start(t); osc.stop(t + 0.9);
+      } catch(e){}
+    }
+    playMelodyNote();
+    const melId = setInterval(() => {
+      if (!bgActive) { clearInterval(melId); return; }
+      playMelodyNote();
+    }, 900);
+    bgNodes.push({melId});
+  } catch(e){}
+}
+
+function stopBgMusic() {
+  bgActive = false;
+  bgNodes.forEach(n => {
+    if (n.osc) { try { n.g.gain.setValueAtTime(n.g.gain.value, getCtx().currentTime); n.g.gain.linearRampToValueAtTime(0.0001, getCtx().currentTime + 0.5); n.osc.stop(getCtx().currentTime + 0.5); } catch(e){} }
+    if (n.melId) clearInterval(n.melId);
+  });
+  bgNodes = [];
+}
+
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  if (muted) stopBgMusic();
+  else if (gs.running) startBgMusic();
+}
+
+// ═══════════════════════════════════════════════════════════
+// HAND POSES — real images from OpenMoji (openmoji.org)
+// Open-source emoji, hosted on GitHub Pages, no CORS issues.
+// Light/medium skin tone variants (1F3FB, 1F3FC, 1F3FD).
+// Left hand = CSS scaleX(-1) mirror of right hand image.
+// ═══════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════
+// HAND POSES — emoji как текст, точно как в нейрогимнастике
+// Никаких внешних файлов. Работает везде всегда.
+// ═══════════════════════════════════════════════════════════
+
+const POSE_EMOJIS = {
+  open:    '🤚',
+  fist:    '✊',
+  peace:   '✌️',
+  point:   '☝️',
+  four:    '🖐️',
+  thumbup: '👍',
+  rock:    '🤘',
+  ok:      '👌',
+  callme:  '🤙',
+};
+
+const POSE_KEYS = Object.keys(POSE_EMOJIS);
+const CIRCLE_COLORS = ['#e8f4ff','#eaffef','#fff8e8','#f8eeff','#eefffa'];
+
+function buildHandSVG(poseKey, isLeft, skinIdx) {
+  const emoji = POSE_EMOJIS[poseKey];
+  const bg    = CIRCLE_COLORS[skinIdx % CIRCLE_COLORS.length];
+  const flip  = isLeft ? 'display:inline-block;transform:scaleX(-1);' : '';
+  return `<div style="width:100%;height:100%;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;box-shadow:inset 0 2px 18px rgba(0,0,0,0.07),0 0 0 3px rgba(255,255,255,0.7);">
+    <span style="font-size:0.62em;line-height:1;${flip}">${emoji}</span>
+  </div>`;
+}
+
+
+// ═══════════════════════════════
+// GAME LOGIC
+// ═══════════════════════════════
+const speedMs = {1:4500,2:2800,3:1600,4:900,5:450,0:null};
+let cfg = {speed:3, time:60};
+let gs  = {running:false, lPose:'', rPose:'', lSkin:0, rSkin:2,
+           timerLeft:60, elapsed:0, autoId:null, countId:null, elId:null};
+
+function pickSpeed(v){ cfg.speed=v; document.querySelectorAll('#speedRow .chip').forEach(c=>c.classList.toggle('on',+c.dataset.v===v)); playClick(); }
+function pickTime(t){ cfg.time=t; document.querySelectorAll('#timeRow .time-chip').forEach(c=>c.classList.toggle('on',+c.dataset.t===t)); playClick(); }
+function openRules(){ document.getElementById('rulesOverlay').classList.remove('hidden'); }
+function closeRules(){ document.getElementById('rulesOverlay').classList.add('hidden'); }
+function show(id){ ['menu','game','end'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id)); }
+function goMenu(){ stopBgMusic(); show('menu'); }
+
+function randPose(e1,e2){
+  let p;
+  do{ p=POSE_KEYS[Math.floor(Math.random()*POSE_KEYS.length)]; }
+  while(p===e1||p===e2);
+  return p;
+}
+function randSkin(excl){ return 0; } // skin now fixed per image URL
+
+function renderHands(){
+  document.getElementById('svgL').innerHTML = buildHandSVG(gs.lPose, true, gs.lSkin);
+  document.getElementById('svgR').innerHTML = buildHandSVG(gs.rPose, false, gs.rSkin);
+}
+
+function flash(id){ const el=document.getElementById(id); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+
+function changeBoth(){
+  gs.lPose = randPose(gs.rPose,'');
+  gs.rPose = randPose(gs.lPose,'');
+  gs.lSkin = randSkin(gs.rSkin);
+  gs.rSkin = randSkin(gs.lSkin);
+  flash('cardL'); flash('cardR');
+  playSwoosh();
+  renderHands();
+}
+
+// FIX 1: clicking either card (or the arena) changes BOTH hands
+function handleArenaClick(){
+  if(!gs.running || cfg.speed!==0) return;
+  changeBoth();
+}
+
+function startGame(){
+  gs.running = true; gs.elapsed = 0;
+  gs.timerLeft = cfg.time > 0 ? cfg.time : null;
+  gs.lPose = POSE_KEYS[Math.floor(Math.random()*POSE_KEYS.length)];
+  gs.rPose = randPose(gs.lPose,'');
+  gs.lSkin = 0; gs.rSkin = 2;
+  show('game');
+  renderHands();
+  const isClick = cfg.speed===0;
+  ['cardL','cardR'].forEach(id=>document.getElementById(id).classList.toggle('clickable',isClick));
+  document.getElementById('clickMsg').style.display = isClick ? 'block' : 'none';
+  document.getElementById('gHint').textContent = isClick
+    ? 'Нажми на любую карточку — сменятся обе позы!'
+    : 'Воспроизведи обе позы одновременно!';
+  updateTimer();
+  playStart();
+  setTimeout(()=>startBgMusic(), 800);
+  if(!isClick){ gs.autoId = setInterval(changeBoth, speedMs[cfg.speed]); }
+  if(cfg.time>0){
+    gs.countId = setInterval(()=>{
+      gs.timerLeft--; updateTimer();
+      if(gs.timerLeft<=10) document.getElementById('gTimer').classList.add('warn');
+      if(gs.timerLeft<=0) endGame(false);
+    },1000);
+  }
+  gs.elId = setInterval(()=>gs.elapsed++,1000);
+}
+
+function updateTimer(){
+  const el = document.getElementById('gTimer');
+  if(gs.timerLeft===null){ el.textContent='∞'; return; }
+  const m = Math.floor(gs.timerLeft/60);
+  const s = (gs.timerLeft%60).toString().padStart(2,'0');
+  el.textContent = `${m}:${s}`;
+}
+
+function endGame(manual){
+  gs.running = false;
+  clearInterval(gs.autoId); clearInterval(gs.countId); clearInterval(gs.elId);
+  document.getElementById('gTimer').classList.remove('warn');
+  stopBgMusic();
+  playEnd();
+  const m=Math.floor(gs.elapsed/60), s=gs.elapsed%60;
+  document.getElementById('endTime').textContent = m>0
+    ? `Тренировка: ${m} мин ${s} сек`
+    : `Тренировка: ${s} секунд`;
+  show('end');
+}
+</script>
+</body>
+</html>
