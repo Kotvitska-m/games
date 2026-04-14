@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тихая гавань</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=EB+Garamond:ital,wght@0,400;1,400&family=Raleway:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky1: #c9dff0;
+    --sky2: #a8cce0;
+    --sky3: #7eb5d4;
+    --teal1: #b2d8d8;
+    --teal2: #6db3b3;
+    --teal3: #3d8b8b;
+    --deep: #1a5f7a;
+    --foam: #e8f4f8;
+    --mist: #f0f8fc;
+    --ink: #1e3a4a;
+    --pale: #d6eef5;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'EB Garamond', Georgia, serif;
+    background: linear-gradient(160deg, #daeefa 0%, #b8dff0 30%, #9ecfe3 60%, #7dbcd4 100%);
+    min-height: 100vh;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* Floating particles */
+  .particles {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    pointer-events: none; z-index:0; overflow:hidden;
+  }
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    animation: drift linear infinite;
+  }
+
+  @keyframes drift {
+    0% { transform: translateY(100vh) scale(0); opacity:0; }
+    10% { opacity:1; }
+    90% { opacity:0.5; }
+    100% { transform: translateY(-10vh) scale(1); opacity:0; }
+  }
+
+  /* Screens */
+  .screen {
+    display: none;
+    position: relative; z-index:1;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    animation: fadeIn 0.8s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity:0; transform: translateY(16px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* Main menu */
+  .app-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 6vw, 3.6rem);
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--deep);
+    text-align: center;
+    margin-bottom: 0.4rem;
+    text-shadow: 0 2px 12px rgba(100,170,200,0.4);
+  }
+  .app-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    color: var(--teal3);
+    text-align: center;
+    margin-bottom: 3rem;
+    opacity: 0.85;
+  }
+
+  .wave-divider {
+    width: 120px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--teal2), transparent);
+    margin: 0 auto 2.5rem;
+  }
+
+  .menu-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .menu-btn {
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.7);
+    border-radius: 16px;
+    padding: 1.2rem 1.8rem;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    text-align: left;
+    display: flex; align-items: center; gap: 1rem;
+    box-shadow: 0 4px 20px rgba(61,139,139,0.12);
+  }
+  .menu-btn:hover {
+    background: rgba(255,255,255,0.65);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(61,139,139,0.22);
+  }
+  .menu-btn:active { transform: translateY(0); }
+
+  .btn-icon {
+    font-size: 1.6rem;
+    width: 42px; text-align: center;
+    flex-shrink: 0;
+  }
+  .btn-text { flex:1; }
+  .btn-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--deep);
+    display: block;
+  }
+  .btn-desc {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 300;
+    color: var(--teal3);
+    letter-spacing: 0.04em;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Back button */
+  .back-btn {
+    position: absolute;
+    top: 1.5rem; left: 1.5rem;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 50px;
+    padding: 0.4rem 1rem;
+    cursor: pointer;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 300;
+    color: var(--deep);
+    letter-spacing: 0.05em;
+    transition: all 0.3s;
+    z-index: 10;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.65); }
+
+  /* Content screens */
+  .screen-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.7rem, 5vw, 2.4rem);
+    font-weight: 300;
+    color: var(--deep);
+    text-align: center;
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.06em;
+  }
+  .screen-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--teal3);
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.75);
+    border-radius: 20px;
+    padding: 2rem 2rem;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 6px 32px rgba(61,139,139,0.14);
+    text-align: center;
+    line-height: 1.8;
+    font-size: clamp(1rem, 2.5vw, 1.15rem);
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: cardAppear 0.6s ease;
+  }
+
+  @keyframes cardAppear {
+    from { opacity:0; transform: scale(0.96) translateY(10px); }
+    to { opacity:1; transform: scale(1) translateY(0); }
+  }
+
+  .card p {
+    font-family: 'EB Garamond', serif;
+    font-size: clamp(1rem, 2.5vw, 1.18rem);
+    font-style: italic;
+    line-height: 1.9;
+    color: var(--ink);
+  }
+
+  .action-btn {
+    background: linear-gradient(135deg, rgba(125,188,212,0.6), rgba(109,179,179,0.6));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 50px;
+    padding: 0.8rem 2.2rem;
+    cursor: pointer;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(61,139,139,0.2);
+    text-transform: uppercase;
+  }
+  .action-btn:hover {
+    background: linear-gradient(135deg, rgba(109,179,179,0.75), rgba(61,139,139,0.75));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(61,139,139,0.3);
+  }
+
+  /* Drawing section */
+  #drawing-screen {
+    padding: 1rem;
+    justify-content: flex-start;
+  }
+  .drawing-area {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    max-width: 800px;
+    align-items: stretch;
+    flex: 1;
+  }
+  .canvas-container {
+    flex: 1;
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 28px rgba(61,139,139,0.15);
+    position: relative;
+  }
+  #drawCanvas {
+    display: block;
+    cursor: crosshair;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+
+  .color-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.8rem 0.5rem;
+    background: rgba(255,255,255,0.45);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.7);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(61,139,139,0.12);
+    align-items: center;
+    justify-content: center;
+  }
+
+  .color-swatch {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.25s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+  }
+  .color-swatch:hover { transform: scale(1.18); }
+  .color-swatch.active {
+    border-color: rgba(255,255,255,0.9);
+    transform: scale(1.22);
+    box-shadow: 0 0 0 3px rgba(61,139,139,0.5);
+  }
+
+  .eraser-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    background: #f5f0e8;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    transition: all 0.25s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    flex-shrink: 0;
+  }
+  .eraser-btn:hover { transform: scale(1.18); }
+  .eraser-btn.active {
+    border-color: rgba(255,255,255,0.9);
+    transform: scale(1.22);
+    box-shadow: 0 0 0 3px rgba(61,139,139,0.5);
+  }
+
+  .brush-panel {
+    display: flex; flex-direction: column;
+    gap: 0.3rem; align-items: center;
+    margin-top: 0.3rem;
+  }
+  .brush-size {
+    display: flex; flex-direction: column;
+    gap: 0.4rem; align-items: center;
+  }
+  .size-dot {
+    cursor: pointer;
+    border-radius: 50%;
+    background: var(--deep);
+    opacity: 0.4;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .size-dot:hover, .size-dot.active { opacity: 1; }
+  .size-dot.s1 { width:6px; height:6px; }
+  .size-dot.s2 { width:11px; height:11px; }
+  .size-dot.s3 { width:18px; height:18px; }
+
+  .drawing-footer {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .screenshot-hint {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    color: var(--deep);
+    opacity: 0.75;
+    flex: 1;
+  }
+
+  .clear-btn {
+    background: rgba(255,255,255,0.45);
+    border: 1px solid rgba(255,255,255,0.65);
+    border-radius: 50px;
+    padding: 0.5rem 1.4rem;
+    cursor: pointer;
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--deep);
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .clear-btn:hover {
+    background: rgba(255,255,255,0.65);
+  }
+
+  /* Cleared message */
+  #cleared-msg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(178,216,216,0.75);
+    backdrop-filter: blur(18px);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    animation: fadeIn 0.6s ease;
+  }
+  #cleared-msg.show { display: flex; }
+  #cleared-msg p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--deep);
+    text-align: center;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+
+  /* Footer signature */
+  .signature {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--deep);
+    text-align: center;
+    opacity: 0.7;
+    margin-top: 2rem;
+    letter-spacing: 0.05em;
+  }
+
+  .disclaimer {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ink);
+    text-align: center;
+    opacity: 0.55;
+    max-width: 440px;
+    line-height: 1.6;
+    margin-top: 0.6rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .drawing-area { flex-direction: row; }
+    .color-panel { flex-direction: column; padding: 0.5rem 0.3rem; }
+    .color-swatch { width: 28px; height: 28px; }
+    .eraser-btn { width: 28px; height: 28px; }
+    #drawing-screen { padding: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- ===== MAIN MENU ===== -->
+<div class="screen active" id="menu-screen">
+  <div class="app-title">Тихая гавань</div>
+  <div class="app-subtitle">место покоя для тревожного сердца</div>
+  <div class="wave-divider"></div>
+
+  <div class="menu-grid">
+    <button class="menu-btn" onclick="showScreen('cope-screen')">
+      <span class="btn-icon">🌊</span>
+      <span class="btn-text">
+        <span class="btn-title">Справиться с тревогой</span>
+        <span class="btn-desc">практики и советы для сложных минут</span>
+      </span>
+    </button>
+    <button class="menu-btn" onclick="showScreen('support-screen')">
+      <span class="btn-icon">🕊️</span>
+      <span class="btn-text">
+        <span class="btn-title">Поддержка</span>
+        <span class="btn-desc">слова, которые тебе нужны сейчас</span>
+      </span>
+    </button>
+    <button class="menu-btn" onclick="showScreen('drawing-screen'); initCanvas()">
+      <span class="btn-icon">🎨</span>
+      <span class="btn-text">
+        <span class="btn-title">Порисовать</span>
+        <span class="btn-desc">выразить, что не выразить словами</span>
+      </span>
+    </button>
+  </div>
+
+  <div class="signature">Котвицкая</div>
+  <p class="disclaimer">
+    Это приложение не является профессиональной психологической помощью. Если тебе нужна поддержка специалиста — пожалуйста, обратись к психологу или на горячую линию психологической помощи в твоей стране.
+  </p>
+</div>
+
+<!-- ===== COPE SCREEN ===== -->
+<div class="screen" id="cope-screen">
+  <button class="back-btn" onclick="showScreen('menu-screen')">← назад</button>
+  <div class="screen-title">Справиться с тревогой</div>
+  <div class="screen-sub">один шаг за раз</div>
+  <div class="card" id="cope-card"><p id="cope-text">...</p></div>
+  <button class="action-btn" onclick="newCopeTip()">другой совет</button>
+</div>
+
+<!-- ===== SUPPORT SCREEN ===== -->
+<div class="screen" id="support-screen">
+  <button class="back-btn" onclick="showScreen('menu-screen')">← назад</button>
+  <div class="screen-title">Поддержка</div>
+  <div class="screen-sub">ты не одна / не один</div>
+  <div class="card" id="support-card"><p id="support-text">...</p></div>
+  <button class="action-btn" onclick="newSupportPhrase()">ещё слова</button>
+</div>
+
+<!-- ===== DRAWING SCREEN ===== -->
+<div class="screen" id="drawing-screen">
+  <button class="back-btn" onclick="showScreen('menu-screen')">← назад</button>
+  <div class="screen-title" style="margin-bottom:0.8rem;">Порисовать</div>
+
+  <div class="drawing-area" id="drawing-area">
+    <div class="canvas-container" id="canvas-container">
+      <canvas id="drawCanvas"></canvas>
+    </div>
+    <div class="color-panel">
+      <div class="color-swatch active" style="background:#3d8b8b" data-color="#3d8b8b" onclick="setColor(this)"></div>
+      <div class="color-swatch" style="background:#7dbcd4" data-color="#7dbcd4" onclick="setColor(this)"></div>
+      <div class="color-swatch" style="background:#c9a0dc" data-color="#c9a0dc" onclick="setColor(this)"></div>
+      <div class="color-swatch" style="background:#f4a261" data-color="#f4a261" onclick="setColor(this)"></div>
+      <div class="color-swatch" style="background:#e76f51" data-color="#e76f51" onclick="setColor(this)"></div>
+      <div class="color-swatch" style="background:#264653" data-color="#264653" onclick="setColor(this)"></div>
+      <div class="color-swatch" style="background:#e9c46a" data-color="#e9c46a" onclick="setColor(this)"></div>
+      <div class="eraser-btn" id="eraserBtn" onclick="setEraser()" title="Ластик">◻</div>
+      <div class="brush-size">
+        <div class="size-dot s1 active" onclick="setBrush(3, this)"></div>
+        <div class="size-dot s2" onclick="setBrush(7, this)"></div>
+        <div class="size-dot s3" onclick="setBrush(14, this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawing-footer">
+    <span class="screenshot-hint">сделай скрин, если тебе нравится то, что ты видишь</span>
+    <button class="clear-btn" onclick="clearCanvas()">очистить</button>
+  </div>
+</div>
+
+<!-- Cleared message overlay -->
+<div id="cleared-msg">
+  <p>ты очистил себя от тревоги</p>
+  <button class="action-btn" onclick="goMenu()">на главную</button>
+</div>
+
+<script>
+// ===== PARTICLES =====
+(function() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 14 + 4;
+    p.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*20+15}s;
+      animation-delay:${Math.random()*20}s;
+    `;
+    container.appendChild(p);
+  }
+})();
+
+// ===== NAVIGATION =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const screen = document.getElementById(id);
+  screen.classList.add('active');
+
+  if (id === 'cope-screen') newCopeTip();
+  if (id === 'support-screen') newSupportPhrase();
+}
+
+// ===== 120 COPE TIPS =====
+const copeTips = [
+  "Сделай глубокий вдох на 4 счёта, задержи дыхание на 4, выдыхай на 8. Это успокаивает нервную систему.",
+  "Назови вслух 5 вещей, которые ты видишь прямо сейчас. Это возвращает тебя в настоящий момент.",
+  "Положи руку на грудь. Почувствуй своё сердцебиение. Ты живой. Ты здесь. Этого достаточно.",
+  "Выпей стакан воды медленно, глоток за глотком, чувствуя каждое движение.",
+  "Встань, потянись вверх и медленно опусти руки. Позволь плечам расслабиться.",
+  "Напряги все мышцы тела на 5 секунд — потом отпусти. Почувствуй разницу.",
+  "Скажи себе: «Эта тревога временна. Она пройдёт, как проходило всё до этого.»",
+  "Закрой глаза и представь спокойное место — море, лес, тёплая комната. Оставайся там несколько минут.",
+  "Обними себя руками. По-настоящему. Это активирует чувство безопасности.",
+  "Запиши три вещи, которые сейчас в безопасности — даже самые маленькие.",
+  "Тревога — не твой враг. Это сигнал тела о том, что тебе нужна забота. Прояви её к себе.",
+  "Попробуй технику «5-4-3-2-1»: 5 вещей вижу, 4 слышу, 3 могу потрогать, 2 чувствую запах, 1 чувствую на вкус.",
+  "Если мысли кружатся — запиши их. Бумага держит то, что сложно удержать внутри.",
+  "Сделай 10 медленных выдохов. Выдох длиннее вдоха — это включает режим покоя.",
+  "Встань босыми ногами на пол. Почувствуй твёрдость опоры под тобой.",
+  "Позволь тревоге быть рядом, не борись с ней. «Привет, тревога. Я тебя вижу.» Это снижает её власть.",
+  "Сделай что-то простое руками: умойся, застели кровать, сложи вещи. Простые действия заземляют.",
+  "Поставь таймер на 5 минут. Скажи себе: «Эти 5 минут я просто дышу.»",
+  "Тело помнит безопасность. Погладь своё предплечье медленными движениями.",
+  "Поговори с кем-то близким — не обязательно о тревоге, просто услышь знакомый голос.",
+  "Включи успокаивающую музыку или звуки природы. Слух — прямой путь к нервной системе.",
+  "Запиши, что самое худшее, что может случиться — и потом три варианта, как с этим справиться.",
+  "Кризис не длится вечно. Каждый из предыдущих закончился. Этот тоже закончится.",
+  "Практика «безопасного места»: опиши воображаемое место в деталях — цвета, запахи, звуки.",
+  "Осторожно покачайся — влево-вправо или вперёд-назад. Ритмичные движения успокаивают.",
+  "Тревога во время войны или травмы — это нормальная реакция на ненормальные события.",
+  "Напомни себе: я пережил всё, что было до этого момента. Значит, я сильнее, чем думаю.",
+  "Сосредоточься на дыхании живота: рука лежит на животе и поднимается на вдохе.",
+  "Скажи себе: «Я позволяю себе чувствовать то, что чувствую.» Это снижает сопротивление.",
+  "Прогулка даже на 10 минут меняет химию мозга. Выйди, если можешь.",
+  "Запиши три вещи, за которые сегодня можно быть благодарным — даже крошечных.",
+  "Если тревога сжимает грудь — попробуй «дыхание по квадрату»: вдох 4, задержка 4, выдох 4, задержка 4.",
+  "Позволь слезам выйти, если они есть. Плач — это не слабость, а естественное освобождение.",
+  "Приготовь себе что-то тёплое: чай, суп, молоко. Тепло в руках и животе — сигнал безопасности.",
+  "Сканирование тела: медленно переведи внимание с макушки до пяток, замечая ощущения без оценки.",
+  "Напряжение в теле — где оно сосредоточено? Подышите туда намеренно.",
+  "Во время панической атаки: ты не умираешь. Это острое, но безопасное состояние тела.",
+  "Попробуй технику «холодной воды»: умойся холодной водой или подержи лёд. Это сбрасывает панику.",
+  "Составь список «я справился с»: вспомни сложные ситуации, которые ты пережил.",
+  "Спроси себя: «Это реальная угроза прямо сейчас или воображаемая?»",
+  "Напомни себе, что тревожные мысли — это не факты. Это просто мысли.",
+  "Позволь своему телу отдохнуть. Лечь, не делая ничего — это тоже действие.",
+  "Ты не обязан быть сильным каждую минуту. Уязвимость — часть человечности.",
+  "Присутствие в теле: потри ладони друг о друга, почувствуй тепло между ними.",
+  "Когда мысли скачут — назови их: «вот снова страх», «вот снова беспокойство». Это создаёт дистанцию.",
+  "Прочитай вслух что-нибудь: любое стихотворение, текст песни. Голос заземляет.",
+  "Напиши письмо себе будущему — из места, где всё наладилось.",
+  "Разрешение: «Я разрешаю себе не справляться идеально. Я делаю что могу.»",
+  "Посмотри в окно. Наблюдай за облаками, деревьями, людьми — не оценивая, просто наблюдая.",
+  "Тело реагирует на безопасные воспоминания. Вспомни момент, когда тебе было спокойно.",
+  "Если ты в зоне опасности — сосредоточься на конкретных шагах безопасности, один за раз.",
+  "Посттравматическая тревога — не твоя вина. Это след пережитого, не дефект характера.",
+  "Ты можешь медленно восстанавливаться. Восстановление не бывает линейным.",
+  "Проговори вслух: «Я в безопасности в эту минуту.» Даже если не веришь — тело слышит слова.",
+  "Найди якорный предмет — что-то, что можно держать в руке и что напоминает о безопасности.",
+  "Страх и возбуждение физически похожи. Иногда помогает сказать себе: «я возбуждён», а не «я боюсь».",
+  "Напиши всё, что тебя беспокоит, — и убери листок. Ты вернёшься к этому позже, не прямо сейчас.",
+  "Ограничь новости. Один раз в день — достаточно для информированности. Остальное — перегрузка.",
+  "Создай ритуал конца дня: чай, тишина, три хорошие вещи за день. Ритуалы создают предсказуемость.",
+  "Подвигайся под любимую музыку — даже 3 минуты. Тело хранит стресс, движение его освобождает.",
+  "Разреши себе маленькие радости. Удовольствие — не роскошь в трудное время, а необходимость.",
+  "Поговори с природой: деревом, небом, водой. Это звучит странно, но работает.",
+  "Помоги кому-то маленьким жестом. Забота о других возвращает ощущение смысла и силы.",
+  "Ты имеешь право на паузу. Остановиться — не значит сдаться.",
+  "Контакт с животным: погладь кошку, собаку, даже вспомни об этом — это снижает кортизол.",
+  "Практикуй «благодарность за тело»: ноги несут тебя, лёгкие дышат, сердце бьётся.",
+  "Попробуй прогрессивную мышечную релаксацию: напрягай и расслабляй группы мышц поочерёдно.",
+  "Разбей сложную ситуацию на маленькие шаги. Что ты можешь сделать только сегодня?",
+  "Тревога усиливается от кофеина. Если ты очень взволнован — попробуй воду или травяной чай.",
+  "Регулярный сон — один из мощнейших инструментов против тревоги. Ложись в одно время.",
+  "Медленная еда — это тоже заземление. Почувствуй вкус, запах, текстуру.",
+  "Ты не обязан отвечать на всё прямо сейчас. Можно взять паузу перед ответом.",
+  "Если мысли стали навязчивыми — скажи им: «Спасибо, я тебя услышал. Сейчас я занят другим.»",
+  "Нарисуй свою тревогу — любым цветом, любой формой. Это выводит её наружу.",
+  "Напомни себе: то, что тяжело сейчас — не навсегда. Всё меняется.",
+  "Практика самосострадания: обратись к себе так, как обратился бы к близкому другу в беде.",
+  "Расскажи своей тревоге историю: где она живёт в теле, какого она цвета, что ей нужно.",
+  "Одна хорошая вещь в день — маленькая, но твоя. Это строит психологическую устойчивость.",
+  "Позволь себе не знать, чем всё закончится. Неопределённость — часть жизни, не катастрофа.",
+  "Дыши через нос — это активирует парасимпатическую систему быстрее, чем дыхание ртом.",
+  "Поставь ограничение на социальные сети в трудные дни. Сравнение с другими усиливает тревогу.",
+  "Позволь себе плакать, злиться, бояться. Подавление эмоций — топливо для тревоги.",
+  "Маленький шаг лучше большого плана. Что ты можешь сделать в следующие 10 минут?",
+  "Переключись на что-то конкретное и простое: чисти зубы, мой посуду, складывай вещи.",
+  "Напомни себе, что беспокойство за будущее не делает будущее лучше — только настоящее хуже.",
+  "Сделай что-то творческое — пусть без цели и результата. Процесс сам по себе исцеляет.",
+  "Открой окно и глубоко вдохни свежий воздух. Это мгновенно меняет состояние.",
+  "Если ты устал бояться — позволь себе устать. Это тоже честное чувство.",
+  "В кризисные моменты сосредоточься на том, что ты контролируешь: своё дыхание, свои слова.",
+  "Связь с другими людьми — лучшее лекарство от тревоги. Не изолируй себя.",
+  "Напиши себе записку и прикрепи на видное место: «Ты справлялся. Ты справишься.»",
+  "Проведи «детокс от новостей» на один день. Мир не рухнет, а ты — отдохнёшь.",
+  "Повтори мантру: «Я делаю всё, что могу. Этого достаточно.»",
+  "Попробуй звуковую терапию: пение, мычание или хмыканье успокаивает блуждающий нерв.",
+  "Составь «план безопасности» на случай сложного дня: три вещи, которые помогут.",
+  "Позволь себе жить медленнее. Скорость — не мера ценности.",
+  "Посмотри на звёзды или на воду. Бесконечность природы успокаивает масштаб тревог.",
+  "Скажи кому-то, что он для тебя важен. Это соединяет и наполняет одновременно.",
+  "Каждый день ты делаешь что-то героическое — встаёшь, дышишь, продолжаешь.",
+  "Посттравматический рост реален. Люди находят смысл и силу даже после самого тяжёлого.",
+  "Твоя боль имеет значение. Ты имеешь значение.",
+  "Попробуй технику «якоря»: сжми кулак и скажи себе «я здесь, я в безопасности».",
+  "Напомни себе о тех, кто пережил похожее. Ты не одинок в своём опыте.",
+  "Дай себе разрешение на несовершенство. Совершенство — это иллюзия, особенно в трудное время.",
+  "Ты заслуживаешь помощи. Просить о помощи — смелость, не слабость.",
+  "Наблюдай за дыханием как за волнами — они приходят и уходят, и ты остаёшься.",
+  "Трудные времена обнажают то, что действительно важно. Доверяй этому знанию.",
+  "Твоё тело сделало всё возможное, чтобы выжить. Поблагодари его.",
+  "Один добрый жест к себе в день — это уже терапия.",
+  "Ты больше своей тревоги. Намного больше.",
+  "Прямо сейчас, в эту секунду — ты в порядке. Просто эта секунда.",
+  "Усталость от войны, от боли, от страха — это нормально. Дай себе отдохнуть без вины.",
+  "Ты не обязан быть счастливым прямо сейчас. Ты обязан только быть.",
+  "Маленькие победы считаются. Проснулся — победа. Поел — победа. Дышал — победа.",
+  "Доверяй своему телу. Оно знает, как исцеляться, если дать ему время и покой.",
+  "Каждая волна тревоги достигает пика и спадает. Твоя задача — просто пережить пик.",
+  "Ты — больше чем то, что с тобой произошло.",
+  "Забота о себе — это не эгоизм. Это основа для того, чтобы помогать другим.",
+  "Ты уже выжил во всём, что пытался тебя сломать. Это невероятно.",
+];
+
+// ===== 50 SUPPORT PHRASES =====
+const supportPhrases = [
+  "Ты не один в этом. Даже когда кажется иначе.",
+  "То, что ты чувствуешь — настоящее и важное.",
+  "Ты справляешься. Может быть, не идеально — но ты справляешься.",
+  "Разрешаю тебе быть сломленным. Это не конец.",
+  "Твоя боль имеет право быть. Ты имеешь право быть.",
+  "Даже сейчас, в самый тёмный момент, внутри тебя есть что-то неломаемое.",
+  "Ты заслуживаешь покоя так же, как и все остальные.",
+  "Это не навсегда. Даже если сейчас кажется, что навсегда.",
+  "Ты достаточно силён, чтобы попросить о помощи.",
+  "Твои чувства — не слабость. Они — доказательство того, что ты живой.",
+  "Я рада, что ты здесь. Твоё присутствие имеет значение.",
+  "Ты уже прошёл через столько — и ты всё ещё здесь.",
+  "Каждый день ты делаешь что-то героическое, просто продолжая жить.",
+  "Тебе разрешено отдохнуть. Прямо сейчас.",
+  "Ты не должен быть счастливым. Ты просто должен быть.",
+  "Твои слёзы — не слабость. Это твоя сила, которая ищет выход.",
+  "Ты заслуживаешь той же доброты, которую отдаёшь другим.",
+  "Даже в самые тёмные ночи появляется рассвет.",
+  "Ты — больше своей боли. Намного больше.",
+  "Разрешаю тебе двигаться медленно. Медленно — тоже движение.",
+  "Ты не обязан всё понимать. Иногда достаточно просто дышать.",
+  "Твоя история ещё не закончена.",
+  "Прямо сейчас — ты в безопасности. Просто этот момент.",
+  "Ты не один со своей болью, даже если сейчас так чувствуешь.",
+  "Твоя жизнь имеет смысл. Даже когда этот смысл пока не виден.",
+  "Ты достаточно. Прямо такой, какой ты есть.",
+  "Позволь себе принять помощь. Принимать — тоже смелость.",
+  "Труднее всего бывает именно тогда, когда ты ближе всего к чему-то важному.",
+  "Ты пережил сто процентов своих худших дней. Это статистика твоей силы.",
+  "Ты — не один свой страшный день. Ты — всё, что ты есть.",
+  "В тебе есть что-то, ради чего стоит остаться.",
+  "Это пройдёт. Не исчезнет бесследно, но изменится — обязательно.",
+  "Твоя усталость понятна. Мир устал вместе с тобой.",
+  "Ты не должен быть сильным прямо сейчас.",
+  "Даже маленький шаг — это шаг.",
+  "Ты имеешь право на паузу. На тишину. На себя.",
+  "Я вижу, как тебе тяжело. И я вижу, что ты продолжаешь.",
+  "Исцеление не бывает прямой линией. Это нормально.",
+  "Ты — не обуза. Твоё существование — дар.",
+  "Иногда просто пережить день — это уже победа.",
+  "Твоя боль не делает тебя сломленным. Она делает тебя человеком.",
+  "Позволь себе верить, что лучшее впереди — даже немного.",
+  "Ты заслуживаешь тепла. И ты можешь дать его себе прямо сейчас.",
+  "Каждая слеза — это немного освобождения.",
+  "Жизнь умеет удивлять. Дай ей шанс.",
+  "Ты несёшь много. Это замечено. Это важно.",
+  "Ты не должен объяснять свою боль, чтобы иметь право на неё.",
+  "Прямо сейчас кто-то в мире думает о тебе с теплом.",
+  "Ты выбрал остаться. Это самый важный выбор.",
+  "Я рядом. Даже здесь, в тишине экрана — ты не один.",
+];
+
+function getRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function newCopeTip() {
+  const el = document.getElementById('cope-text');
+  document.getElementById('cope-card').style.animation = 'none';
+  void document.getElementById('cope-card').offsetWidth;
+  document.getElementById('cope-card').style.animation = 'cardAppear 0.6s ease';
+  el.textContent = getRandom(copeTips);
+}
+
+function newSupportPhrase() {
+  const el = document.getElementById('support-text');
+  document.getElementById('support-card').style.animation = 'none';
+  void document.getElementById('support-card').offsetWidth;
+  document.getElementById('support-card').style.animation = 'cardAppear 0.6s ease';
+  el.textContent = getRandom(supportPhrases);
+}
+
+// ===== DRAWING =====
+let canvas, ctx, drawing = false, currentColor = '#3d8b8b', brushSize = 3, erasing = false;
+
+function initCanvas() {
+  canvas = document.getElementById('drawCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDraw);
+  canvas.addEventListener('mouseleave', stopDraw);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, { passive: false });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, { passive: false });
+  canvas.addEventListener('touchend', stopDraw);
+
+  window.addEventListener('resize', resizeCanvas);
+}
+
+let canvasInited = false;
+const origInit = initCanvas;
+window.initCanvas = function() {
+  if (!canvasInited) { origInit(); canvasInited = true; }
+};
+
+function resizeCanvas() {
+  if (!canvas) return;
+  const container = document.getElementById('canvas-container');
+  const rect = container.getBoundingClientRect();
+  const imageData = ctx ? ctx.getImageData(0, 0, canvas.width, canvas.height) : null;
+  canvas.width = rect.width;
+  canvas.height = rect.height || window.innerHeight * 0.55;
+  ctx.fillStyle = 'rgba(240,248,252,0)';
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (imageData) ctx.putImageData(imageData, 0, 0);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (e.clientX - rect.left) * (canvas.width / rect.width),
+    y: (e.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+function startDraw(e) {
+  drawing = true;
+  const pos = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const pos = getPos(e);
+  ctx.lineWidth = brushSize;
+  if (erasing) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.strokeStyle = 'rgba(0,0,0,1)';
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = currentColor;
+  }
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+}
+
+function stopDraw() { drawing = false; ctx && ctx.beginPath(); }
+
+function setColor(el) {
+  erasing = false;
+  currentColor = el.dataset.color;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  document.getElementById('eraserBtn').classList.remove('active');
+  el.classList.add('active');
+}
+
+function setEraser() {
+  erasing = true;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  document.getElementById('eraserBtn').classList.add('active');
+}
+
+function setBrush(size, el) {
+  brushSize = size;
+  document.querySelectorAll('.size-dot').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function clearCanvas() {
+  if (!ctx) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  document.getElementById('cleared-msg').classList.add('show');
+}
+
+function goMenu() {
+  document.getElementById('cleared-msg').classList.remove('show');
+  showScreen('menu-screen');
+}
+</script>
+</body>
+</html>
