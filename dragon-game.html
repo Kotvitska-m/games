@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Покорми дракончика</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;700&family=Uncial+Antiqua&display=swap');
+
+  :root {
+    --fire: #ff6b00;
+    --gold: #f0c040;
+    --deep: #0d1b2a;
+    --ocean: #1a3a5c;
+    --sky: #2e6b9e;
+    --fog: rgba(180,210,255,0.08);
+    --correct: #4caf50;
+    --wrong: #e53935;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Cinzel', serif;
+    background: radial-gradient(ellipse at 50% 0%, #1a3a5c 0%, #0d1b2a 60%, #060e18 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    color: #e8d9b0;
+    position: relative;
+  }
+
+  /* Stars */
+  .stars {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    pointer-events: none; z-index: 0;
+  }
+  .star {
+    position: absolute; background: white; border-radius: 50%;
+    animation: twinkle var(--d, 3s) infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.1; } to { opacity: 0.8; } }
+
+  /* Clouds */
+  .cloud {
+    position: fixed; top: 10%; opacity: 0.08;
+    background: radial-gradient(ellipse, #a0c4ff, transparent);
+    border-radius: 50%; filter: blur(20px);
+    animation: drift var(--cd, 20s) linear infinite;
+    pointer-events: none; z-index: 0;
+  }
+  @keyframes drift { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
+
+  /* Header */
+  header {
+    z-index: 10; text-align: center; padding: 12px 20px 4px;
+    position: relative;
+  }
+  header h1 {
+    font-family: 'Uncial Antiqua', cursive;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(240,192,64,0.6), 0 2px 4px rgba(0,0,0,0.8);
+    letter-spacing: 2px;
+  }
+
+  /* Score */
+  .score-bar {
+    z-index: 10; display: flex; gap: 20px; align-items: center;
+    padding: 4px 20px 8px; font-size: 0.85rem; color: #a0c4e8;
+  }
+  .score-bar span { font-family: 'Cinzel', serif; }
+  .hearts { color: #e53935; font-size: 1rem; }
+
+  /* Main game area */
+  .game-area {
+    z-index: 10; position: relative;
+    width: 100%; max-width: 700px;
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 0 10px;
+  }
+
+  /* Dragon scene */
+  .dragon-scene {
+    position: relative; width: 100%; height: 240px;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+
+  /* Dragon SVG container */
+  .dragon-wrap {
+    position: relative;
+    animation: dragonFloat 4s ease-in-out infinite;
+    cursor: default;
+    filter: drop-shadow(0 10px 30px rgba(255,107,0,0.3));
+  }
+  @keyframes dragonFloat {
+    0%,100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-12px) rotate(1deg); }
+  }
+  .dragon-wrap.happy { animation: dragonHappy 0.6s ease; }
+  @keyframes dragonHappy {
+    0%,100% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.15) rotate(-5deg); }
+    75% { transform: scale(1.15) rotate(5deg); }
+  }
+  .dragon-wrap.angry { animation: dragonAngry 0.5s ease; }
+  @keyframes dragonAngry {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    60% { transform: translateX(10px); }
+  }
+
+  /* Speech bubble */
+  .speech-bubble {
+    position: absolute; top: 0; right: 10px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,230,200,0.95));
+    border: 3px solid var(--gold);
+    border-radius: 18px; padding: 12px 16px;
+    max-width: 200px; min-width: 140px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.5);
+    color: #2a1a00;
+    z-index: 20;
+    animation: bubblePop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes bubblePop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .speech-bubble::after {
+    content: ''; position: absolute; bottom: -14px; left: 30px;
+    border: 7px solid transparent;
+    border-top-color: var(--gold);
+  }
+  .speech-bubble::before {
+    content: ''; position: absolute; bottom: -10px; left: 32px;
+    border: 5px solid transparent;
+    border-top-color: rgba(240,230,200,0.95);
+    z-index: 1;
+  }
+  .bubble-label {
+    font-size: 0.6rem; color: #8a6a30; font-family: 'Cinzel', serif;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .bubble-syllable {
+    font-size: 2.2rem; font-weight: bold; color: #1a0a00;
+    font-family: serif;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+  }
+
+  /* Divider */
+  .divider {
+    width: 100%; height: 2px; margin: 4px 0;
+    background: linear-gradient(90deg, transparent, rgba(240,192,64,0.5), transparent);
+    z-index: 10;
+  }
+
+  /* Bowls area */
+  .bowls-label {
+    z-index: 10; font-size: 0.7rem; color: #7090b0; letter-spacing: 2px;
+    text-transform: uppercase; margin: 8px 0 6px;
+  }
+  .bowls-area {
+    z-index: 10; display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 16px;
+    padding: 0 10px 8px;
+    width: 100%; max-width: 680px;
+  }
+
+  /* Individual bowl */
+  .bowl {
+    display: flex; flex-direction: column; align-items: center;
+    cursor: grab; transition: transform 0.2s, filter 0.2s;
+    user-select: none;
+    position: relative;
+  }
+  .bowl:hover { transform: translateY(-6px) scale(1.05); }
+  .bowl:active { cursor: grabbing; transform: scale(0.95); }
+
+  .bowl-svg { position: relative; }
+  .bowl-syllable {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -58%);
+    font-size: 1.5rem; color: #1a0a00;
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    direction: rtl;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .bowl.correct-flash { animation: correctFlash 0.5s ease; }
+  @keyframes correctFlash {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(2) drop-shadow(0 0 15px #4caf50); }
+    100% { filter: brightness(1); }
+  }
+  .bowl.wrong-flash { animation: wrongFlash 0.4s ease; }
+  @keyframes wrongFlash {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); filter: drop-shadow(0 0 8px #e53935); }
+    75% { transform: translateX(8px); filter: drop-shadow(0 0 8px #e53935); }
+  }
+
+  /* Feedback overlay */
+  .feedback {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 100; font-family: 'Uncial Antiqua', cursive;
+    font-size: clamp(2rem, 8vw, 4rem);
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    opacity: 0;
+  }
+  .feedback.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  .feedback.hide { transform: translate(-50%, -50%) scale(1.3); opacity: 0; }
+  .feedback.correct-text { color: #a8ff78; text-shadow: 0 0 30px #4caf50; }
+  .feedback.wrong-text { color: #ff8a80; text-shadow: 0 0 30px #e53935; }
+
+  /* Fire particles */
+  .fire-container {
+    position: fixed; pointer-events: none; z-index: 50;
+  }
+  .fire-particle {
+    position: absolute; border-radius: 50%;
+    animation: fireUp var(--dur, 1s) ease-out forwards;
+  }
+  @keyframes fireUp {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(var(--fy, -100px)) translateX(var(--fx, 0px)) scale(0); opacity: 0; }
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    z-index: 10; width: 100%; max-width: 500px;
+    height: 8px; background: rgba(255,255,255,0.1);
+    border-radius: 4px; overflow: hidden; margin: 4px auto;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--fire), var(--gold));
+    border-radius: 4px; transition: width 0.4s ease;
+    box-shadow: 0 0 8px rgba(255,107,0,0.6);
+  }
+
+  /* Footer */
+  footer {
+    z-index: 10; padding: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem; color: rgba(160,196,232,0.5);
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+
+  /* Win / Game over screen */
+  .overlay-screen {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(6,14,24,0.92); z-index: 200;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  .overlay-screen.visible { opacity: 1; pointer-events: all; }
+  .overlay-screen h2 {
+    font-family: 'Uncial Antiqua', cursive;
+    font-size: clamp(1.8rem, 6vw, 3rem);
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(240,192,64,0.7);
+  }
+  .overlay-screen p { color: #a0c4e8; font-size: 1rem; text-align: center; max-width: 300px; }
+  .btn-restart {
+    margin-top: 10px; padding: 12px 32px;
+    background: linear-gradient(135deg, #b8860b, var(--gold));
+    border: none; border-radius: 8px; color: #1a0a00;
+    font-family: 'Cinzel', serif; font-size: 1rem; font-weight: bold;
+    cursor: pointer; letter-spacing: 1px;
+    box-shadow: 0 4px 20px rgba(240,192,64,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-restart:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(240,192,64,0.6); }
+
+  /* Dragging */
+  .dragging-ghost {
+    position: fixed; z-index: 500; pointer-events: none;
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.9;
+    filter: drop-shadow(0 8px 20px rgba(255,107,0,0.6));
+  }
+
+  /* Dragon highlight zone */
+  .dragon-zone {
+    position: absolute; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 160px; height: 200px;
+    border-radius: 50%;
+    transition: background 0.2s;
+    z-index: 5;
+  }
+  .dragon-zone.drag-over {
+    background: radial-gradient(circle, rgba(255,107,0,0.15), transparent);
+  }
+</style>
+</head>
+<body>
+
+<!-- Background stars -->
+<div class="stars" id="stars"></div>
+<div class="cloud" style="--cd:25s; width:300px; height:150px; top:5%;"></div>
+<div class="cloud" style="--cd:35s; width:200px; height:100px; top:15%; animation-delay:-12s;"></div>
+
+<header>
+  <h1>🐉 Покорми дракончика</h1>
+</header>
+
+<div class="score-bar">
+  <span>Очки: <strong id="scoreNum">0</strong></span>
+  <span>Жизни: <span class="hearts" id="heartsDisplay">❤️❤️❤️</span></span>
+  <span>Уровень: <strong id="levelNum">1</strong></span>
+</div>
+
+<div class="game-area">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <div class="dragon-scene" id="dragonScene">
+    <div class="dragon-zone" id="dragonZone"></div>
+
+    <!-- Speech bubble -->
+    <div class="speech-bubble" id="speechBubble">
+      <div class="bubble-label">Дракон хочет:</div>
+      <div class="bubble-syllable" id="bubbleSyllable">БА</div>
+    </div>
+
+    <!-- Dragon SVG -->
+    <div class="dragon-wrap" id="dragonWrap">
+      <svg width="220" height="200" viewBox="0 0 220 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- Wing left -->
+        <ellipse cx="55" cy="100" rx="48" ry="28" fill="#1e4d6b" transform="rotate(-25,55,100)" opacity="0.9"/>
+        <ellipse cx="52" cy="98" rx="36" ry="20" fill="#2a6a8a" transform="rotate(-25,52,98)" opacity="0.7"/>
+        <!-- Wing right -->
+        <ellipse cx="165" cy="100" rx="48" ry="28" fill="#1e4d6b" transform="rotate(25,165,100)" opacity="0.9"/>
+        <ellipse cx="168" cy="98" rx="36" ry="20" fill="#2a6a8a" transform="rotate(25,168,98)" opacity="0.7"/>
+        <!-- Tail -->
+        <path d="M80 160 Q40 190 20 175 Q35 165 50 155 Q60 170 75 158" fill="#2a7060" stroke="#1a5040" stroke-width="1"/>
+        <!-- Body -->
+        <ellipse cx="110" cy="140" rx="55" ry="45" fill="#2a8060"/>
+        <!-- Body shading -->
+        <ellipse cx="110" cy="130" rx="42" ry="32" fill="#3a9070" opacity="0.6"/>
+        <!-- Belly -->
+        <ellipse cx="110" cy="148" rx="32" ry="28" fill="#5ab88a" opacity="0.7"/>
+        <!-- Neck -->
+        <ellipse cx="110" cy="100" rx="24" ry="30" fill="#2a8060"/>
+        <!-- Head -->
+        <ellipse cx="110" cy="75" rx="35" ry="30" fill="#2a8060"/>
+        <!-- Head top bumps (horns) -->
+        <ellipse cx="92" cy="50" rx="6" ry="12" fill="#1a5a40" transform="rotate(-15,92,50)"/>
+        <ellipse cx="128" cy="50" rx="6" ry="12" fill="#1a5a40" transform="rotate(15,128,50)"/>
+        <!-- Snout -->
+        <ellipse cx="110" cy="90" rx="22" ry="14" fill="#3a9070"/>
+        <!-- Nostrils -->
+        <ellipse cx="102" cy="91" rx="3" ry="2" fill="#1a5040"/>
+        <ellipse cx="118" cy="91" rx="3" ry="2" fill="#1a5040"/>
+        <!-- Eyes -->
+        <ellipse cx="97" cy="70" rx="8" ry="9" fill="#f0f0f0"/>
+        <ellipse cx="123" cy="70" rx="8" ry="9" fill="#f0f0f0"/>
+        <circle cx="99" cy="71" r="5" fill="#e8a000" id="eyeL"/>
+        <circle cx="125" cy="71" r="5" fill="#e8a000" id="eyeR"/>
+        <circle cx="100" cy="70" r="3" fill="#1a0a00" id="pupilL"/>
+        <circle cx="126" cy="70" r="3" fill="#1a0a00" id="pupilR"/>
+        <!-- Eye shine -->
+        <circle cx="101" cy="68" r="1.5" fill="white" opacity="0.8"/>
+        <circle cx="127" cy="68" r="1.5" fill="white" opacity="0.8"/>
+        <!-- Smile -->
+        <path id="dragonMouth" d="M98 96 Q110 104 122 96" stroke="#1a5040" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Spines -->
+        <path d="M88 48 L84 35 L90 46" fill="#1a5040"/>
+        <path d="M100 44 L97 30 L103 43" fill="#1a5040"/>
+        <path d="M112 43 L110 28 L116 42" fill="#1a5040"/>
+        <path d="M124 44 L122 30 L128 43" fill="#1a5040"/>
+        <!-- Legs -->
+        <path d="M80 170 Q65 185 60 195 Q70 195 75 185 Q85 182 88 172" fill="#2a7060"/>
+        <path d="M140 170 Q155 185 160 195 Q150 195 145 185 Q135 182 132 172" fill="#2a7060"/>
+        <!-- Claws -->
+        <path d="M60 195 Q56 200 54 195 M65 197 Q62 202 60 197 M70 196 Q67 201 65 196" stroke="#1a5040" stroke-width="1.5" fill="none"/>
+        <path d="M160 195 Q164 200 166 195 M155 197 Q158 202 160 197 M150 196 Q153 201 155 196" stroke="#1a5040" stroke-width="1.5" fill="none"/>
+        <!-- Fire breath (hidden by default) -->
+        <g id="fireBreath" opacity="0">
+          <ellipse cx="150" cy="90" rx="20" ry="8" fill="#ff6b00" opacity="0.9"/>
+          <ellipse cx="170" cy="88" rx="14" ry="6" fill="#ffa000" opacity="0.8"/>
+          <ellipse cx="185" cy="87" rx="10" ry="5" fill="#ffcc00" opacity="0.7"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="bowls-label">Выбери правильную мисочку</div>
+  <div class="bowls-area" id="bowlsArea"></div>
+</div>
+
+<footer>Котвицкая</footer>
+
+<!-- Feedback text -->
+<div class="feedback" id="feedbackEl"></div>
+
+<!-- Overlay screens -->
+<div class="overlay-screen" id="winScreen">
+  <h2>🎉 Победа!</h2>
+  <p>Дракончик сыт и счастлив! Ты отлично знаешь иврит!</p>
+  <button class="btn-restart" onclick="restartGame()">Играть снова</button>
+</div>
+<div class="overlay-screen" id="loseScreen">
+  <h2>💔 Дракончик голодный</h2>
+  <p>Не расстраивайся! Попробуй ещё раз!</p>
+  <button class="btn-restart" onclick="restartGame()">Попробовать снова</button>
+</div>
+
+<!-- Audio -->
+<audio id="bgMusic" loop></audio>
+
+<script>
+// ===================== DATA =====================
+// Hebrew syllables with kamatz (אָ sound = /a/ like "father")
+// and patah (אַ sound = /a/ like "cat") — both correspond to Russian А
+// Format: { hebrew: "...", russian: "...", letter: "..." }
+const SYLLABLES = [
+  // Kamatz (קָמָץ) = ָ  (longer /a/)
+  { heb: "בָּ", rus: "БА", kamatz: true },
+  { heb: "גָ",  rus: "ГА", kamatz: true },
+  { heb: "דָ",  rus: "ДА", kamatz: true },
+  { heb: "וָ",  rus: "ВА", kamatz: true },
+  { heb: "זָ",  rus: "ЗА", kamatz: true },
+  { heb: "טָ",  rus: "ТА", kamatz: true },
+  { heb: "יָ",  rus: "ЙА", kamatz: true },
+  { heb: "כָּ", rus: "КА", kamatz: true },
+  { heb: "לָ",  rus: "ЛА", kamatz: true },
+  { heb: "מָ",  rus: "МА", kamatz: true },
+  { heb: "נָ",  rus: "НА", kamatz: true },
+  { heb: "סָ",  rus: "СА", kamatz: true },
+  { heb: "פָּ", rus: "ПА", kamatz: true },
+  { heb: "רָ",  rus: "РА", kamatz: true },
+  { heb: "שָׁ", rus: "ША", kamatz: true },
+  { heb: "תָּ", rus: "ТА", kamatz: true },
+  // Patah (פַּתָּח) = ַ  (shorter /a/)
+  { heb: "בַּ", rus: "БА", kamatz: false },
+  { heb: "גַ",  rus: "ГА", kamatz: false },
+  { heb: "דַ",  rus: "ДА", kamatz: false },
+  { heb: "וַ",  rus: "ВА", kamatz: false },
+  { heb: "זַ",  rus: "ЗА", kamatz: false },
+  { heb: "טַ",  rus: "ТА", kamatz: false },
+  { heb: "יַ",  rus: "ЙА", kamatz: false },
+  { heb: "כַּ", rus: "КА", kamatz: false },
+  { heb: "לַ",  rus: "ЛА", kamatz: false },
+  { heb: "מַ",  rus: "МА", kamatz: false },
+  { heb: "נַ",  rus: "НА", kamatz: false },
+  { heb: "סַ",  rus: "СА", kamatz: false },
+  { heb: "פַּ", rus: "ПА", kamatz: false },
+  { heb: "רַ",  rus: "РА", kamatz: false },
+  { heb: "שַׁ", rus: "ША", kamatz: false },
+  { heb: "תַּ", rus: "ТА", kamatz: false },
+];
+
+// ===================== GAME STATE =====================
+let score = 0, lives = 3, level = 1;
+let currentQuestion = null;
+let usedQuestions = [];
+let totalQuestions = 10;
+let answered = 0;
+let canAnswer = true;
+
+// ===================== AUDIO (Web Audio API) =====================
+let audioCtx = null;
+
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  playBgMusic();
+}
+
+function playBgMusic() {
+  if (!audioCtx) return;
+  // Celtic/Viking style melody loop using Web Audio
+  playMelodyLoop();
+}
+
+// Simple folk-style melody
+const MELODY = [
+  // Note frequencies (Hz), duration (s)
+  [392, 0.4], [440, 0.4], [494, 0.4], [523, 0.6],
+  [494, 0.3], [440, 0.3], [392, 0.4], [349, 0.6],
+  [392, 0.4], [440, 0.4], [392, 0.3], [349, 0.3],
+  [330, 0.4], [349, 0.6], [392, 0.4], [440, 0.4],
+  [523, 0.4], [494, 0.3], [440, 0.3], [392, 0.6],
+  [330, 0.3], [349, 0.3], [392, 0.4], [440, 0.8],
+];
+
+let melodyTimeout = null;
+
+function playMelodyLoop() {
+  if (!audioCtx) return;
+  let time = audioCtx.currentTime + 0.1;
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.setValueAtTime(0.12, time);
+  masterGain.connect(audioCtx.destination);
+
+  // Bass drone
+  const bassOsc = audioCtx.createOscillator();
+  const bassGain = audioCtx.createGain();
+  bassOsc.type = 'triangle';
+  bassOsc.frequency.value = 98;
+  bassGain.gain.setValueAtTime(0.08, time);
+  bassOsc.connect(bassGain);
+  bassGain.connect(audioCtx.destination);
+  const totalDur = MELODY.reduce((s,[,d]) => s+d, 0);
+  bassOsc.start(time);
+  bassOsc.stop(time + totalDur);
+
+  // Melody
+  for (let [freq, dur] of MELODY) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, time);
+    gain.gain.linearRampToValueAtTime(0.5, time + 0.04);
+    gain.gain.setValueAtTime(0.5, time + dur - 0.1);
+    gain.gain.linearRampToValueAtTime(0, time + dur);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(time);
+    osc.stop(time + dur);
+    time += dur;
+  }
+
+  melodyTimeout = setTimeout(() => playMelodyLoop(), totalDur * 1000);
+}
+
+function playSfx(type) {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  if (type === 'correct') {
+    [523,659,784].forEach((f,i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.frequency.value = f; o.type = 'sine';
+      g.gain.setValueAtTime(0.3, t + i*0.1);
+      g.gain.linearRampToValueAtTime(0, t + i*0.1 + 0.3);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t + i*0.1); o.stop(t + i*0.1 + 0.3);
+    });
+  } else if (type === 'wrong') {
+    [300,250].forEach((f,i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.frequency.value = f; o.type = 'sawtooth';
+      g.gain.setValueAtTime(0.2, t + i*0.15);
+      g.gain.linearRampToValueAtTime(0, t + i*0.15 + 0.25);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(t + i*0.15); o.stop(t + i*0.15 + 0.25);
+    });
+  }
+}
+
+// ===================== STARS =====================
+function createStars() {
+  const c = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+    c.appendChild(s);
+  }
+}
+
+// ===================== BOWL SVG =====================
+function bowlSVG(syllable, color1, color2) {
+  return `<svg width="90" height="80" viewBox="0 0 90 80" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bg${syllable.replace(/[^a-z0-9]/gi,'')}" cx="50%" cy="40%" r="60%">
+        <stop offset="0%" stop-color="${color1}"/>
+        <stop offset="100%" stop-color="${color2}"/>
+      </radialGradient>
+    </defs>
+    <!-- Bowl shadow -->
+    <ellipse cx="45" cy="72" rx="38" ry="7" fill="rgba(0,0,0,0.25)"/>
+    <!-- Bowl outer -->
+    <path d="M10 35 Q12 65 45 68 Q78 65 80 35 Z" fill="url(#bg${syllable.replace(/[^a-z0-9]/gi,'')})"/>
+    <!-- Bowl rim -->
+    <ellipse cx="45" cy="35" rx="35" ry="10" fill="${color1}" opacity="0.9"/>
+    <ellipse cx="45" cy="34" rx="34" ry="9" fill="${color2}" opacity="0.5"/>
+    <!-- Food stuff -->
+    <ellipse cx="45" cy="34" rx="28" ry="7" fill="#8B4513" opacity="0.6"/>
+    <circle cx="35" cy="33" r="4" fill="#c0392b" opacity="0.8"/>
+    <circle cx="45" cy="31" r="3.5" fill="#e67e22" opacity="0.8"/>
+    <circle cx="55" cy="33" r="4" fill="#c0392b" opacity="0.8"/>
+    <circle cx="42" cy="35" r="3" fill="#d35400" opacity="0.7"/>
+    <circle cx="50" cy="35" r="2.5" fill="#e74c3c" opacity="0.7"/>
+    <!-- Bowl shine -->
+    <path d="M18 38 Q22 30 30 32" stroke="rgba(255,255,255,0.3)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+const BOWL_COLORS = [
+  ['#8B4513','#5D2E0C'],
+  ['#8B6914','#5D4208'],
+  ['#4a7c6f','#2a5040'],
+  ['#7a4a7c','#4a2050'],
+  ['#7c4a4a','#4a2020'],
+  ['#4a6a7c','#2a4050'],
+];
+
+// ===================== QUESTION GENERATOR =====================
+function getNewQuestion() {
+  // Pick a random target syllable
+  const pool = SYLLABLES.filter((_, i) => !usedQuestions.includes(i));
+  if (pool.length === 0) { usedQuestions = []; return getNewQuestion(); }
+
+  // Pick target
+  const targetIdx = Math.floor(Math.random() * pool.length);
+  const target = pool[targetIdx];
+  usedQuestions.push(SYLLABLES.indexOf(target));
+
+  // How many bowl options (increase with level)
+  const numBowls = Math.min(3 + Math.floor(level / 2), 6);
+
+  // Create wrong answers (different Russian syllable = different letter)
+  const wrongs = SYLLABLES.filter(s => s.rus !== target.rus);
+  const shuffledWrongs = wrongs.sort(() => Math.random() - 0.5).slice(0, numBowls - 1);
+
+  // Combine and shuffle
+  const bowlOptions = [target, ...shuffledWrongs].sort(() => Math.random() - 0.5);
+
+  return { target, bowlOptions };
+}
+
+// ===================== RENDER QUESTION =====================
+function renderQuestion() {
+  if (!canAnswer) return;
+  currentQuestion = getNewQuestion();
+  
+  // Update speech bubble
+  document.getElementById('bubbleSyllable').textContent = currentQuestion.target.rus;
+  
+  // Rebuild bowls
+  const area = document.getElementById('bowlsArea');
+  area.innerHTML = '';
+  
+  currentQuestion.bowlOptions.forEach((syl, i) => {
+    const [c1, c2] = BOWL_COLORS[i % BOWL_COLORS.length];
+    const div = document.createElement('div');
+    div.className = 'bowl';
+    div.draggable = true;
+    div.dataset.heb = syl.heb;
+    div.dataset.rus = syl.rus;
+    div.innerHTML = bowlSVG(syl.heb + i, c1, c2) +
+      `<div class="bowl-syllable">${syl.heb}</div>`;
+    
+    // Click to feed
+    div.addEventListener('click', () => checkAnswer(div, syl));
+    
+    // Drag events
+    div.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({ rus: syl.rus, heb: syl.heb }));
+      div.style.opacity = '0.4';
+    });
+    div.addEventListener('dragend', () => { div.style.opacity = '1'; });
+    
+    area.appendChild(div);
+  });
+
+  // Dragon zone drop
+  const zone = document.getElementById('dragonZone');
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add('drag-over'); };
+  zone.ondragleave = () => zone.classList.remove('drag-over');
+  zone.ondrop = e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    const bowl = [...area.querySelectorAll('.bowl')].find(b => b.dataset.heb === data.heb);
+    if (bowl) checkAnswer(bowl, data);
+  };
+}
+
+// ===================== CHECK ANSWER =====================
+function checkAnswer(bowlEl, syl) {
+  if (!canAnswer) return;
+  canAnswer = false;
+
+  const isCorrect = syl.rus === currentQuestion.target.rus;
+
+  if (isCorrect) {
+    score += 10 * level;
+    answered++;
+    bowlEl.classList.add('correct-flash');
+    playSfx('correct');
+    showFeedback('🎉 Верно!', true);
+    dragonHappy();
+    spawnFire();
+    updateUI();
+    
+    setTimeout(() => {
+      if (answered >= totalQuestions) {
+        endGame(true);
+      } else {
+        canAnswer = true;
+        renderQuestion();
+      }
+    }, 1200);
+  } else {
+    lives--;
+    bowlEl.classList.add('wrong-flash');
+    playSfx('wrong');
+    showFeedback('❌ Попробуй ещё!', false);
+    dragonAngry();
+    updateUI();
+    
+    setTimeout(() => {
+      if (lives <= 0) {
+        endGame(false);
+      } else {
+        canAnswer = true;
+      }
+    }, 900);
+  }
+}
+
+// ===================== DRAGON ANIMATIONS =====================
+function dragonHappy() {
+  const w = document.getElementById('dragonWrap');
+  w.classList.remove('happy', 'angry');
+  void w.offsetWidth;
+  w.classList.add('happy');
+  // Happy eyes
+  document.getElementById('eyeL').setAttribute('fill', '#00e676');
+  document.getElementById('eyeR').setAttribute('fill', '#00e676');
+  document.getElementById('dragonMouth').setAttribute('d', 'M95 96 Q110 108 125 96');
+  // Fire breath
+  const fire = document.getElementById('fireBreath');
+  fire.style.transition = 'opacity 0.2s';
+  fire.style.opacity = '1';
+  setTimeout(() => { fire.style.opacity = '0'; }, 600);
+  setTimeout(() => {
+    document.getElementById('eyeL').setAttribute('fill', '#e8a000');
+    document.getElementById('eyeR').setAttribute('fill', '#e8a000');
+    document.getElementById('dragonMouth').setAttribute('d', 'M98 96 Q110 104 122 96');
+  }, 800);
+}
+
+function dragonAngry() {
+  const w = document.getElementById('dragonWrap');
+  w.classList.remove('happy', 'angry');
+  void w.offsetWidth;
+  w.classList.add('angry');
+  document.getElementById('eyeL').setAttribute('fill', '#e53935');
+  document.getElementById('eyeR').setAttribute('fill', '#e53935');
+  document.getElementById('dragonMouth').setAttribute('d', 'M100 101 Q110 96 120 101');
+  setTimeout(() => {
+    document.getElementById('eyeL').setAttribute('fill', '#e8a000');
+    document.getElementById('eyeR').setAttribute('fill', '#e8a000');
+    document.getElementById('dragonMouth').setAttribute('d', 'M98 96 Q110 104 122 96');
+  }, 700);
+}
+
+// ===================== FIRE PARTICLES =====================
+function spawnFire() {
+  const scene = document.getElementById('dragonScene');
+  const rect = scene.getBoundingClientRect();
+  const cx = rect.left + rect.width * 0.7;
+  const cy = rect.top + rect.height * 0.4;
+  
+  const container = document.createElement('div');
+  container.className = 'fire-container';
+  container.style.left = cx + 'px';
+  container.style.top = cy + 'px';
+  document.body.appendChild(container);
+  
+  for (let i = 0; i < 15; i++) {
+    const p = document.createElement('div');
+    p.className = 'fire-particle';
+    const colors = ['#ff6b00','#ffa000','#ffcc00','#ff3d00','#fff176'];
+    const sz = 6 + Math.random() * 12;
+    p.style.cssText = `
+      width:${sz}px;height:${sz}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${(Math.random()-0.5)*40}px;
+      top:${(Math.random()-0.5)*20}px;
+      --dur:${0.5+Math.random()*0.8}s;
+      --fy:${-60-Math.random()*80}px;
+      --fx:${(Math.random()-0.5)*60}px;
+    `;
+    container.appendChild(p);
+  }
+  setTimeout(() => container.remove(), 1500);
+}
+
+// ===================== FEEDBACK =====================
+function showFeedback(text, correct) {
+  const el = document.getElementById('feedbackEl');
+  el.textContent = text;
+  el.className = 'feedback ' + (correct ? 'correct-text' : 'wrong-text');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => { el.classList.remove('show'); el.classList.add('hide'); }, 800);
+  setTimeout(() => { el.classList.remove('hide'); }, 1100);
+}
+
+// ===================== UI UPDATE =====================
+function updateUI() {
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('levelNum').textContent = level;
+  const hearts = '❤️'.repeat(lives) + '🖤'.repeat(Math.max(0, 3-lives));
+  document.getElementById('heartsDisplay').textContent = hearts;
+  const pct = (answered / totalQuestions) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  level = Math.floor(answered / 3) + 1;
+}
+
+// ===================== END GAME =====================
+function endGame(win) {
+  canAnswer = false;
+  setTimeout(() => {
+    document.getElementById(win ? 'winScreen' : 'loseScreen').classList.add('visible');
+  }, 600);
+}
+
+function restartGame() {
+  score = 0; lives = 3; level = 1; answered = 0;
+  usedQuestions = []; canAnswer = true;
+  document.getElementById('winScreen').classList.remove('visible');
+  document.getElementById('loseScreen').classList.remove('visible');
+  updateUI();
+  renderQuestion();
+}
+
+// ===================== INIT =====================
+createStars();
+updateUI();
+renderQuestion();
+
+// Start audio on first interaction
+document.addEventListener('click', () => {
+  if (!audioCtx) initAudio();
+}, { once: true });
+document.addEventListener('touchstart', () => {
+  if (!audioCtx) initAudio();
+}, { once: true });
+</script>
+</body>
+</html>
