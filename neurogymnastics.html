@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Нейрогимнастика</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#d0eeff 0%,#e8f8ff 55%,#c5f0d8 100%);
+    font-family:'Nunito','Comic Sans MS',cursive,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:12px 8px;
+  }
+  button{font-family:inherit;cursor:pointer;}
+  button:active{transform:scale(0.95);}
+
+  /* ── Screens ── */
+  .screen{display:none;width:100%;max-width:460px;flex-direction:column;align-items:center;gap:12px;}
+  .screen.active{display:flex;}
+
+  /* ── Menu ── */
+  .menu-wrap{
+    background:#fff;border-radius:28px;padding:22px 18px;
+    box-shadow:0 8px 40px rgba(77,189,232,0.18);width:100%;max-width:400px;
+    display:flex;flex-direction:column;align-items:center;gap:11px;
+  }
+  .game-title{font-size:24px;color:#2d7ab5;font-weight:900;letter-spacing:1px;}
+  .game-subtitle{color:#5DC86B;font-weight:700;font-size:12px;text-align:center;}
+  .rules-btn{
+    background:#f0f8ff;border:2px solid #c0e0f8;border-radius:18px;
+    padding:6px 14px;color:#4DBDE8;font-weight:800;font-size:12px;
+  }
+  .level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;}
+  .lv-btn{
+    border:none;border-radius:11px;padding:8px 2px;
+    color:#fff;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.13);
+  }
+  .lv-num{font-size:18px;line-height:1;}
+  .lv-sub{font-size:7px;opacity:0.9;text-align:center;}
+
+  /* ── Prep ── */
+  .prep-wrap{
+    background:#fff;border-radius:28px;padding:20px 16px;
+    box-shadow:0 8px 40px rgba(77,189,232,0.18);width:100%;
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+  }
+  .prep-header{display:flex;align-items:center;justify-content:space-between;width:100%;}
+  .prep-title{color:#2d7ab5;font-size:20px;font-weight:900;}
+  .pose-by-badge{
+    background:linear-gradient(90deg,#e8f8ff,#eaffef);
+    border:2px solid #b0dff0;border-radius:13px;
+    padding:6px 14px;font-size:12.5px;font-weight:800;color:#2d7ab5;text-align:center;
+    width:100%;
+  }
+  .hand-toggle{display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .hand-label{color:#888;font-size:11.5px;font-weight:700;}
+  .toggle-row{display:flex;gap:6px;}
+  .toggle-btn{
+    border:2px solid #4DBDE8;border-radius:20px;padding:5px 13px;
+    background:#fff;color:#4DBDE8;font-weight:800;font-size:12px;transition:all 0.2s;
+  }
+  .toggle-btn.active{background:#4DBDE8;color:#fff;}
+  .roll-area{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;}
+  .roll-btn{
+    background:linear-gradient(90deg,#FF8C42,#FFB347);border:none;
+    border-radius:22px;padding:10px 24px;color:#fff;font-weight:900;
+    font-size:15px;box-shadow:0 4px 14px rgba(255,140,66,0.28);
+  }
+  .rolling-anim{display:flex;gap:9px;font-size:30px;}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .dice-spin{animation:spin 0.5s linear infinite;display:inline-block;}
+  .dice-row{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;}
+  .btn-row{display:flex;gap:8px;}
+  .go-btn{
+    background:linear-gradient(90deg,#5DC86B,#4DBDE8);border:none;
+    border-radius:22px;padding:10px 22px;color:#fff;font-weight:900;
+    font-size:14px;box-shadow:0 4px 14px rgba(77,189,232,0.26);
+  }
+  .back-btn{
+    background:#f0f8ff;border:2px solid #c0e0f8;border-radius:16px;
+    padding:5px 12px;color:#4DBDE8;font-weight:700;font-size:11px;
+  }
+
+  /* ── Dice card ── */
+  .dice-card{
+    background:#fff;display:flex;flex-direction:column;align-items:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.11);flex-shrink:0;
+  }
+  .dice-dot{border-radius:50%;flex-shrink:0;}
+  .dice-shape-icon{display:flex;align-items:center;justify-content:center;
+    background:#e0edf7;color:#555;font-weight:900;flex-shrink:0;}
+  .dice-emoji{line-height:1;}
+  .dice-label{color:#777;font-weight:700;text-align:center;line-height:1.2;}
+  .dice-name{color:#aaa;text-align:center;}
+
+  /* ── Game ── */
+  .game-header{
+    display:flex;align-items:center;justify-content:space-between;
+    width:100%;max-width:660px;margin-bottom:4px;gap:5px;
+  }
+  .game-title-sm{font-size:15px;font-weight:900;color:#2d7ab5;}
+  .pose-by-small{
+    font-size:10px;font-weight:800;color:#2d7ab5;
+    background:#e8f4ff;border-radius:9px;padding:2px 7px;
+  }
+  .progress-badge{
+    font-size:12px;font-weight:800;color:#FF8C42;
+    background:#fff3e6;border-radius:11px;padding:2px 9px;
+  }
+  .hand-hint{
+    font-size:10.5px;color:#5a8aaa;font-weight:700;text-align:center;
+    background:rgba(255,255,255,0.65);border-radius:9px;padding:3px 9px;
+    margin-bottom:4px;max-width:380px;
+  }
+  .game-row{
+    display:flex;align-items:flex-start;gap:8px;width:100%;max-width:660px;
+    justify-content:center;
+  }
+  .dice-panel{
+    display:flex;flex-direction:column;gap:5px;align-items:center;
+    background:rgba(255,255,255,0.8);border-radius:16px;padding:7px 5px;
+    box-shadow:0 4px 16px rgba(77,189,232,0.11);flex-shrink:0;
+  }
+  .dice-panel-label{
+    font-size:9px;font-weight:800;color:#4DBDE8;margin-bottom:3px;
+    text-transform:uppercase;letter-spacing:1px;text-align:center;
+  }
+  .board-wrap{flex:1;display:flex;justify-content:center;overflow:auto;}
+  .bottom-btns{display:flex;gap:9px;margin-top:10px;}
+
+  /* ── Win ── */
+  .win-wrap{
+    background:#fff;border-radius:28px;padding:30px 22px;
+    box-shadow:0 8px 40px rgba(93,198,107,0.22);width:100%;max-width:340px;
+    display:flex;flex-direction:column;align-items:center;gap:11px;
+  }
+  .win-emoji{font-size:64px;}
+  .win-title{font-size:24px;color:#5DC86B;font-weight:900;}
+  .win-sub{color:#888;font-size:12.5px;text-align:center;}
+  .win-btns{display:flex;flex-direction:column;gap:8px;width:100%;}
+  .play-btn{
+    background:linear-gradient(90deg,#5DC86B,#4DBDE8);border:none;
+    border-radius:22px;padding:11px;color:#fff;font-weight:900;
+    font-size:13px;box-shadow:0 4px 14px rgba(93,198,107,0.28);width:100%;
+  }
+
+  /* ── Brand ── */
+  .brand{display:flex;align-items:center;gap:5px;margin-top:4px;}
+  .brand-icon{font-size:14px;}
+  .brand-name{font-size:9.5px;color:#bbb;font-weight:700;letter-spacing:1px;}
+
+  /* ── Rules modal ── */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,60,120,0.45);
+    display:flex;align-items:center;justify-content:center;z-index:200;
+    backdrop-filter:blur(4px);
+  }
+  .modal-box{
+    background:#fff;border-radius:24px;padding:24px 20px;
+    max-width:360px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.22);
+  }
+  .modal-title{color:#2d7ab5;font-size:20px;font-weight:900;margin-bottom:10px;}
+  .modal-body{font-size:12.5px;color:#444;line-height:1.75;}
+  .modal-body p{margin:0 0 7px;}
+  .modal-body p:last-child{margin:0;}
+  .modal-ok{
+    margin-top:14px;width:100%;
+    background:linear-gradient(90deg,#4DBDE8,#5DC86B);
+    border:none;border-radius:20px;padding:10px;color:#fff;
+    font-weight:900;font-size:13px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ MENU ═══ -->
+<div id="screen-menu" class="screen active">
+  <div class="menu-wrap">
+    <div style="font-size:48px">🧠</div>
+    <h1 class="game-title">Нейрогимнастика</h1>
+    <div class="game-subtitle">Тренируй координацию и реакцию!</div>
+    <button class="rules-btn" onclick="showRules()">📖 Правила игры</button>
+    <div class="level-grid" id="level-grid"></div>
+    <div class="brand"><span class="brand-icon">🤖</span><span class="brand-name">Котвицкая</span></div>
+  </div>
+</div>
+
+<!-- ═══ PREP ═══ -->
+<div id="screen-prep" class="screen">
+  <div class="prep-wrap">
+    <div class="prep-header">
+      <h2 class="prep-title" id="prep-title">Уровень 1</h2>
+      <button class="rules-btn" onclick="showRules()">📖</button>
+    </div>
+    <div class="pose-by-badge" id="pose-by-badge"></div>
+    <div class="hand-toggle">
+      <span class="hand-label">Активная рука (показывает позу):</span>
+      <div class="toggle-row">
+        <button class="toggle-btn active" id="btn-left" onclick="setHand('left')">☜ Левая</button>
+        <button class="toggle-btn" id="btn-right" onclick="setHand('right')">Правая ☞</button>
+      </div>
+    </div>
+    <div class="roll-area" id="roll-area"></div>
+    <button class="back-btn" onclick="goScreen('menu')">← Меню</button>
+    <div class="brand"><span class="brand-icon">🤖</span><span class="brand-name">Котвицкая</span></div>
+  </div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="screen-game" class="screen">
+  <div class="game-header">
+    <span class="game-title-sm" id="g-title"></span>
+    <span class="pose-by-small" id="g-poseby"></span>
+    <span class="progress-badge" id="g-progress"></span>
+    <button class="rules-btn" style="padding:3px 9px;font-size:11px" onclick="showRules()">📖</button>
+  </div>
+  <div class="hand-hint" id="g-hint"></div>
+  <div class="game-row" id="game-row">
+    <div class="dice-panel" id="dice-panel-left" style="display:none">
+      <div class="dice-panel-label">☜ Левая</div>
+      <div id="dice-cards-left"></div>
+    </div>
+    <div class="board-wrap">
+      <svg id="board-svg" style="display:block;overflow:visible;"></svg>
+    </div>
+    <div class="dice-panel" id="dice-panel-right" style="display:none">
+      <div class="dice-panel-label">Правая ☞</div>
+      <div id="dice-cards-right"></div>
+    </div>
+  </div>
+  <div class="bottom-btns">
+    <button class="back-btn" onclick="goScreen('prep')">← Назад</button>
+    <button class="back-btn" onclick="goScreen('menu')">☰ Меню</button>
+  </div>
+  <div class="brand"><span class="brand-icon">🤖</span><span class="brand-name">Котвицкая</span></div>
+</div>
+
+<!-- ═══ WIN ═══ -->
+<div id="screen-win" class="screen">
+  <div class="win-wrap">
+    <div class="win-emoji">🏆</div>
+    <h2 class="win-title">Уровень пройден!</h2>
+    <div class="win-sub" id="win-sub"></div>
+    <div class="win-btns" id="win-btns"></div>
+    <div class="brand"><span class="brand-icon">🤖</span><span class="brand-name">Котвицкая</span></div>
+  </div>
+</div>
+
+<!-- ═══ RULES MODAL ═══ -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="hideRules()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title">📖 Правила</div>
+    <div class="modal-body">
+      <p>🎲 <b>Бросаются кубики</b> — они показывают позу для каждого цвета или формы.</p>
+      <p>🐍 <b>Путь змейкой</b> — клетки пронумерованы. Нажимай строго по порядку: 1, 2, 3…</p>
+      <p>🎨 На одних уровнях поза по <b>цвету</b>, на других — по <b>форме</b>.</p>
+      <p>☜☞ <b>Активная рука</b> держит позу. Другая рука тычет в клетки.</p>
+      <p>🏆 <b>Уровень пройден</b>, когда все клетки отмечены!</p>
+    </div>
+    <button class="modal-ok" onclick="hideRules()">Понятно! ✓</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────────────────────────────
+const ALL_GESTURES = [
+  {id:"rock",     label:"🤘", name:"Рок"},
+  {id:"paper",    label:"🖐", name:"Ладонь"},
+  {id:"scissors", label:"✌", name:"Ножницы"},
+  {id:"point",    label:"☝", name:"Указатель"},
+  {id:"ok",       label:"👌", name:"ОК"},
+  {id:"fist",     label:"✊", name:"Кулак"},
+  {id:"shaka",    label:"🤙", name:"Шака"},
+];
+
+const COLOR_MAP = {
+  orange:{bg:"#FF8C42",label:"Оранжевый"},
+  blue:  {bg:"#4DBDE8",label:"Синий"},
+  green: {bg:"#5DC86B",label:"Зелёный"},
+  purple:{bg:"#8B6FCE",label:"Фиолетовый"},
+  red:   {bg:"#E85454",label:"Красный"},
+  yellow:{bg:"#F5C842",label:"Жёлтый"},
+  teal:  {bg:"#3ECFB2",label:"Бирюзовый"},
+};
+const SHAPE_ICONS = {circle:"●",square:"■",pentagon:"⬠",triangle:"▲",diamond:"◆",star:"★",hexagon:"⬡"};
+const SHAPE_NAMES = {circle:"Круг",square:"Квадрат",pentagon:"Пятиугол.",triangle:"Треугольник",diamond:"Ромб",star:"Звезда",hexagon:"Шестиугол."};
+
+const LEVELS = [
+  {id:1, poseBy:"color",colors:["orange","blue","green"],                        shapes:["circle"],                                gridW:3,gridH:2,gestureCnt:3},
+  {id:2, poseBy:"color",colors:["orange","blue","green","purple"],               shapes:["circle","square"],                       gridW:3,gridH:3,gestureCnt:4},
+  {id:3, poseBy:"shape",colors:["orange","blue","green"],                        shapes:["circle","square","triangle","pentagon"],  gridW:4,gridH:3,gestureCnt:4},
+  {id:4, poseBy:"color",colors:["orange","blue","green","purple","red"],         shapes:["circle","square","triangle"],            gridW:4,gridH:3,gestureCnt:5},
+  {id:5, poseBy:"shape",colors:["orange","blue","green","purple"],               shapes:["circle","square","pentagon","triangle","diamond"],gridW:4,gridH:4,gestureCnt:5},
+  {id:6, poseBy:"color",colors:["orange","blue","green","purple","yellow"],      shapes:["circle","square","pentagon","triangle"], gridW:4,gridH:4,gestureCnt:5},
+  {id:7, poseBy:"shape",colors:["orange","blue","green","purple"],               shapes:["circle","square","pentagon","triangle","diamond","star"],gridW:5,gridH:4,gestureCnt:6},
+  {id:8, poseBy:"color",colors:["orange","blue","green","purple","red","yellow"],shapes:["circle","square","pentagon","triangle"], gridW:5,gridH:5,gestureCnt:6},
+  {id:9, poseBy:"shape",colors:["orange","blue","green","purple"],               shapes:["circle","square","pentagon","triangle","diamond","star"],gridW:5,gridH:5,gestureCnt:6},
+  {id:10,poseBy:"color",colors:["orange","blue","green","purple","red","yellow","teal"],shapes:["circle","square","pentagon","triangle","diamond"],gridW:6,gridH:6,gestureCnt:7},
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let state = {
+  screen:"menu", levelIdx:0, hand:"left",
+  diceMap:{}, cells:[], path:[], tapped:[], nextIdx:0,
+  rolling:false, rollDone:false,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCREEN NAVIGATION
+// ─────────────────────────────────────────────────────────────────────────────
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  state.screen = name;
+  if (name==='menu') renderMenu();
+  else if (name==='prep') renderPrep();
+  else if (name==='game') renderGame();
+  else if (name==='win') renderWin();
+}
+
+function showRules(){document.getElementById('modal').style.display='flex';}
+function hideRules(){document.getElementById('modal').style.display='none';}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ALGORITHMS
+// ─────────────────────────────────────────────────────────────────────────────
+function buildSnakePath(gridW, gridH, lvId) {
+  const total = gridW*gridH;
+  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  const visited = Array.from({length:gridH},()=>Array(gridW).fill(false));
+
+  const freeN = (col,row) => {
+    let n=0;
+    for(const [dc,dr] of dirs){
+      const nc=col+dc,nr=row+dr;
+      if(nc>=0&&nc<gridW&&nr>=0&&nr<gridH&&!visited[nr][nc]) n++;
+    }
+    return n;
+  };
+
+  const corners=[[0,0],[gridW-1,0],[0,gridH-1],[gridW-1,gridH-1]];
+  let col=0,row=0;
+  if(lvId>=6){[col,row]=corners[Math.floor(Math.random()*corners.length)];}
+
+  const path=[];
+  visited[row][col]=true;
+  path.push({col,row});
+
+  while(path.length<total){
+    let nbrs=[];
+    for(const [dc,dr] of dirs){
+      const nc=col+dc,nr=row+dr;
+      if(nc>=0&&nc<gridW&&nr>=0&&nr<gridH&&!visited[nr][nc])
+        nbrs.push({col:nc,row:nr,score:freeN(nc,nr)});
+    }
+    if(!nbrs.length) break;
+    nbrs.sort(()=>Math.random()-0.5);
+    nbrs.sort((a,b)=>a.score-b.score);
+    let chosen;
+    if(lvId<=3){chosen=nbrs[0];}
+    else{
+      const min=nbrs[0].score;
+      const cands=nbrs.filter(n=>n.score<=min+1);
+      chosen=cands[Math.floor(Math.random()*cands.length)];
+    }
+    col=chosen.col; row=chosen.row;
+    visited[row][col]=true;
+    path.push({col,row});
+  }
+  if(path.length<total){
+    path.length=0;
+    for(let r=0;r<gridH;r++){
+      if(r%2===0)for(let c=0;c<gridW;c++) path.push({col:c,row:r});
+      else for(let c=gridW-1;c>=0;c--) path.push({col:c,row:r});
+    }
+  }
+  return path;
+}
+
+function rollDice(level) {
+  const keys = level.poseBy==="color"?level.colors:level.shapes;
+  const shuffled=[...ALL_GESTURES].sort(()=>Math.random()-0.5);
+  const map={};
+  keys.forEach((k,i)=>{map[k]=shuffled[i%shuffled.length];});
+  return map;
+}
+
+function buildCells(level, diceMap) {
+  const {colors,shapes,gridW,gridH,poseBy,id}=level;
+  const total=gridW*gridH;
+  const maxConsec=id<=3?2:1;
+  const gidOf=(c,s)=>(poseBy==="color"?diceMap[c]:diceMap[s])?.id??"x";
+  const cells=[];
+  let lastGid=null,consec=0;
+  for(let i=0;i<total;i++){
+    let c,s,gid,tries=0;
+    do{
+      c=colors[Math.floor(Math.random()*colors.length)];
+      s=shapes[Math.floor(Math.random()*shapes.length)];
+      gid=gidOf(c,s); tries++;
+    }while(gid===lastGid&&consec>=maxConsec&&tries<60);
+    consec=gid===lastGid?consec+1:1; lastGid=gid;
+    cells.push({color:c,shape:s});
+  }
+  return cells;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SVG HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+const SVG_NS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs={}) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for(const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
+  return el;
+}
+
+function polyPts(s, n, rot=0) {
+  return Array.from({length:n},(_,i)=>{
+    const ang=(Math.PI*2/n)*i+rot;
+    return `${(s/2+(s/2-3)*Math.cos(ang)).toFixed(1)},${(s/2+(s/2-3)*Math.sin(ang)).toFixed(1)}`;
+  }).join(" ");
+}
+
+function shapeEl(shape, s, colorBg, alpha) {
+  const fill=colorBg, fillOpacity=String(alpha);
+  if(shape==="circle") return svgEl("circle",{cx:s/2,cy:s/2,r:s/2-2,fill,fillOpacity});
+  if(shape==="square") return svgEl("rect",{x:2,y:2,width:s-4,height:s-4,rx:7,fill,fillOpacity});
+  if(shape==="pentagon") return svgEl("polygon",{points:polyPts(s,5,-Math.PI/2),fill,fillOpacity});
+  if(shape==="triangle") return svgEl("polygon",{points:`${s/2},2 ${s-2},${s-2} 2,${s-2}`,fill,fillOpacity});
+  if(shape==="diamond") return svgEl("polygon",{points:`${s/2},2 ${s-2},${s/2} ${s/2},${s-2} 2,${s/2}`,fill,fillOpacity});
+  if(shape==="star"){
+    const pts=Array.from({length:10},(_,i)=>{
+      const ang=(Math.PI*2/10)*i-Math.PI/2;
+      const r2=i%2===0?s/2-2:s/4;
+      return `${(s/2+r2*Math.cos(ang)).toFixed(1)},${(s/2+r2*Math.sin(ang)).toFixed(1)}`;
+    }).join(" ");
+    return svgEl("polygon",{points:pts,fill,fillOpacity});
+  }
+  if(shape==="hexagon") return svgEl("polygon",{points:polyPts(s,6,0),fill,fillOpacity});
+  return svgEl("circle",{cx:s/2,cy:s/2,r:s/2-2,fill,fillOpacity});
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOARD RENDERING
+// ─────────────────────────────────────────────────────────────────────────────
+function renderBoard() {
+  const {cells, path, tapped, nextIdx} = state;
+  const level = LEVELS[state.levelIdx];
+  const {gridW, gridH} = level;
+
+  const maxW = Math.min(340, window.innerWidth - 160);
+  const cellSize = Math.max(38, Math.floor(maxW / gridW));
+  const gap = Math.max(4, Math.floor(cellSize*0.12));
+  const step = cellSize+gap;
+  const svgW = gridW*step-gap;
+  const svgH = gridH*step-gap;
+
+  const svg = document.getElementById('board-svg');
+  svg.innerHTML='';
+  svg.setAttribute('width', svgW);
+  svg.setAttribute('height', svgH);
+
+  // Arrows
+  for(let i=1;i<path.length;i++){
+    const prev=path[i-1], cur=path[i];
+    const fx=prev.col*step+cellSize/2, fy=prev.row*step+cellSize/2;
+    const tx=cur.col*step+cellSize/2,  ty=cur.row*step+cellSize/2;
+    const dx=tx-fx, dy=ty-fy;
+    const len=Math.sqrt(dx*dx+dy*dy);
+    const margin=cellSize/2-2;
+    const sx=fx+dx/len*margin, sy=fy+dy/len*margin;
+    const ex=tx-dx/len*margin, ey=ty-dy/len*margin;
+    const angle=Math.atan2(dy,dx)*180/Math.PI;
+
+    const g=svgEl("g",{opacity:"0.55"});
+    const line=svgEl("line",{x1:sx,y1:sy,x2:ex,y2:ey,stroke:"#7bc8f0","stroke-width":"2.5","stroke-dasharray":"4 3"});
+    const arrow=svgEl("polygon",{points:"0,-4 8,0 0,4",fill:"#4DBDE8",
+      transform:`translate(${ex},${ey}) rotate(${angle})`});
+    g.appendChild(line); g.appendChild(arrow);
+    svg.appendChild(g);
+  }
+
+  // Cells
+  path.forEach((pos, i) => {
+    const cell = cells[i];
+    if(!cell) return;
+    const x=pos.col*step, y=pos.row*step;
+    const c=COLOR_MAP[cell.color]||{bg:"#ccc"};
+    const isDone=tapped[i];
+    const isNext=(i===nextIdx);
+    const alpha=isDone?0.28:1;
+
+    const g=svgEl("g",{
+      transform:`translate(${x},${y})`,
+      style:`cursor:${isDone?"default":"pointer"};`,
+    });
+
+    // shape
+    g.appendChild(shapeEl(cell.shape, cellSize, c.bg, alpha));
+
+    // glow outline for next cell
+    if(isNext){
+      const outline=shapeEl(cell.shape, cellSize, "white", 0);
+      outline.setAttribute("stroke","white");
+      outline.setAttribute("stroke-width","3");
+      g.appendChild(outline);
+    }
+
+    // number badge
+    const numSize=Math.max(9,cellSize*0.22);
+    const ringBg=isNext?"rgba(0,0,0,0.55)":"rgba(0,0,0,0.32)";
+    const numCirc=svgEl("circle",{cx:cellSize*0.82,cy:cellSize*0.18,r:numSize*0.9,fill:ringBg});
+    const numText=svgEl("text",{
+      x:cellSize*0.82, y:cellSize*0.18+numSize*0.34,
+      "text-anchor":"middle","font-size":numSize,
+      fill:"rgba(255,255,255,0.9)","font-weight":"900","font-family":"Nunito,Arial,sans-serif"
+    });
+    numText.textContent=i+1;
+    g.appendChild(numCirc); g.appendChild(numText);
+
+    // checkmark
+    if(isDone){
+      const ck=svgEl("text",{
+        x:cellSize/2, y:cellSize/2+cellSize*0.14,
+        "text-anchor":"middle","font-size":cellSize*0.42,
+        fill:"white","font-weight":"bold",opacity:"0.95"
+      });
+      ck.textContent="✓";
+      g.appendChild(ck);
+    }
+
+    if(!isDone && isNext){
+      g.addEventListener('click',()=>tapCell(i));
+    }
+    svg.appendChild(g);
+  });
+
+  // START / END labels
+  if(path.length>0){
+    const s0=path[0], sE=path[path.length-1];
+    const startLbl=svgEl("text",{
+      x:s0.col*step+cellSize/2, y:s0.row*step-5,
+      "text-anchor":"middle","font-size":10,fill:"#5DC86B","font-weight":"900"
+    });
+    startLbl.textContent="СТАРТ";
+    const endLbl=svgEl("text",{
+      x:sE.col*step+cellSize/2, y:sE.row*step+cellSize+13,
+      "text-anchor":"middle","font-size":10,fill:"#FF8C42","font-weight":"900"
+    });
+    endLbl.textContent="ФИНИШ";
+    svg.appendChild(startLbl); svg.appendChild(endLbl);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DICE CARD HTML
+// ─────────────────────────────────────────────────────────────────────────────
+function makeDiceCardHTML(attrKey, gesture, poseBy, size) {
+  const isColor=poseBy==="color";
+  const borderColor=isColor?(COLOR_MAP[attrKey]?.bg??"#ccc"):"#b0cfe8";
+  const dotSize=Math.round(size*0.42);
+  const emojiSz=Math.round(size*0.36);
+  const labelSz=Math.max(6,Math.round(size*0.13));
+  const nameSz=Math.max(5,Math.round(size*0.115));
+  const pad=Math.round(size*0.10);
+  const radius=Math.round(size*0.20);
+  const border=size>50?3:2;
+
+  let iconHtml;
+  if(isColor){
+    iconHtml=`<div style="width:${dotSize}px;height:${dotSize}px;border-radius:50%;background:${COLOR_MAP[attrKey]?.bg??"#ccc"};flex-shrink:0;"></div>`;
+  } else {
+    iconHtml=`<div style="width:${dotSize}px;height:${dotSize}px;border-radius:${Math.round(dotSize*0.22)}px;background:#e0edf7;display:flex;align-items:center;justify-content:center;font-size:${Math.round(dotSize*0.6)}px;color:#555;font-weight:900;flex-shrink:0;">${SHAPE_ICONS[attrKey]??attrKey}</div>`;
+  }
+  const lbl=isColor?(COLOR_MAP[attrKey]?.label??attrKey):(SHAPE_NAMES[attrKey]??attrKey);
+
+  return `<div class="dice-card" style="border-radius:${radius}px;padding:${pad}px ${Math.round(pad*1.2)}px;gap:${Math.round(size*0.04)}px;min-width:${size}px;border:${border}px solid ${borderColor};">
+    ${iconHtml}
+    <div class="dice-emoji" style="font-size:${emojiSz}px;">${gesture?.label??""}</div>
+    <div class="dice-label" style="font-size:${labelSz}px;">${lbl}</div>
+    <div class="dice-name" style="font-size:${nameSz}px;">${gesture?.name??""}</div>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER SCREENS
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMenu() {
+  const grid=document.getElementById('level-grid');
+  const colors=["#5DC86B","#5DC86B","#5DC86B","#4DBDE8","#4DBDE8","#4DBDE8","#FF8C42","#FF8C42","#FF8C42","#8B6FCE"];
+  grid.innerHTML=LEVELS.map((lv,i)=>`
+    <button class="lv-btn" style="background:${colors[i]}" onclick="startLevel(${i})">
+      <div class="lv-num">${lv.id}</div>
+      <div class="lv-sub">${lv.poseBy==="color"?"🎨":"⬠"} ${lv.gestureCnt}🎲</div>
+    </button>`).join('');
+}
+
+function startLevel(idx) {
+  state.levelIdx=idx;
+  state.hand="left";
+  state.rollDone=false;
+  state.rolling=false;
+  goScreen('prep');
+}
+
+function setHand(h) {
+  state.hand=h;
+  document.getElementById('btn-left').classList.toggle('active',h==="left");
+  document.getElementById('btn-right').classList.toggle('active',h==="right");
+}
+
+function renderPrep() {
+  const lv=LEVELS[state.levelIdx];
+  document.getElementById('prep-title').textContent=`Уровень ${lv.id}`;
+  document.getElementById('pose-by-badge').textContent=
+    lv.poseBy==="color"?"🎨 Поза зависит от ЦВЕТА":"⬠ Поза зависит от ФОРМЫ";
+  document.getElementById('btn-left').classList.add('active');
+  document.getElementById('btn-right').classList.remove('active');
+  renderRollArea();
+}
+
+function renderRollArea() {
+  const lv=LEVELS[state.levelIdx];
+  const poseKeys=lv.poseBy==="color"?lv.colors:lv.shapes;
+  const diceSize=Math.round(64-(lv.gestureCnt-3)*(28/4));
+  const area=document.getElementById('roll-area');
+
+  if(state.rolling){
+    area.innerHTML=`<div class="rolling-anim">${poseKeys.map((_,i)=>`<div class="dice-spin" style="animation-delay:${i*0.1}s">🎲</div>`).join('')}</div>`;
+    return;
+  }
+  if(!state.rollDone){
+    area.innerHTML=`<button class="roll-btn" onclick="doRoll()">🎲 Бросить кубики</button>`;
+    return;
+  }
+  // Show dice + buttons
+  const cardsHtml=poseKeys.map(k=>makeDiceCardHTML(k,state.diceMap[k],lv.poseBy,diceSize)).join('');
+  area.innerHTML=`
+    <div class="dice-row">${cardsHtml}</div>
+    <div class="btn-row">
+      <button class="roll-btn" onclick="doRoll()">🔄 Перебросить</button>
+      <button class="go-btn" onclick="goScreen('game')">▶ Старт</button>
+    </div>`;
+}
+
+function doRoll() {
+  const lv=LEVELS[state.levelIdx];
+  state.rolling=true;
+  state.rollDone=false;
+  renderRollArea();
+  setTimeout(()=>{
+    state.diceMap=rollDice(lv);
+    state.path=buildSnakePath(lv.gridW,lv.gridH,lv.id);
+    state.cells=buildCells(lv,state.diceMap);
+    state.tapped=new Array(lv.gridW*lv.gridH).fill(false);
+    state.nextIdx=0;
+    state.rolling=false;
+    state.rollDone=true;
+    renderRollArea();
+  },900);
+}
+
+function renderGame() {
+  const lv=LEVELS[state.levelIdx];
+  const {poseBy,colors,shapes,gestureCnt}=lv;
+  const poseKeys=poseBy==="color"?colors:shapes;
+  const isLeft=state.hand==="left";
+  const diceSize=Math.round(64-(gestureCnt-3)*(28/4));
+
+  document.getElementById('g-title').textContent=`Ур. ${lv.id}`;
+  document.getElementById('g-poseby').textContent=poseBy==="color"?"🎨 цвет":"⬠ форма";
+  document.getElementById('g-hint').textContent=isLeft
+    ?"☜ Левая держит позу · Правая ☞ тычет по порядку"
+    :"☞ Правая держит позу · Левая ☜ тычет по порядку";
+
+  // Dice panels
+  const panelL=document.getElementById('dice-panel-left');
+  const panelR=document.getElementById('dice-panel-right');
+  const cardsHtml=poseKeys.map(k=>makeDiceCardHTML(k,state.diceMap[k],poseBy,diceSize)).join('');
+
+  if(isLeft){
+    panelL.style.display='flex'; panelR.style.display='none';
+    document.getElementById('dice-cards-left').innerHTML=cardsHtml;
+  } else {
+    panelR.style.display='flex'; panelL.style.display='none';
+    document.getElementById('dice-cards-right').innerHTML=cardsHtml;
+  }
+
+  updateProgress();
+  renderBoard();
+}
+
+function updateProgress() {
+  const done=state.tapped.filter(Boolean).length;
+  document.getElementById('g-progress').textContent=`${done}/${state.cells.length}`;
+}
+
+function tapCell(i) {
+  if(i!==state.nextIdx) return;
+  state.tapped[i]=true;
+  state.nextIdx=i+1;
+  updateProgress();
+  renderBoard();
+  if(state.tapped.every(Boolean)){
+    setTimeout(()=>goScreen('win'),400);
+  }
+}
+
+function renderWin() {
+  const lv=LEVELS[state.levelIdx];
+  document.getElementById('win-sub').textContent=`Уровень ${lv.id} завершён! Отлично!`;
+  const btns=document.getElementById('win-btns');
+  const hasNext=state.levelIdx<LEVELS.length-1;
+  btns.innerHTML=`
+    ${hasNext?`<button class="play-btn" onclick="startLevel(${state.levelIdx+1})">▶ Следующий уровень</button>`:""}
+    <button class="go-btn" style="width:100%" onclick="goScreen('menu')">☰ Все уровни</button>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+renderMenu();
+</script>
+</body>
+</html>
