@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Состав числа — Котвицкая</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Baloo+2:wght@700;800&display=swap');
+
+  :root {
+    --bg: #FFF8E7;
+    --yellow: #FFD93D;
+    --orange: #FF6B35;
+    --pink: #FF4FA0;
+    --blue: #4DC9FF;
+    --green: #5EE65E;
+    --purple: #C084FC;
+    --red: #FF4444;
+    --dark: #2D2A4A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── FLOATING STICKERS BACKGROUND ── */
+  #sticker-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .sticker {
+    position: absolute;
+    font-size: 2.2rem;
+    opacity: 0.18;
+    animation: floatSticker linear infinite;
+    will-change: transform;
+  }
+  @keyframes floatSticker {
+    0%   { transform: translateY(110vh) rotate(0deg); }
+    100% { transform: translateY(-20vh) rotate(360deg); }
+  }
+
+  /* ── SCREENS ── */
+  #screen-menu, #screen-game, #screen-result {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: opacity 0.35s;
+  }
+  .hidden { display: none !important; }
+
+  /* ── MENU ── */
+  .logo {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    font-weight: 800;
+    color: var(--orange);
+    text-shadow: 3px 3px 0 var(--dark), 6px 6px 0 rgba(0,0,0,.1);
+    letter-spacing: -1px;
+    text-align: center;
+    line-height: 1.1;
+  }
+  .subtitle {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dark);
+    opacity: 0.5;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    margin-bottom: 28px;
+  }
+
+  .menu-card {
+    background: white;
+    border-radius: 28px;
+    padding: 28px 36px;
+    box-shadow: 6px 6px 0 var(--dark);
+    border: 3px solid var(--dark);
+    width: min(90vw, 400px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .section-label {
+    font-size: .75rem;
+    font-weight: 800;
+    color: var(--dark);
+    opacity: .45;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: -4px;
+  }
+
+  .btn-row { display: flex; gap: 10px; }
+
+  .btn {
+    flex: 1;
+    padding: 12px 10px;
+    border-radius: 14px;
+    border: 3px solid var(--dark);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+    box-shadow: 4px 4px 0 var(--dark);
+    background: white;
+    color: var(--dark);
+  }
+  .btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--dark); }
+  .btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--dark); }
+
+  .btn.selected { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--dark); }
+
+  .btn-level-5.selected  { background: var(--pink);   color: white; }
+  .btn-level-10.selected { background: var(--blue);   color: white; }
+  .btn-timer.selected    { background: var(--yellow);  color: var(--dark); }
+  .btn-notimer.selected  { background: var(--green);   color: var(--dark); }
+
+  .btn-start {
+    background: var(--orange);
+    color: white;
+    font-size: 1.15rem;
+    padding: 16px;
+    border-radius: 18px;
+    box-shadow: 5px 5px 0 var(--dark);
+  }
+  .btn-start:hover { background: #ff5520; }
+
+  .kotvitskaya-sig {
+    text-align: center;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--dark);
+    opacity: .35;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: -4px;
+  }
+
+  .btn-rules-small {
+    background: transparent;
+    border: 2px solid var(--dark);
+    border-radius: 10px;
+    font-size: .8rem;
+    box-shadow: 3px 3px 0 var(--dark);
+    padding: 8px 14px;
+    opacity: .7;
+  }
+
+  /* ── MODAL RULES ── */
+  #modal-rules {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(45,42,74,.55);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-box {
+    background: white;
+    border-radius: 24px;
+    border: 3px solid var(--dark);
+    box-shadow: 8px 8px 0 var(--dark);
+    padding: 32px 36px;
+    max-width: min(90vw, 440px);
+    position: relative;
+  }
+  .modal-box h2 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.6rem;
+    color: var(--orange);
+    margin-bottom: 14px;
+  }
+  .modal-box p, .modal-box li {
+    font-size: .95rem;
+    line-height: 1.6;
+    color: var(--dark);
+  }
+  .modal-box ul { padding-left: 18px; margin-top: 8px; }
+  .btn-close {
+    position: absolute; top: 14px; right: 16px;
+    background: var(--pink); color: white;
+    border: 2px solid var(--dark);
+    border-radius: 50%; width: 32px; height: 32px;
+    font-size: 1rem; font-weight: 900;
+    cursor: pointer; line-height: 28px; text-align: center;
+    box-shadow: 3px 3px 0 var(--dark);
+  }
+
+  /* ── GAME SCREEN ── */
+  #screen-game {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 12px 12px 0;
+    gap: 0;
+  }
+
+  #game-top {
+    width: 100%; display: flex;
+    align-items: center; justify-content: space-between;
+    padding: 0 4px 8px;
+    flex-wrap: wrap; gap: 6px;
+  }
+
+  #big-number {
+    font-family: 'Baloo 2', cursive;
+    font-size: clamp(3.5rem, 12vw, 6rem);
+    font-weight: 800;
+    color: var(--orange);
+    text-shadow: 4px 4px 0 var(--dark);
+    line-height: 1;
+  }
+
+  #timer-display {
+    font-family: 'Baloo 2', cursive;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--dark);
+    background: var(--yellow);
+    border: 3px solid var(--dark);
+    border-radius: 14px;
+    padding: 4px 16px;
+    box-shadow: 4px 4px 0 var(--dark);
+    min-width: 80px;
+    text-align: center;
+  }
+  #timer-display.urgent { color: var(--red); animation: pulse .5s infinite alternate; }
+  @keyframes pulse { from{transform:scale(1)} to{transform:scale(1.06)} }
+
+  #score-display {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--dark);
+    background: var(--green);
+    border: 3px solid var(--dark);
+    border-radius: 14px;
+    padding: 4px 14px;
+    box-shadow: 4px 4px 0 var(--dark);
+  }
+
+  #field {
+    flex: 1;
+    width: 100%;
+    position: relative;
+    background: linear-gradient(135deg, #fffaf0 0%, #fff0f8 50%, #f0f8ff 100%);
+    border-radius: 24px;
+    border: 3px solid var(--dark);
+    box-shadow: 6px 6px 0 var(--dark);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  /* ── FLOATING DIGITS ── */
+  .digit-bubble {
+    position: absolute;
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.8rem;
+    font-weight: 800;
+    border: 3px solid var(--dark);
+    box-shadow: 4px 4px 0 var(--dark);
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+    will-change: transform;
+    z-index: 2;
+  }
+  .digit-bubble:hover { transform: scale(1.12); }
+  .digit-bubble.selected {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 4px var(--orange), 4px 4px 0 var(--dark);
+    transform: scale(1.18);
+    z-index: 5;
+  }
+  .digit-bubble.correct-flash {
+    animation: correctFlash .5s forwards;
+  }
+  @keyframes correctFlash {
+    0%  { background: white; }
+    30% { background: var(--green); transform: scale(1.3); }
+    70% { background: var(--green); }
+    100%{ opacity: 0; transform: scale(0); }
+  }
+  .digit-bubble.wrong-flash {
+    animation: wrongFlash .5s forwards;
+  }
+  @keyframes wrongFlash {
+    0%,100%{ transform: translateX(0); }
+    20%    { transform: translateX(-8px); background: var(--red); color: white; }
+    40%    { transform: translateX(8px); }
+    60%    { transform: translateX(-6px); }
+    80%    { transform: translateX(6px); }
+  }
+
+  /* SVG lines */
+  #lines-svg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .pair-line {
+    stroke: var(--orange);
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0;
+    animation: lineAppear .3s forwards;
+  }
+  @keyframes lineAppear { to { opacity: .6; } }
+
+  /* ── RESULT SCREEN ── */
+  .result-card {
+    background: white;
+    border-radius: 28px;
+    border: 3px solid var(--dark);
+    box-shadow: 8px 8px 0 var(--dark);
+    padding: 36px 40px;
+    text-align: center;
+    width: min(92vw, 420px);
+  }
+  .result-emoji { font-size: 4rem; margin-bottom: 8px; }
+  .result-title {
+    font-family: 'Baloo 2', cursive;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .result-score {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--orange);
+    text-shadow: 3px 3px 0 var(--dark);
+    margin: 10px 0;
+  }
+  .result-detail { font-size: .95rem; color: var(--dark); opacity: .7; margin-bottom: 20px; }
+  .result-breakdown { font-size: .9rem; color: var(--dark); margin-bottom: 20px; text-align: left;
+    background: var(--bg); border-radius: 12px; padding: 12px 16px; line-height: 1.8; }
+
+  .btn-again {
+    background: var(--pink);
+    color: white;
+    font-size: 1.1rem;
+    padding: 14px 32px;
+    border-radius: 18px;
+    border: 3px solid var(--dark);
+    box-shadow: 5px 5px 0 var(--dark);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s;
+  }
+  .btn-again:hover { transform: translate(-2px,-2px); box-shadow: 7px 7px 0 var(--dark); }
+
+  /* ── COMBO POPUP ── */
+  .combo-pop {
+    position: absolute;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--orange);
+    text-shadow: 2px 2px 0 var(--dark);
+    pointer-events: none;
+    z-index: 20;
+    animation: comboRise .8s forwards;
+  }
+  @keyframes comboRise {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1.4); }
+  }
+
+  #btn-exit-game {
+    background: transparent;
+    border: 2px solid rgba(45,42,74,.3);
+    border-radius: 10px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--dark);
+    opacity: .6;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    box-shadow: none;
+  }
+  #btn-exit-game:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND STICKERS -->
+<div id="sticker-bg"></div>
+
+<!-- MODAL RULES -->
+<div id="modal-rules" class="hidden">
+  <div class="modal-box">
+    <button class="btn-close" onclick="closeRules()">✕</button>
+    <h2>📖 Правила игры</h2>
+    <p>Цель: найти все пары чисел, которые в сумме дают <strong>5</strong> или <strong>10</strong> (зависит от уровня).</p>
+    <ul>
+      <li>Нажми на одну цифру — она выделится.</li>
+      <li>Затем нажми на вторую цифру — если сумма верная, пара исчезнет ✅</li>
+      <li>Если сумма неверная — цифры встряхнутся ❌</li>
+      <li>Найди все пары, чтобы завершить игру.</li>
+    </ul>
+    <p style="margin-top:10px"><strong>🏆 Баллы:</strong></p>
+    <ul>
+      <li>+10 за каждую правильную пару</li>
+      <li>−2 за каждую ошибку</li>
+      <li>С таймером: бонус за оставшееся время</li>
+    </ul>
+  </div>
+</div>
+
+<!-- MENU SCREEN -->
+<div id="screen-menu">
+  <div class="logo">Состав числа</div>
+  <div class="menu-card">
+    <div class="section-label">Уровень сложности</div>
+    <div class="btn-row">
+      <button class="btn btn-level-5 selected" id="btn5" onclick="selectLevel(5)">Число <strong>5</strong></button>
+      <button class="btn btn-level-10" id="btn10" onclick="selectLevel(10)">Число <strong>10</strong></button>
+    </div>
+
+    <div class="section-label">Режим таймера</div>
+    <div class="btn-row">
+      <button class="btn btn-timer selected" id="btnTimer" onclick="selectTimer(true)">⏱ 1 минута</button>
+      <button class="btn btn-notimer" id="btnNoTimer" onclick="selectTimer(false)">∞ Без таймера</button>
+    </div>
+
+    <button class="btn btn-start" onclick="startGame()">▶ Начать игру!</button>
+    <button class="btn btn-rules-small" onclick="openRules()">📖 Правила</button>
+    <div class="kotvitskaya-sig">Котвицкая</div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="screen-game" class="hidden">
+  <div id="game-top">
+    <div id="big-number">5</div>
+    <div id="timer-display" class="hidden">1:00</div>
+    <div id="score-display">⭐ 0</div>
+    <button id="btn-exit-game" onclick="goMenu()">✕ Выйти</button>
+  </div>
+  <div id="field">
+    <svg id="lines-svg"></svg>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result" class="hidden">
+  <div class="result-card">
+    <div class="result-emoji" id="res-emoji">🎉</div>
+    <div class="result-title" id="res-title">Отлично!</div>
+    <div class="result-score" id="res-score">100</div>
+    <div class="result-detail" id="res-detail">баллов</div>
+    <div class="result-breakdown" id="res-breakdown"></div>
+    <button class="btn-again" onclick="goMenu()">🔄 Ещё раз!</button>
+  </div>
+</div>
+
+<script>
+// ─── STICKER BG ───────────────────────────────────────────────────────────
+const STICKERS = ['➕','➖','🧮','🖐','🤚'];
+const bg = document.getElementById('sticker-bg');
+for(let i=0;i<22;i++){
+  const s = document.createElement('div');
+  s.className = 'sticker';
+  s.textContent = STICKERS[i % STICKERS.length];
+  s.style.left = (Math.random()*100)+'%';
+  s.style.fontSize = (1.4+Math.random()*1.8)+'rem';
+  s.style.opacity = (0.1+Math.random()*0.18).toFixed(2);
+  const dur = 10+Math.random()*18;
+  const delay = -(Math.random()*dur);
+  s.style.animation = `floatSticker ${dur}s ${delay}s linear infinite`;
+  bg.appendChild(s);
+}
+
+// ─── STATE ────────────────────────────────────────────────────────────────
+let level = 5, useTimer = true;
+let score = 0, errors = 0, correct = 0;
+let timerSec = 60, timerInterval = null;
+let selected = null;
+let bubbles = []; // {id, el, val, x, y, vx, vy, paired}
+let animFrame = null;
+let gameActive = false;
+let totalPairs = 0;
+let startTime = 0;
+
+// ─── MENU ─────────────────────────────────────────────────────────────────
+function selectLevel(n){
+  level = n;
+  document.getElementById('btn5').classList.toggle('selected', n===5);
+  document.getElementById('btn10').classList.toggle('selected', n===10);
+}
+function selectTimer(t){
+  useTimer = t;
+  document.getElementById('btnTimer').classList.toggle('selected', t);
+  document.getElementById('btnNoTimer').classList.toggle('selected', !t);
+}
+function openRules(){ document.getElementById('modal-rules').classList.remove('hidden'); }
+function closeRules(){ document.getElementById('modal-rules').classList.add('hidden'); }
+
+// ─── GAME START ───────────────────────────────────────────────────────────
+const COLORS = [
+  {bg:'#FFD93D',cl:'#2D2A4A'}, {bg:'#FF6B35',cl:'#fff'},
+  {bg:'#FF4FA0',cl:'#fff'}, {bg:'#4DC9FF',cl:'#2D2A4A'},
+  {bg:'#5EE65E',cl:'#2D2A4A'}, {bg:'#C084FC',cl:'#fff'},
+  {bg:'#FFA94D',cl:'#2D2A4A'}, {bg:'#FF8FAB',cl:'#fff'},
+  {bg:'#90E0EF',cl:'#2D2A4A'}, {bg:'#B9FBC0',cl:'#2D2A4A'},
+];
+
+function getPairs(n){
+  // Returns array of [a,b] pairs summing to n
+  const pairs = [];
+  for(let a=0;a<=n;a++) pairs.push([a,n-a]);
+  // For variety: duplicate some pairs (make enough bubbles to fill field)
+  const result = [];
+  const copies = n===5 ? 2 : 2; // 5→2 copies=12 nums; 10→2 copies=22 nums
+  for(let c=0;c<copies;c++) result.push(...pairs);
+  return result;
+}
+
+function startGame(){
+  show('screen-game');
+  score=0; errors=0; correct=0; selected=null;
+  gameActive=true;
+  startTime=Date.now();
+
+  document.getElementById('big-number').textContent = level;
+  document.getElementById('score-display').textContent = '⭐ 0';
+
+  const td = document.getElementById('timer-display');
+  if(useTimer){
+    timerSec=60;
+    td.classList.remove('hidden','urgent');
+    td.textContent='1:00';
+    timerInterval = setInterval(tickTimer,1000);
+  } else {
+    td.classList.add('hidden');
+  }
+
+  buildBubbles();
+  if(animFrame) cancelAnimationFrame(animFrame);
+  animLoop();
+}
+
+function buildBubbles(){
+  const field = document.getElementById('field');
+  // clear old
+  field.querySelectorAll('.digit-bubble').forEach(e=>e.remove());
+  document.getElementById('lines-svg').innerHTML='';
+  bubbles=[];
+
+  const pairs = getPairs(level);
+  totalPairs = pairs.length;
+  const nums = [];
+  pairs.forEach(([a,b])=>{ nums.push(a); nums.push(b); });
+  // shuffle
+  for(let i=nums.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [nums[i],nums[j]]=[nums[j],nums[i]];
+  }
+
+  const W = field.clientWidth || window.innerWidth-24;
+  const H = field.clientHeight || window.innerHeight-120;
+  const R = 32;
+
+  nums.forEach((val,idx)=>{
+    const el = document.createElement('div');
+    el.className = 'digit-bubble';
+    el.textContent = val;
+    const ci = idx % COLORS.length;
+    el.style.background = COLORS[ci].bg;
+    el.style.color = COLORS[ci].cl;
+    const x = R+Math.random()*(W-R*2);
+    const y = R+Math.random()*(H-R*2);
+    const speed = 0.4+Math.random()*0.6;
+    const angle = Math.random()*Math.PI*2;
+    const vx = Math.cos(angle)*speed;
+    const vy = Math.sin(angle)*speed;
+    el.style.left=x-R+'px'; el.style.top=y-R+'px';
+    el.addEventListener('click',()=>onBubbleClick(idx));
+    field.appendChild(el);
+    bubbles.push({id:idx,el,val,x,y,vx,vy,paired:false,removing:false});
+  });
+}
+
+// ─── ANIMATION LOOP (с физикой столкновений) ─────────────────────────────
+function animLoop(){
+  if(!gameActive){ animFrame=null; return; }
+  const field = document.getElementById('field');
+  const W = field.clientWidth;
+  const H = field.clientHeight;
+  const R = 32;
+  const D = R * 2;
+
+  const active = bubbles.filter(b=>!b.paired&&!b.removing);
+
+  // Движение + отскок от стен
+  active.forEach(b=>{
+    b.x += b.vx;
+    b.y += b.vy;
+    if(b.x<=R){ b.x=R; b.vx=Math.abs(b.vx); }
+    if(b.x>=W-R){ b.x=W-R; b.vx=-Math.abs(b.vx); }
+    if(b.y<=R){ b.y=R; b.vy=Math.abs(b.vy); }
+    if(b.y>=H-R){ b.y=H-R; b.vy=-Math.abs(b.vy); }
+  });
+
+  // Столкновения между кружками (упругий удар)
+  for(let i=0;i<active.length;i++){
+    for(let j=i+1;j<active.length;j++){
+      const a=active[i], b=active[j];
+      const dx=b.x-a.x, dy=b.y-a.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<D && dist>0){
+        const overlap=(D-dist)/2;
+        const nx=dx/dist, ny=dy/dist;
+        a.x-=nx*overlap; a.y-=ny*overlap;
+        b.x+=nx*overlap; b.y+=ny*overlap;
+        const dvx=a.vx-b.vx, dvy=a.vy-b.vy;
+        const dot=dvx*nx+dvy*ny;
+        if(dot>0){
+          a.vx-=dot*nx; a.vy-=dot*ny;
+          b.vx+=dot*nx; b.vy+=dot*ny;
+        }
+      }
+    }
+  }
+
+  // Обновляем позиции в DOM
+  active.forEach(b=>{
+    b.el.style.left=(b.x-R)+'px';
+    b.el.style.top=(b.y-R)+'px';
+  });
+
+  animFrame = requestAnimationFrame(animLoop);
+}
+
+// ─── INTERACTION ──────────────────────────────────────────────────────────
+function onBubbleClick(idx){
+  if(!gameActive) return;
+  const b = bubbles[idx];
+  if(b.paired||b.removing) return;
+
+  if(selected===null){
+    selected=idx;
+    b.el.classList.add('selected');
+    return;
+  }
+  if(selected===idx){
+    // deselect
+    b.el.classList.remove('selected');
+    selected=null;
+    return;
+  }
+
+  const a = bubbles[selected];
+  a.el.classList.remove('selected');
+  selected=null;
+
+  if(a.val+b.val===level){
+    // correct!
+    correct++;
+    score+=10;
+    updateScore();
+    showCombo(b.x, b.y, '✅ +10');
+    a.removing=true; b.removing=true;
+    a.el.classList.add('correct-flash');
+    b.el.classList.add('correct-flash');
+    setTimeout(()=>{
+      a.paired=true; b.paired=true;
+      a.el.style.display='none'; b.el.style.display='none';
+      checkWin();
+    },500);
+  } else {
+    errors++;
+    score=Math.max(0,score-2);
+    updateScore();
+    a.el.classList.add('wrong-flash');
+    b.el.classList.add('wrong-flash');
+    setTimeout(()=>{
+      a.el.classList.remove('wrong-flash');
+      b.el.classList.remove('wrong-flash');
+    },500);
+  }
+}
+
+function updateScore(){
+  document.getElementById('score-display').textContent='⭐ '+score;
+}
+
+function showCombo(x,y,text){
+  const field = document.getElementById('field');
+  const d = document.createElement('div');
+  d.className='combo-pop';
+  d.textContent=text;
+  d.style.left=(x-30)+'px'; d.style.top=(y-40)+'px';
+  field.appendChild(d);
+  setTimeout(()=>d.remove(),800);
+}
+
+// ─── TIMER ────────────────────────────────────────────────────────────────
+function tickTimer(){
+  timerSec--;
+  const td = document.getElementById('timer-display');
+  const m=Math.floor(timerSec/60), s=timerSec%60;
+  td.textContent=m+':'+(s<10?'0':'')+s;
+  if(timerSec<=10) td.classList.add('urgent');
+  if(timerSec<=0){ clearInterval(timerInterval); endGame(false); }
+}
+
+// ─── WIN CHECK ────────────────────────────────────────────────────────────
+function checkWin(){
+  const remaining = bubbles.filter(b=>!b.paired&&!b.removing).length;
+  if(remaining===0) endGame(true);
+}
+
+// ─── END GAME ─────────────────────────────────────────────────────────────
+function endGame(won){
+  gameActive=false;
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+
+  let timeBonus=0;
+  const elapsed = Math.round((Date.now()-startTime)/1000);
+  if(useTimer && won && timerSec>0) timeBonus=timerSec*2;
+  const finalScore=score+timeBonus;
+
+  const emoji = won ? (finalScore>=totalPairs*10*0.8?'🏆':'🎉') : '⏰';
+  const title = won ? (errors===0?'Без ошибок!':'Молодец!') : 'Время вышло!';
+
+  document.getElementById('res-emoji').textContent=emoji;
+  document.getElementById('res-title').textContent=title;
+  document.getElementById('res-score').textContent=finalScore;
+  document.getElementById('res-detail').textContent='баллов';
+
+  let bd='';
+  bd+=`✅ Правильных пар: ${correct} из ${totalPairs}\n`;
+  bd+=`❌ Ошибок: ${errors}\n`;
+  if(useTimer) bd+=`⏱ Затрачено: ${elapsed} сек\n`;
+  if(timeBonus>0) bd+=`⚡ Бонус за скорость: +${timeBonus}`;
+  document.getElementById('res-breakdown').innerHTML=bd.replace(/\n/g,'<br>');
+
+  setTimeout(()=>show('screen-result'),600);
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────
+function goMenu(){
+  gameActive=false;
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  if(animFrame){ cancelAnimationFrame(animFrame); animFrame=null; }
+  show('screen-menu');
+}
+
+function show(id){
+  ['screen-menu','screen-game','screen-result'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden',s!==id);
+  });
+}
+</script>
+</body>
+</html>
