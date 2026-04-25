@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Космическая Математика 🚀</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --space: #0a0a1a;
+    --deep: #0d0d2b;
+    --nebula1: #1a0533;
+    --nebula2: #0a1a3d;
+    --star: #fff;
+    --gold: #ffd700;
+    --gold2: #ffaa00;
+    --cyan: #00e5ff;
+    --cyan2: #00b8d4;
+    --green: #00e676;
+    --red: #ff1744;
+    --purple: #ce93d8;
+    --pink: #f48fb1;
+    --orange: #ffab40;
+    --card: rgba(255,255,255,0.05);
+    --border: rgba(0,229,255,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--space);
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ─── STARS ─────────────────────────────── */
+  #stars-canvas {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ─── SCREENS ────────────────────────────── */
+  .screen {
+    position: relative; z-index: 10;
+    min-height: 100vh;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+  }
+  .screen.active { display: flex; }
+
+  /* ─── TITLE SCREEN ───────────────────────── */
+  #screen-title {
+    background: radial-gradient(ellipse at 50% 40%, #1a0a4a 0%, #0a0a1a 70%);
+  }
+
+  .game-logo {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: clamp(2rem, 7vw, 4.5rem);
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--gold) 50%, var(--pink) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    line-height: 1.1;
+    filter: drop-shadow(0 0 30px rgba(0,229,255,0.4));
+    animation: titlePulse 3s ease-in-out infinite;
+  }
+  @keyframes titlePulse {
+    0%,100% { filter: drop-shadow(0 0 30px rgba(0,229,255,0.4)); }
+    50% { filter: drop-shadow(0 0 60px rgba(0,229,255,0.8)) drop-shadow(0 0 80px rgba(255,215,0,0.3)); }
+  }
+
+  .rocket-hero {
+    font-size: clamp(4rem, 12vw, 8rem);
+    animation: float 3s ease-in-out infinite;
+    display: block;
+    margin: 20px 0;
+    filter: drop-shadow(0 0 20px rgba(255,215,0,0.6));
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+
+  .tagline {
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    color: var(--purple);
+    margin-bottom: 30px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  /* ─── MODE SELECT ────────────────────────── */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 760px;
+    margin: 20px 0;
+  }
+
+  .mode-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(0,229,255,0.1), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .mode-card:hover { border-color: var(--cyan); transform: translateY(-4px) scale(1.02); }
+  .mode-card:hover::before { opacity: 1; }
+  .mode-card .icon { font-size: 2.8rem; margin-bottom: 10px; display: block; }
+  .mode-card h3 { font-family: 'Orbitron', monospace; font-size: 1rem; color: var(--cyan); margin-bottom: 6px; }
+  .mode-card p { font-size: 0.82rem; color: rgba(255,255,255,0.6); line-height: 1.4; }
+
+  /* ─── TABLE SELECT ───────────────────────── */
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(0.85rem, 2vw, 1.1rem);
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 20px 0 12px;
+  }
+
+  .table-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 480px;
+  }
+
+  .table-btn {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--card);
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .table-btn.selected {
+    background: linear-gradient(135deg, var(--cyan2), var(--cyan));
+    border-color: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 15px rgba(0,229,255,0.5);
+    transform: scale(1.08);
+  }
+  .table-btn:hover:not(.selected) { border-color: var(--gold); color: var(--gold); }
+
+  /* ─── BUTTONS ────────────────────────────── */
+  .btn {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(0.85rem, 2vw, 1rem);
+    font-weight: 700;
+    padding: 14px 36px;
+    border-radius: 50px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #00b8d4, #00e5ff);
+    color: #000;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.4);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,229,255,0.6); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.2);
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold2), var(--gold));
+    color: #000;
+    box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+  }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,215,0,0.6); }
+
+  /* ─── GAME SCREEN ────────────────────────── */
+  #screen-game {
+    justify-content: flex-start;
+    padding-top: 10px;
+  }
+
+  .game-header {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    backdrop-filter: blur(10px);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Orbitron', monospace;
+  }
+  .stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--cyan);
+  }
+  .stat-value.gold { color: var(--gold); }
+  .stat-value.green { color: var(--green); }
+
+  /* HP Bar */
+  .hp-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 120px;
+  }
+  .hp-bar {
+    flex: 1;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), #69f0ae);
+    border-radius: 99px;
+    transition: width 0.5s ease;
+  }
+  .hp-fill.warn { background: linear-gradient(90deg, var(--orange), #ffd740); }
+  .hp-fill.danger { background: linear-gradient(90deg, var(--red), #ff5252); }
+
+  /* Arena */
+  .arena {
+    width: 100%;
+    max-width: 700px;
+    position: relative;
+    min-height: 260px;
+    margin-bottom: 16px;
+  }
+
+  /* Enemy */
+  .enemy-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+  }
+
+  .enemy-wrap {
+    position: relative;
+    display: inline-block;
+  }
+
+  .enemy-sprite {
+    font-size: clamp(4rem, 12vw, 7rem);
+    display: block;
+    animation: enemyHover 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(255,100,100,0.5));
+    transition: transform 0.2s;
+    cursor: default;
+    user-select: none;
+  }
+  @keyframes enemyHover {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-12px) scale(1.05); }
+  }
+
+  .enemy-hp-bar {
+    width: clamp(160px, 50vw, 280px);
+    height: 14px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .enemy-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff1744, #ff6d00);
+    border-radius: 99px;
+    transition: width 0.5s ease;
+  }
+  .enemy-name {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(0.75rem, 2vw, 0.95rem);
+    color: var(--pink);
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .damage-float {
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 1.6rem;
+    color: var(--gold);
+    pointer-events: none;
+    animation: floatDmg 1s ease-out forwards;
+    text-shadow: 0 0 20px var(--gold);
+    z-index: 20;
+  }
+  @keyframes floatDmg {
+    0% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(1.4); }
+  }
+
+  /* Question Box */
+  .question-box {
+    background: linear-gradient(135deg, rgba(0,40,80,0.9), rgba(0,20,50,0.9));
+    border: 2px solid var(--border);
+    border-radius: 24px;
+    padding: 24px 28px;
+    width: 100%;
+    max-width: 700px;
+    backdrop-filter: blur(10px);
+    margin-bottom: 14px;
+  }
+
+  .question-table-tag {
+    font-size: 0.72rem;
+    font-family: 'Orbitron', monospace;
+    color: var(--purple);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .question-text {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 4px;
+    text-shadow: 0 0 30px rgba(0,229,255,0.3);
+  }
+  .question-text .op { color: var(--cyan); }
+  .question-text .q-mark { color: var(--gold); animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .hint-text {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.3);
+    margin-top: 4px;
+  }
+
+  /* Answer options */
+  .answer-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .answer-btn {
+    background: rgba(255,255,255,0.07);
+    border: 2px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    padding: 18px 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.3rem, 5vw, 2rem);
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .answer-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(0,229,255,0.15), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,229,255,0.2);
+  }
+  .answer-btn:hover:not(:disabled)::after { opacity: 1; }
+  .answer-btn:active:not(:disabled) { transform: scale(0.97); }
+  .answer-btn.correct {
+    background: rgba(0,230,118,0.2);
+    border-color: var(--green);
+    color: var(--green);
+    animation: correctPulse 0.4s ease;
+  }
+  .answer-btn.wrong {
+    background: rgba(255,23,68,0.2);
+    border-color: var(--red);
+    color: var(--red);
+    animation: wrongShake 0.4s ease;
+  }
+  @keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); box-shadow: 0 0 30px rgba(0,230,118,0.6); }
+    100% { transform: scale(1); }
+  }
+  @keyframes wrongShake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .answer-btn:disabled { cursor: default; }
+
+  /* Timer */
+  .timer-ring {
+    position: relative;
+    width: 64px; height: 64px;
+  }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring .bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5; }
+  .timer-ring .prog {
+    fill: none;
+    stroke: var(--cyan);
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 163;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+  }
+  .timer-num {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--cyan);
+  }
+
+  /* ─── COMBO ──────────────────────────────── */
+  .combo-display {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%) scale(0);
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: clamp(2rem, 8vw, 4rem);
+    pointer-events: none;
+    z-index: 100;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .combo-display.show {
+    animation: comboPop 1.2s ease-out forwards;
+  }
+  @keyframes comboPop {
+    0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+    20% { transform: translate(-50%,-50%) scale(1.1); }
+    40% { transform: translate(-50%,-50%) scale(0.95); }
+    60% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%,-60%) scale(0.8); opacity: 0; }
+  }
+
+  /* ─── SCREEN EFFECTS ─────────────────────── */
+  .flash-overlay {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  .flash-overlay.green { background: rgba(0,230,118,0.2); }
+  .flash-overlay.red { background: rgba(255,23,68,0.2); }
+  .flash-overlay.show { opacity: 1; }
+
+  /* ─── RESULTS SCREEN ─────────────────────── */
+  #screen-results {
+    background: radial-gradient(ellipse at 50% 30%, #1a0a4a 0%, #0a0a1a 70%);
+  }
+
+  .result-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 500px;
+    backdrop-filter: blur(10px);
+  }
+
+  .result-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .stars-display {
+    font-size: clamp(2rem, 6vw, 3rem);
+    margin: 16px 0;
+    letter-spacing: 4px;
+    animation: starsPop 0.8s ease 0.3s both;
+  }
+  @keyframes starsPop {
+    0% { transform: scale(0); opacity: 0; }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .result-stat {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 14px 8px;
+  }
+  .result-stat .val {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--cyan);
+  }
+  .result-stat .lbl {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.5);
+    margin-top: 2px;
+  }
+
+  .mistakes-list {
+    background: rgba(255,23,68,0.08);
+    border: 1px solid rgba(255,23,68,0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    max-height: 140px;
+    overflow-y: auto;
+    text-align: left;
+  }
+  .mistakes-list h4 {
+    font-size: 0.75rem;
+    font-family: 'Orbitron', monospace;
+    color: var(--red);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .mistake-item {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.7);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+  }
+  .mistake-item:last-child { border-bottom: none; }
+  .mistake-correct { color: var(--green); font-weight: 700; }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+
+  /* ─── PROGRESS SCREEN ────────────────────── */
+  #screen-table-practice {
+    background: radial-gradient(ellipse at 30% 60%, #001a40 0%, #0a0a1a 70%);
+  }
+
+  .table-display {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    width: 100%;
+    max-width: 700px;
+    margin: 16px 0;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .table-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .table-row:hover { background: rgba(0,229,255,0.08); border-color: var(--cyan); }
+  .table-row .eq { color: var(--cyan); font-size: 0.7rem; }
+  .table-row .res { color: var(--gold); font-weight: 700; }
+
+  /* ─── BADGE ──────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 1px solid;
+  }
+  .badge-cyan { background: rgba(0,229,255,0.1); border-color: rgba(0,229,255,0.3); color: var(--cyan); }
+  .badge-gold { background: rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.3); color: var(--gold); }
+
+  /* ─── SCROLLBAR ──────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* ─── MISC ───────────────────────────────── */
+  .gap-12 { gap: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .text-sm { font-size: 0.82rem; color: rgba(255,255,255,0.5); }
+
+  .planet-deco {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .answer-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .answer-btn { padding: 14px 8px; font-size: 1.4rem; }
+    .question-text { font-size: 2.2rem; }
+    .game-header { padding: 8px 12px; }
+    .result-stats { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+<div class="flash-overlay" id="flashOverlay"></div>
+<div class="combo-display" id="comboDisplay"></div>
+
+<!-- Planet decorations -->
+<div class="planet-deco" style="width:200px;height:200px;background:radial-gradient(circle at 35% 35%,#4a1a8a,#1a0a3a);top:-60px;right:-60px;opacity:0.4;box-shadow:inset -20px -20px 40px rgba(0,0,0,0.5);"></div>
+<div class="planet-deco" style="width:120px;height:120px;background:radial-gradient(circle at 40% 35%,#0a3a6a,#0a1a3a);bottom:10%;left:-40px;opacity:0.3;box-shadow:inset -15px -15px 30px rgba(0,0,0,0.5);"></div>
+
+<!-- ═══════ SCREEN: TITLE ═══════ -->
+<div class="screen active" id="screen-title">
+  <span class="rocket-hero">🚀</span>
+  <h1 class="game-logo">КОСМИЧЕСКАЯ<br>МАТЕМАТИКА</h1>
+  <p class="tagline">⭐ Спаси галактику силой умножения! ⭐</p>
+
+  <p class="section-title">Выбери режим</p>
+
+  <div class="mode-grid">
+    <div class="mode-card" onclick="startMode('battle')">
+      <span class="icon">👾</span>
+      <h3>Битва</h3>
+      <p>Побеждай инопланетных монстров правильными ответами! 30 секунд на каждый вопрос.</p>
+    </div>
+    <div class="mode-card" onclick="startMode('speed')">
+      <span class="icon">⚡</span>
+      <h3>Скорость</h3>
+      <p>10 вопросов как можно быстрее. Цени каждую секунду!</p>
+    </div>
+    <div class="mode-card" onclick="startMode('survival')">
+      <span class="icon">🛡️</span>
+      <h3>Выживание</h3>
+      <p>3 жизни. Не ошибись три раза подряд! Сколько продержишься?</p>
+    </div>
+    <div class="mode-card" onclick="showTablePractice()">
+      <span class="icon">📖</span>
+      <h3>Шпаргалка</h3>
+      <p>Посмотри всю таблицу умножения от 2 до 12 перед игрой.</p>
+    </div>
+  </div>
+
+  <p class="section-title">Выбери таблицы (или все)</p>
+  <div class="table-grid" id="tableSelector">
+    <button class="table-btn selected" data-n="all" onclick="toggleTable(this)">Все</button>
+    <button class="table-btn" data-n="2" onclick="toggleTable(this)">2</button>
+    <button class="table-btn" data-n="3" onclick="toggleTable(this)">3</button>
+    <button class="table-btn" data-n="4" onclick="toggleTable(this)">4</button>
+    <button class="table-btn" data-n="5" onclick="toggleTable(this)">5</button>
+    <button class="table-btn" data-n="6" onclick="toggleTable(this)">6</button>
+    <button class="table-btn" data-n="7" onclick="toggleTable(this)">7</button>
+    <button class="table-btn" data-n="8" onclick="toggleTable(this)">8</button>
+    <button class="table-btn" data-n="9" onclick="toggleTable(this)">9</button>
+    <button class="table-btn" data-n="10" onclick="toggleTable(this)">10</button>
+    <button class="table-btn" data-n="11" onclick="toggleTable(this)">11</button>
+    <button class="table-btn" data-n="12" onclick="toggleTable(this)">12</button>
+  </div>
+</div>
+
+<!-- ═══════ SCREEN: GAME ═══════ -->
+<div class="screen" id="screen-game">
+
+  <div class="game-header">
+    <div class="stat-box">
+      <span class="stat-label">Счёт</span>
+      <span class="stat-value gold" id="scoreDisplay">0</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Верно</span>
+      <span class="stat-value green" id="correctDisplay">0</span>
+    </div>
+
+    <!-- HP bar (battle/survival) -->
+    <div class="hp-bar-wrap" id="hpBarWrap" style="display:none">
+      <span style="font-size:1.1rem">❤️</span>
+      <div class="hp-bar"><div class="hp-fill" id="hpFill"></div></div>
+      <span id="hpText" style="font-family:'Orbitron',monospace;font-size:0.85rem;min-width:28px;color:var(--green)"></span>
+    </div>
+
+    <div class="stat-box">
+      <span class="stat-label">Серия</span>
+      <span class="stat-value" id="streakDisplay" style="color:var(--orange)">🔥0</span>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-ring" id="timerRing" style="display:none">
+      <svg width="64" height="64" viewBox="0 0 64 64">
+        <circle class="bg" cx="32" cy="32" r="26"/>
+        <circle class="prog" id="timerCircle" cx="32" cy="32" r="26"/>
+      </svg>
+      <div class="timer-num" id="timerNum">30</div>
+    </div>
+
+    <div class="stat-box">
+      <span class="stat-label">Вопрос</span>
+      <span class="stat-value" id="questionNum">1</span>
+    </div>
+  </div>
+
+  <!-- Enemy (battle/survival mode) -->
+  <div class="enemy-section" id="enemySection" style="display:none; margin-bottom:14px">
+    <div class="enemy-wrap">
+      <span class="enemy-sprite" id="enemySprite">👾</span>
+    </div>
+    <span class="enemy-name" id="enemyName">ЗАРБОР ЗВЁЗДНЫЙ</span>
+    <div class="enemy-hp-bar">
+      <div class="enemy-hp-fill" id="enemyHpFill" style="width:100%"></div>
+    </div>
+  </div>
+
+  <div class="question-box">
+    <div class="question-table-tag" id="questionTableTag">Таблица умножения на 7</div>
+    <div class="question-text" id="questionText">
+      <span id="qNum1">7</span> <span class="op">×</span> <span id="qNum2">8</span> <span class="op">=</span> <span class="q-mark">?</span>
+    </div>
+    <div class="hint-text" id="hintText"></div>
+  </div>
+
+  <div class="answer-grid" id="answerGrid">
+    <button class="answer-btn" onclick="checkAnswer(this, 0)">48</button>
+    <button class="answer-btn" onclick="checkAnswer(this, 1)">56</button>
+    <button class="answer-btn" onclick="checkAnswer(this, 2)">63</button>
+    <button class="answer-btn" onclick="checkAnswer(this, 3)">42</button>
+  </div>
+
+  <button class="btn btn-secondary mt-16" onclick="quitGame()" style="font-size:0.75rem;padding:10px 24px">✕ Выйти</button>
+</div>
+
+<!-- ═══════ SCREEN: TABLE PRACTICE ═══════ -->
+<div class="screen" id="screen-table-practice">
+  <h2 style="font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--cyan);margin-bottom:4px">📖 Шпаргалка</h2>
+  <p class="text-sm" style="margin-bottom:12px">Вся таблица умножения от 2 до 12</p>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px" id="practiceTableBtns"></div>
+
+  <div class="table-display" id="tableDisplay"></div>
+
+  <button class="btn btn-primary mt-16" onclick="showScreen('screen-title')">← Назад</button>
+</div>
+
+<!-- ═══════ SCREEN: RESULTS ═══════ -->
+<div class="screen" id="screen-results">
+  <div class="result-card">
+    <div id="resultEmoji" style="font-size:3.5rem;margin-bottom:8px">🏆</div>
+    <div class="result-title" id="resultTitle">ПОБЕДА!</div>
+    <div class="stars-display" id="starsDisplay">⭐⭐⭐</div>
+
+    <div class="result-stats">
+      <div class="result-stat">
+        <div class="val" id="rScore">0</div>
+        <div class="lbl">Очков</div>
+      </div>
+      <div class="result-stat">
+        <div class="val" id="rCorrect">0</div>
+        <div class="lbl">Верно</div>
+      </div>
+      <div class="result-stat">
+        <div class="val" id="rAccuracy">0%</div>
+        <div class="lbl">Точность</div>
+      </div>
+    </div>
+
+    <div id="mistakesSection"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="replayGame()">🔄 Ещё раз</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-title')">🏠 Меню</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────
+// STARS
+// ────────────────────────────────────────────
+(function() {
+  const c = document.getElementById('stars-canvas');
+  const ctx = c.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 180; i++) {
+    stars.push({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 1.5 + 0.2,
+      a: Math.random(),
+      speed: Math.random() * 0.4 + 0.1,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, c.width, c.height);
+    stars.forEach(s => {
+      const a = s.a * (0.5 + 0.5 * Math.sin(t / 1000 * s.speed + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x * c.width, s.y * c.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// ────────────────────────────────────────────
+// GAME STATE
+// ────────────────────────────────────────────
+const ENEMIES = [
+  { name: 'ЗАРБОР ЗВЁЗДНЫЙ', emoji: '👾' },
+  { name: 'КРАТОН ГАЛАКТИЧЕСКИЙ', emoji: '🤖' },
+  { name: 'ГЛЮК ТУМАННОСТИ', emoji: '👹' },
+  { name: 'МРАКОР ЧЁРНЫЙ', emoji: '🦑' },
+  { name: 'ЗВЁЗДНЫЙ СЛИЗЕНЬ', emoji: '👽' },
+  { name: 'НЕБУЛЯТОР 3000', emoji: '🦠' },
+  { name: 'ТЕМНОТРОН', emoji: '🕷️' },
+  { name: 'МЕТЕОРИТ ЗЛОБНЫЙ', emoji: '☄️' },
+];
+
+let gameMode = 'battle';
+let selectedTables = 'all';
+let currentQ = null;
+let score = 0;
+let streak = 0;
+let maxStreak = 0;
+let correctCount = 0;
+let totalCount = 0;
+let playerHp = 3;
+let enemyHp = 3;
+let enemyIndex = 0;
+let questionIndex = 0;
+let timerInterval = null;
+let timerValue = 30;
+let answering = false;
+let mistakes = [];
+let lastMode = 'battle';
+let lastTables = 'all';
+let speedStartTime = null;
+let speedTotalTime = 0;
+const SPEED_TOTAL = 10;
+
+// ────────────────────────────────────────────
+// SCREEN MANAGEMENT
+// ────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ────────────────────────────────────────────
+// TABLE SELECTOR
+// ────────────────────────────────────────────
+function toggleTable(btn) {
+  const n = btn.dataset.n;
+  const allBtn = document.querySelector('[data-n="all"]');
+
+  if (n === 'all') {
+    document.querySelectorAll('.table-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedTables = 'all';
+  } else {
+    allBtn.classList.remove('selected');
+    btn.classList.toggle('selected');
+    const sel = [...document.querySelectorAll('.table-btn.selected')].map(b => b.dataset.n).filter(x => x !== 'all');
+    if (sel.length === 0) {
+      allBtn.classList.add('selected');
+      selectedTables = 'all';
+    } else {
+      selectedTables = sel.map(Number);
+    }
+  }
+}
+
+function getTableNumbers() {
+  if (selectedTables === 'all') return [2,3,4,5,6,7,8,9,10,11,12];
+  return selectedTables;
+}
+
+// ────────────────────────────────────────────
+// QUESTION GENERATION
+// ────────────────────────────────────────────
+function generateQuestion() {
+  const tables = getTableNumbers();
+  const a = tables[Math.floor(Math.random() * tables.length)];
+  const b = Math.floor(Math.random() * 11) + 2; // 2-12
+  const correct = a * b;
+
+  // Generate 3 wrong answers
+  const wrongs = new Set();
+  while (wrongs.size < 3) {
+    let w;
+    const type = Math.floor(Math.random() * 4);
+    if (type === 0) w = correct + (Math.floor(Math.random() * 5) + 1) * (Math.random() > 0.5 ? 1 : -1);
+    else if (type === 1) w = a * (b + (Math.random() > 0.5 ? 1 : -1));
+    else if (type === 2) w = (a + (Math.random() > 0.5 ? 1 : -1)) * b;
+    else w = correct + (Math.floor(Math.random() * 10) - 5);
+    if (w > 0 && w !== correct) wrongs.add(w);
+  }
+
+  const options = [correct, ...wrongs];
+  // Shuffle
+  for (let i = options.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [options[i], options[j]] = [options[j], options[i]];
+  }
+
+  return { a, b, correct, options, correctIdx: options.indexOf(correct) };
+}
+
+// ────────────────────────────────────────────
+// START MODE
+// ────────────────────────────────────────────
+function startMode(mode) {
+  gameMode = mode;
+  lastMode = mode;
+  lastTables = selectedTables;
+  score = 0;
+  streak = 0;
+  maxStreak = 0;
+  correctCount = 0;
+  totalCount = 0;
+  playerHp = 3;
+  questionIndex = 0;
+  mistakes = [];
+  speedTotalTime = 0;
+
+  // Setup UI for mode
+  document.getElementById('hpBarWrap').style.display = (mode === 'battle' || mode === 'survival') ? 'flex' : 'none';
+  document.getElementById('timerRing').style.display = (mode === 'battle' || mode === 'survival') ? 'flex' : 'none';
+  document.getElementById('enemySection').style.display = (mode === 'battle' || mode === 'survival') ? 'flex' : 'none';
+
+  if (mode === 'battle' || mode === 'survival') {
+    enemyIndex = Math.floor(Math.random() * ENEMIES.length);
+    enemyHp = 5;
+    updateEnemyUI();
+    updateHpUI();
+  }
+
+  updateScoreUI();
+  showScreen('screen-game');
+  nextQuestion();
+}
+
+// ────────────────────────────────────────────
+// QUESTIONS
+// ────────────────────────────────────────────
+function nextQuestion() {
+  if (gameMode === 'speed' && questionIndex >= SPEED_TOTAL) {
+    endGame('win');
+    return;
+  }
+
+  answering = false;
+  clearInterval(timerInterval);
+
+  currentQ = generateQuestion();
+  questionIndex++;
+
+  // Update question UI
+  document.getElementById('qNum1').textContent = currentQ.a;
+  document.getElementById('qNum2').textContent = currentQ.b;
+  document.getElementById('questionTableTag').textContent = `Таблица на ${currentQ.a}`;
+  document.getElementById('questionNum').textContent = questionIndex;
+
+  // Hint for harder ones
+  const product = currentQ.a * currentQ.b;
+  let hint = '';
+  if (currentQ.a === 9) hint = '💡 Приём: 9×N = (10×N) - N';
+  else if (currentQ.b === 11) hint = '💡 11×N = N×10 + N';
+  document.getElementById('hintText').textContent = hint;
+
+  // Answer buttons
+  const grid = document.getElementById('answerGrid');
+  grid.querySelectorAll('.answer-btn').forEach((btn, i) => {
+    btn.textContent = currentQ.options[i];
+    btn.className = 'answer-btn';
+    btn.disabled = false;
+    btn.onclick = () => checkAnswer(btn, i);
+  });
+
+  // Start timer (battle / survival)
+  if (gameMode === 'battle' || gameMode === 'survival') {
+    timerValue = 30;
+    startTimer();
+  } else if (gameMode === 'speed') {
+    if (questionIndex === 1) speedStartTime = Date.now();
+  }
+}
+
+function startTimer() {
+  const circle = document.getElementById('timerCircle');
+  const numEl = document.getElementById('timerNum');
+  const DASH = 163;
+  timerValue = 30;
+
+  circle.style.stroke = 'var(--cyan)';
+  numEl.style.color = 'var(--cyan)';
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerValue--;
+    numEl.textContent = timerValue;
+    circle.style.strokeDashoffset = DASH * (1 - timerValue / 30);
+
+    if (timerValue <= 10) {
+      circle.style.stroke = 'var(--orange)';
+      numEl.style.color = 'var(--orange)';
+    }
+    if (timerValue <= 5) {
+      circle.style.stroke = 'var(--red)';
+      numEl.style.color = 'var(--red)';
+    }
+    if (timerValue <= 0) {
+      clearInterval(timerInterval);
+      timeOut();
+    }
+  }, 1000);
+}
+
+function timeOut() {
+  if (answering) return;
+  answering = true;
+  totalCount++;
+  streak = 0;
+
+  mistakes.push({ q: `${currentQ.a} × ${currentQ.b}`, correct: currentQ.correct, given: '—' });
+
+  // Highlight correct
+  const grid = document.getElementById('answerGrid');
+  grid.querySelectorAll('.answer-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === currentQ.correctIdx) btn.classList.add('correct');
+  });
+
+  flashScreen('red');
+  if (gameMode === 'battle' || gameMode === 'survival') {
+    playerHp = Math.max(0, playerHp - 1);
+    updateHpUI();
+    if (playerHp <= 0) { setTimeout(() => endGame('lose'), 900); return; }
+  }
+
+  updateScoreUI();
+  setTimeout(nextQuestion, 1400);
+}
+
+// ────────────────────────────────────────────
+// CHECK ANSWER
+// ────────────────────────────────────────────
+function checkAnswer(btn, idx) {
+  if (answering) return;
+  answering = true;
+  clearInterval(timerInterval);
+  totalCount++;
+
+  const isCorrect = idx === currentQ.correctIdx;
+  const grid = document.getElementById('answerGrid');
+  grid.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    correctCount++;
+    streak++;
+    if (streak > maxStreak) maxStreak = streak;
+
+    // Score calc
+    let pts = 10;
+    if (gameMode === 'battle' || gameMode === 'survival') pts += timerValue; // bonus for speed
+    if (streak >= 3) pts = Math.floor(pts * 1.5);
+    if (streak >= 5) pts = Math.floor(pts * 2);
+    score += pts;
+
+    flashScreen('green');
+    showCombo(streak, pts);
+
+    if (gameMode === 'battle' || gameMode === 'survival') {
+      enemyHp--;
+      updateEnemyUI();
+      showDamage(pts);
+      if (enemyHp <= 0) {
+        // New enemy
+        enemyIndex = (enemyIndex + 1) % ENEMIES.length;
+        enemyHp = 5 + Math.floor(questionIndex / 5);
+        setTimeout(() => { updateEnemyUI(); }, 500);
+      }
+    }
+  } else {
+    btn.classList.add('wrong');
+    streak = 0;
+    grid.querySelectorAll('.answer-btn')[currentQ.correctIdx].classList.add('correct');
+    mistakes.push({ q: `${currentQ.a} × ${currentQ.b}`, correct: currentQ.correct, given: currentQ.options[idx] });
+
+    flashScreen('red');
+
+    if (gameMode === 'battle' || gameMode === 'survival') {
+      playerHp = Math.max(0, playerHp - 1);
+      updateHpUI();
+      if (playerHp <= 0) {
+        updateScoreUI();
+        setTimeout(() => endGame('lose'), 900);
+        return;
+      }
+    }
+  }
+
+  updateScoreUI();
+
+  // Check end conditions
+  if (gameMode === 'speed' && questionIndex >= SPEED_TOTAL) {
+    speedTotalTime = ((Date.now() - speedStartTime) / 1000).toFixed(1);
+    setTimeout(() => endGame('win'), 900);
+    return;
+  }
+
+  setTimeout(nextQuestion, isCorrect ? 800 : 1400);
+}
+
+// ────────────────────────────────────────────
+// UI UPDATES
+// ────────────────────────────────────────────
+function updateScoreUI() {
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('correctDisplay').textContent = correctCount;
+  document.getElementById('streakDisplay').textContent = streak >= 3 ? `🔥${streak}` : `🔥${streak}`;
+}
+
+function updateHpUI() {
+  const fill = document.getElementById('hpFill');
+  const text = document.getElementById('hpText');
+  const pct = (playerHp / 3) * 100;
+  fill.style.width = pct + '%';
+  fill.className = 'hp-fill' + (pct <= 33 ? ' danger' : pct <= 66 ? ' warn' : '');
+  text.textContent = '❤'.repeat(playerHp);
+  text.style.color = pct <= 33 ? 'var(--red)' : pct <= 66 ? 'var(--orange)' : 'var(--green)';
+}
+
+function updateEnemyUI() {
+  const e = ENEMIES[enemyIndex % ENEMIES.length];
+  document.getElementById('enemySprite').textContent = e.emoji;
+  document.getElementById('enemyName').textContent = e.name;
+  const maxHp = 5 + Math.floor(questionIndex / 5);
+  const pct = (enemyHp / maxHp) * 100;
+  document.getElementById('enemyHpFill').style.width = Math.max(0, pct) + '%';
+}
+
+function showDamage(pts) {
+  const wrap = document.querySelector('.enemy-wrap');
+  const el = document.createElement('div');
+  el.className = 'damage-float';
+  el.textContent = '-' + pts;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
+}
+
+function flashScreen(color) {
+  const el = document.getElementById('flashOverlay');
+  el.className = `flash-overlay ${color} show`;
+  setTimeout(() => el.classList.remove('show'), 150);
+}
+
+function showCombo(streak, pts) {
+  if (streak < 2) return;
+  const el = document.getElementById('comboDisplay');
+  el.className = 'combo-display';
+
+  let text, color;
+  if (streak >= 7) { text = `🌟 СУПЕР-СЕРИЯ x${streak}!`; color = 'var(--gold)'; }
+  else if (streak >= 5) { text = `⚡ МОЛНИЯ x${streak}!`; color = 'var(--cyan)'; }
+  else if (streak >= 3) { text = `🔥 ОГОНЬ x${streak}!`; color = 'var(--orange)'; }
+  else { text = `✓ x${streak}`; color = 'var(--green)'; }
+
+  el.textContent = text;
+  el.style.color = color;
+  el.style.textShadow = `0 0 40px ${color}, 0 0 80px ${color}`;
+
+  void el.offsetWidth;
+  el.className = 'combo-display show';
+}
+
+// ────────────────────────────────────────────
+// END GAME
+// ────────────────────────────────────────────
+function endGame(result) {
+  clearInterval(timerInterval);
+  const accuracy = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+
+  // Stars
+  let stars = 1;
+  if (result === 'win') {
+    if (accuracy >= 90) stars = 3;
+    else if (accuracy >= 70) stars = 2;
+  }
+  if (result === 'lose') stars = accuracy >= 60 ? 1 : 0;
+
+  // Emoji & title
+  let emoji, title;
+  if (result === 'win') {
+    if (stars === 3) { emoji = '🏆'; title = 'ГАЛАКТИКА СПАСЕНА!'; }
+    else if (stars === 2) { emoji = '🥈'; title = 'ХОРОШАЯ РАБОТА!'; }
+    else { emoji = '🥉'; title = 'НЕПЛОХО!'; }
+  } else {
+    emoji = '💫'; title = 'ПРОДОЛЖАЙ ТРЕНИРОВАТЬСЯ!';
+  }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('starsDisplay').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+  document.getElementById('rScore').textContent = score;
+  document.getElementById('rCorrect').textContent = `${correctCount}/${totalCount}`;
+  document.getElementById('rAccuracy').textContent = accuracy + '%';
+
+  if (gameMode === 'speed' && speedTotalTime) {
+    document.getElementById('rAccuracy').textContent = speedTotalTime + 'с';
+  }
+
+  // Mistakes
+  const sec = document.getElementById('mistakesSection');
+  if (mistakes.length > 0) {
+    sec.innerHTML = `<div class="mistakes-list"><h4>❌ Повторить (${mistakes.length})</h4>${
+      mistakes.map(m => `<div class="mistake-item"><span>${m.q} = ?</span><span class="mistake-correct">= ${m.correct}</span></div>`).join('')
+    }</div>`;
+  } else {
+    sec.innerHTML = `<div style="color:var(--green);font-size:0.9rem;margin:12px 0">✨ Ни одной ошибки! Блестяще!</div>`;
+  }
+
+  showScreen('screen-results');
+}
+
+function quitGame() {
+  clearInterval(timerInterval);
+  showScreen('screen-title');
+}
+
+function replayGame() {
+  selectedTables = lastTables;
+  startMode(lastMode);
+}
+
+// ────────────────────────────────────────────
+// TABLE PRACTICE
+// ────────────────────────────────────────────
+let practiceTable = 2;
+
+function showTablePractice() {
+  const btnWrap = document.getElementById('practiceTableBtns');
+  btnWrap.innerHTML = '';
+  for (let n = 2; n <= 12; n++) {
+    const b = document.createElement('button');
+    b.className = 'table-btn' + (n === 2 ? ' selected' : '');
+    b.textContent = n;
+    b.onclick = () => {
+      document.querySelectorAll('#practiceTableBtns .table-btn').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      practiceTable = n;
+      renderPracticeTable(n);
+    };
+    btnWrap.appendChild(b);
+  }
+  renderPracticeTable(2);
+  showScreen('screen-table-practice');
+}
+
+function renderPracticeTable(n) {
+  const display = document.getElementById('tableDisplay');
+  display.innerHTML = '';
+  for (let i = 2; i <= 12; i++) {
+    const row = document.createElement('div');
+    row.className = 'table-row';
+    row.innerHTML = `<span>${n} <span style="color:var(--cyan)">×</span> ${i}</span><span class="eq">=</span><span class="res">${n * i}</span>`;
+    display.appendChild(row);
+  }
+}
+
+// ────────────────────────────────────────────
+// MOUSE TRACKING FOR ANSWER BUTTONS
+// ────────────────────────────────────────────
+document.addEventListener('mousemove', e => {
+  document.querySelectorAll('.answer-btn').forEach(btn => {
+    const rect = btn.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    btn.style.setProperty('--mx', x + '%');
+    btn.style.setProperty('--my', y + '%');
+  });
+});
+</script>
+</body>
+</html>
