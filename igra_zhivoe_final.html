@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Живое или не живое? v2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+@keyframes fly { from{transform:translateX(110vw)} to{transform:translateX(-130%)} }
+@keyframes shake { 0%,100%{transform:translateX(0) translateY(-50%)} 20%{transform:translateX(-9px) translateY(-50%)} 60%{transform:translateX(9px) translateY(-50%)} }
+@keyframes fadeUp { to{opacity:0;transform:translateY(-40px) scale(1.4)} }
+@keyframes treeSway { 0%,100%{transform:rotate(-1.2deg)} 50%{transform:rotate(1.2deg)} }
+@keyframes cloudDrift { from{transform:translateX(0)} to{transform:translateX(36px)} }
+@keyframes cloudDrift2 { from{transform:translateX(0)} to{transform:translateX(-28px)} }
+@keyframes sunPulse { 0%,100%{r:26} 50%{r:29} }
+@keyframes lvlPop { 0%{transform:scale(0.7);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+@keyframes barGlow { 0%,100%{box-shadow:0 0 0 0 rgba(244,180,0,0)} 50%{box-shadow:0 0 8px 2px rgba(244,180,0,0.5)} }
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Nunito',sans-serif;
+  background:#1a3a1a;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:12px;
+}
+
+#wrap{
+  width:100%;max-width:680px;
+  border-radius:22px;overflow:hidden;
+  position:relative;
+  background:linear-gradient(175deg,#c6e8ff 0%,#a8d8a0 48%,#5aaa55 100%);
+  box-shadow:0 20px 60px rgba(0,0,0,0.45);
+  min-height:560px;
+  display:flex;flex-direction:column;
+  user-select:none;
+}
+
+/* ── ДЕКОР ── */
+#sky-svg{position:absolute;top:0;left:0;width:100%;height:62%;pointer-events:none;z-index:0}
+#gnd-svg{position:absolute;bottom:0;left:0;width:100%;height:48%;pointer-events:none;z-index:0}
+
+/* ── HUD ── */
+#hud{
+  position:relative;z-index:10;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px 5px;
+  flex-wrap:wrap;gap:4px;
+}
+.hud-pill{
+  background:rgba(255,255,255,0.55);
+  border:1.5px solid rgba(255,255,255,0.8);
+  border-radius:20px;padding:4px 12px;
+  font-size:15px;font-weight:800;color:#1a3d0a;
+  display:flex;align-items:center;gap:5px;
+  backdrop-filter:blur(4px);
+}
+#level-pill{
+  font-size:12px;font-weight:700;padding:4px 10px;
+  background:rgba(255,255,255,0.5);
+  border:1.5px solid rgba(80,160,40,0.5);
+  border-radius:16px;color:#2a5a10;
+}
+#mute-btn{
+  background:rgba(255,255,255,0.55);
+  border:1.5px solid rgba(255,255,255,0.8);
+  border-radius:50%;width:34px;height:34px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;
+  transition:background 0.15s,transform 0.1s;
+  flex-shrink:0;
+}
+#mute-btn:hover{background:rgba(255,255,255,0.85);transform:scale(1.08)}
+#mute-btn:active{transform:scale(0.93)}
+
+/* ── ПРОГРЕСС ── */
+#pbar-wrap{
+  position:relative;z-index:10;
+  padding:0 16px 4px;
+}
+#pbar-bg{height:6px;background:rgba(255,255,255,0.3);border-radius:4px;overflow:hidden}
+#pbar{height:100%;background:linear-gradient(90deg,#f4b400,#ff8f00);border-radius:4px;transition:width 1s linear;animation:barGlow 2s ease infinite}
+
+/* ── ЛЕТЯЩЕЕ СЛОВО ── */
+#fly-zone{
+  position:relative;z-index:10;
+  flex:1;display:flex;align-items:center;
+  overflow:hidden;min-height:88px;
+}
+#fw{
+  position:absolute;
+  white-space:nowrap;font-weight:900;
+  color:#1a3d0a;
+  text-shadow:0 2px 4px rgba(255,255,255,0.5);
+  background:rgba(255,255,255,0.6);
+  border-radius:14px;padding:7px 20px;
+  border:2px solid rgba(255,255,255,0.75);
+  top:50%;transform:translateY(-50%);
+  backdrop-filter:blur(3px);
+  transition:background 0.1s,color 0.1s;
+}
+#fw.ok{background:rgba(90,210,70,0.75)!important;border-color:rgba(60,180,40,0.8)!important}
+#fw.bad{
+  background:rgba(240,50,50,0.75)!important;
+  border-color:rgba(200,30,30,0.8)!important;
+  color:#fff!important;
+  animation:shake 0.38s ease;
+}
+
+/* ── УПРАВЛЕНИЕ ── */
+#controls{
+  position:relative;z-index:10;
+  display:flex;flex-direction:column;align-items:center;
+  gap:9px;padding:6px 14px 16px;
+}
+#speed-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center}
+.sp-lbl{font-size:12px;font-weight:700;color:#2a5a10}
+.sp-btn{
+  background:rgba(255,255,255,0.45);
+  border:1.5px solid rgba(80,150,40,0.4);
+  border-radius:20px;padding:4px 13px;
+  font-size:12px;font-weight:700;color:#2a5a10;
+  cursor:pointer;transition:background 0.12s,border-color 0.12s;
+  font-family:'Nunito',sans-serif;
+}
+.sp-btn.active,.sp-btn:hover{background:rgba(70,170,50,0.45);border-color:#3a9a2a}
+
+#act-row{display:flex;gap:14px;width:100%;max-width:400px}
+.ans-btn{
+  flex:1;padding:13px 0;font-size:17px;font-weight:900;
+  border:none;border-radius:32px;cursor:pointer;
+  transition:transform 0.12s,filter 0.12s;
+  font-family:'Nunito',sans-serif;
+  letter-spacing:0.2px;
+}
+.ans-btn:active{transform:scale(0.94)}
+.ans-btn:hover{filter:brightness(1.08)}
+#btn-a{background:#3d9e44;color:#fff;box-shadow:0 5px 0 #256b29}
+#btn-n{background:#8b5e28;color:#fff;box-shadow:0 5px 0 #5c3c16}
+
+/* ── ФИДБЕК ── */
+.fbi{
+  position:absolute;pointer-events:none;
+  font-size:28px;font-weight:900;
+  animation:fadeUp 0.7s ease forwards;
+  z-index:20;
+}
+
+/* ── ЭКРАНЫ ── */
+#ss,#rs{
+  position:absolute;inset:0;z-index:40;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(168,224,155,0.93);
+  border-radius:22px;gap:13px;padding:26px;
+  text-align:center;
+  backdrop-filter:blur(6px);
+}
+#rs{display:none}
+.sc-title{font-size:23px;font-weight:900;color:#1a3d0a;line-height:1.2}
+.sc-sub{font-size:13px;font-weight:700;color:#2d5a1b;max-width:370px;line-height:1.6}
+.sc-sub b{color:#1a3d0a}
+.big-btn{
+  padding:12px 38px;font-size:16px;font-weight:900;
+  background:#3d9e44;color:#fff;border:none;border-radius:32px;
+  cursor:pointer;box-shadow:0 5px 0 #256b29;
+  font-family:'Nunito',sans-serif;
+  transition:background 0.1s,transform 0.1s;
+}
+.big-btn:hover{background:#348a3a}
+.big-btn:active{transform:scale(0.96)}
+
+.res-ico{font-size:50px;line-height:1}
+.res-cnt{font-size:34px;font-weight:900;color:#c07000}
+.res-lbl{font-size:14px;font-weight:700;color:#2d5a1b;max-width:340px;line-height:1.55}
+
+/* ── ПОДПИСЬ ── */
+#sig{
+  position:absolute;bottom:6px;right:12px;
+  font-size:11px;font-weight:700;
+  color:rgba(30,70,10,0.4);z-index:5;
+  letter-spacing:0.5px;
+}
+
+/* ── SVG деревья ── */
+.tree{animation:treeSway 4s ease-in-out infinite;transform-origin:bottom center}
+.cl{animation:cloudDrift 10s ease-in-out infinite alternate}
+.cl2{animation:cloudDrift2 13s ease-in-out infinite alternate}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+<!-- небо -->
+<svg id="sky-svg" viewBox="0 0 680 190" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="sunG" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9a0"/>
+      <stop offset="100%" stop-color="#ffcc00"/>
+    </radialGradient>
+  </defs>
+  <circle cx="88" cy="40" r="32" fill="#ffe566" opacity="0.3"/>
+  <circle cx="88" cy="40" r="24" fill="url(#sunG)"/>
+  <g class="cl">
+    <ellipse cx="240" cy="55" rx="62" ry="21" fill="white" opacity="0.82"/>
+    <ellipse cx="215" cy="62" rx="34" ry="19" fill="white" opacity="0.72"/>
+    <ellipse cx="272" cy="62" rx="38" ry="17" fill="white" opacity="0.72"/>
+  </g>
+  <g class="cl2">
+    <ellipse cx="520" cy="42" rx="65" ry="19" fill="white" opacity="0.72"/>
+    <ellipse cx="493" cy="48" rx="36" ry="16" fill="white" opacity="0.65"/>
+    <ellipse cx="550" cy="48" rx="42" ry="15" fill="white" opacity="0.65"/>
+  </g>
+  <circle cx="420" cy="75" r="5" fill="white" opacity="0.4"/>
+  <circle cx="160" cy="95" r="4" fill="white" opacity="0.35"/>
+</svg>
+
+<!-- земля -->
+<svg id="gnd-svg" viewBox="0 0 680 230" preserveAspectRatio="xMidYMax slice">
+  <rect width="680" height="230" fill="#52a047"/>
+  <ellipse cx="340" cy="10" rx="370" ry="30" fill="#72c46e" opacity="0.55"/>
+  <!-- дерево 1 -->
+  <g class="tree" style="transform-origin:64px 185px">
+    <rect x="59" y="122" width="10" height="63" fill="#7a5228"/>
+    <ellipse cx="64" cy="112" rx="34" ry="40" fill="#2c7a30"/>
+    <ellipse cx="64" cy="101" rx="24" ry="28" fill="#389040"/>
+    <ellipse cx="64" cy="93" rx="15" ry="19" fill="#44a64a"/>
+  </g>
+  <!-- дерево 2 -->
+  <g class="tree" style="transform-origin:596px 192px;animation-delay:-2.1s">
+    <rect x="591" y="130" width="10" height="62" fill="#7a5228"/>
+    <ellipse cx="596" cy="120" rx="32" ry="38" fill="#1b5e20"/>
+    <ellipse cx="596" cy="110" rx="22" ry="26" fill="#2e7d32"/>
+    <ellipse cx="596" cy="102" rx="14" ry="18" fill="#3d9440"/>
+  </g>
+  <!-- дерево 3 -->
+  <g style="transform-origin:205px 202px;animation:treeSway 6.2s ease-in-out infinite;animation-delay:-1.3s">
+    <rect x="201" y="160" width="8" height="42" fill="#8d6533"/>
+    <ellipse cx="205" cy="152" rx="25" ry="30" fill="#52882a"/>
+    <ellipse cx="205" cy="144" rx="17" ry="20" fill="#669e38"/>
+  </g>
+  <!-- дерево 4 -->
+  <g style="transform-origin:466px 198px;animation:treeSway 5.3s ease-in-out infinite;animation-delay:-3.2s">
+    <rect x="462" y="152" width="8" height="46" fill="#8d6533"/>
+    <ellipse cx="466" cy="142" rx="27" ry="32" fill="#31661e"/>
+    <ellipse cx="466" cy="134" rx="18" ry="22" fill="#52882a"/>
+  </g>
+  <!-- цветы -->
+  <path d="M314 186 Q324 170 334 186 Q324 197 314 186Z" fill="#f06292" opacity="0.85"/>
+  <path d="M328 189 Q338 173 348 189 Q338 200 328 189Z" fill="#ec407a" opacity="0.75"/>
+  <circle cx="300" cy="190" r="5" fill="#ff7043" opacity="0.7"/>
+  <!-- кусты -->
+  <ellipse cx="155" cy="204" rx="48" ry="13" fill="#48963e" opacity="0.55"/>
+  <ellipse cx="525" cy="208" rx="42" ry="11" fill="#48963e" opacity="0.5"/>
+</svg>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-pill">⏱ <span id="tdisp">2:00</span></div>
+  <div style="display:flex;align-items:center;gap:7px">
+    <span id="level-pill">Уровень 1</span>
+    <button id="mute-btn" aria-label="Звук">🔊</button>
+  </div>
+  <div class="hud-pill">⭐ <span id="scnt">0</span></div>
+</div>
+
+<!-- прогресс -->
+<div id="pbar-wrap">
+  <div id="pbar-bg"><div id="pbar" style="width:100%"></div></div>
+</div>
+
+<!-- летящее слово -->
+<div id="fly-zone"><div id="fw">слово</div></div>
+
+<!-- управление -->
+<div id="controls">
+  <div id="speed-row">
+    <span class="sp-lbl">Скорость:</span>
+    <button class="sp-btn active" data-s="slow">🐢 Медленно</button>
+    <button class="sp-btn" data-s="medium">🦊 Средне</button>
+    <button class="sp-btn" data-s="fast">🐇 Быстро</button>
+  </div>
+  <div id="act-row">
+    <button class="ans-btn" id="btn-a">🌿 Живое</button>
+    <button class="ans-btn" id="btn-n">🪨 Не живое</button>
+  </div>
+</div>
+
+<!-- стартовый экран -->
+<div id="ss">
+  <div class="sc-title">🌿 Живое или не живое?</div>
+  <div class="sc-sub">
+    Слова летят по экрану — нажимай нужную кнопку.<br>
+    За правильный ответ — ⭐ звезда!<br>
+    Сложность нарастает каждые 30 секунд.<br>
+    <b>Длительность: 2 минуты.</b>
+  </div>
+  <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:center">
+    <span class="sp-lbl">Скорость:</span>
+    <button class="sp-btn active" data-ss="slow">🐢 Медленно</button>
+    <button class="sp-btn" data-ss="medium">🦊 Средне</button>
+    <button class="sp-btn" data-ss="fast">🐇 Быстро</button>
+  </div>
+  <button class="big-btn" id="start-btn">▶ Начать игру</button>
+</div>
+
+<!-- экран результатов -->
+<div id="rs">
+  <div class="res-ico">🏆</div>
+  <div class="sc-title">Время вышло!</div>
+  <div class="res-cnt" id="rcnt">0 звёзд</div>
+  <div class="res-lbl" id="rmsg"></div>
+  <button class="big-btn" id="restart-btn">🔄 Играть снова</button>
+</div>
+
+<div id="sig">Котвицкая</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+
+// Слова сгруппированы по ТОЧНОЙ длине (проверено).
+// Нет научных терминов — всё понятно детям 8 лет.
+// Этап 1: длины 4–6 | Этап 2: длины 7–8 | Этап 3: длины 9+
+
+const BY_LEN = {
+  alive: {
+    4: ['гусь','рысь','рыба','мышь','волк','краб','овца','утка','коза','лиса','крот','орёл','роза','паук','змея','морж','аист','кедр','осёл','ёжик'],
+    5: ['кошка','птица','пчела','цапля','сосна','петух','акула','хомяк','бобёр','олень'],
+    6: ['тюлень','собака','корова','лошадь','берёза','ворона','клевер','малина','голубь','тополь','каштан','ландыш','улитка','павлин','суслик','кактус'],
+    7: ['медведь','бабочка','дельфин','попугай','ящерица','лягушка','снегирь','орхидея','черника','горилла','крапива','ромашка','мышонок','мухомор'],
+    8: ['фламинго','осьминог','черепаха','стрекоза','хамелеон','гусеница','шиповник','лишайник','кузнечик','бурундук','дикобраз','антилопа','бригадир','водитель','директор','шиншилла'],
+    9: ['одуванчик','смородина','водоросль','земляника','малиновка','лягушонок','ассистент','аллигатор'],
+    10: ['папоротник','броненосец','желтопузик'],
+    15: ['воспитательница']
+  },
+  notAlive: {
+    4: ['снег','вода','гора','туча','роса','мель','лава','соль','пыль','море','дюна','река','лужа','пруд','иней','холм','гром'],
+    5: ['скала','земля','озеро','глина','уголь','туман','ручей','песок','закат','волна'],
+    6: ['камень','облако','радуга','молния','мрамор','лавина','гранит','вулкан','ледник','пещера','янтарь','прибой'],
+    7: ['водопад','рассвет','торнадо','айсберг','паровоз','самолёт','телефон','автобус','трактор','стадион'],
+    8: ['горизонт','метеорит','астероид','вертолёт','кристалл','карусель','светофор','трамплин','аквариум'],
+    9: ['сталактит','известняк','велосипед','кинотеатр','компьютер'],
+    10: ['электричка','планетарий','библиотека','мультфильм']
+  }
+};
+
+// СТРОГО: на этапе 1 — только длины 4,5,6; на 2 — только 7,8; на 3 — только 9,10,15
+const STAGE_LENS = {
+  1: [4, 5, 6],
+  2: [7, 8],
+  3: [9, 10, 15]
+};
+
+const TOTAL_TIME = 120;
+const SPEEDS = {slow:13000, medium:8000, fast:4500};
+const FIXED_FS = 22;
+
+const recentWords = [];
+
+function pickWord(){
+  const lens = STAGE_LENS[g.level]; // массив допустимых длин текущего этапа
+  const alive = Math.random() < 0.5;
+
+  // Собираем ВСЕ слова строго допустимых длин
+  function poolFor(isAlive){
+    const src = isAlive ? BY_LEN.alive : BY_LEN.notAlive;
+    return lens.flatMap(l => src[l] || []);
+  }
+
+  let pool = poolFor(alive).filter(w => !recentWords.includes(w));
+  if(!pool.length) pool = poolFor(alive);
+  if(!pool.length) pool = poolFor(!alive).filter(w => !recentWords.includes(w));
+  if(!pool.length) pool = poolFor(!alive);
+
+  const word = pool[Math.floor(Math.random() * pool.length)] || '???';
+  // Определяем alive по факту нахождения в пуле живых
+  const isAliveWord = lens.some(l => (BY_LEN.alive[l]||[]).includes(word));
+  recentWords.push(word);
+  if(recentWords.length > 4) recentWords.shift();
+  return { word, alive: isAliveWord };
+}
+
+let _ctx = null;
+function getCtx(){ return _ctx||(_ctx=new(window.AudioContext||window.webkitAudioContext)()); }
+
+function playOk(){
+  if(g.muted) return;
+  try{
+    const ctx=getCtx();
+    [[600,0,0.22],[900,160,0.18],[1200,280,0.14]].forEach(([f,d,v])=>{
+      setTimeout(()=>{
+        const o=ctx.createOscillator(),gn=ctx.createGain();
+        o.connect(gn);gn.connect(ctx.destination);
+        o.type='sine';o.frequency.value=f;
+        gn.gain.setValueAtTime(v,ctx.currentTime);
+        gn.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.32);
+        o.start();o.stop(ctx.currentTime+0.32);
+      },d);
+    });
+  }catch(e){}
+}
+function playWrong(){
+  if(g.muted) return;
+  try{
+    const ctx=getCtx();
+    const o=ctx.createOscillator(),gn=ctx.createGain();
+    o.connect(gn);gn.connect(ctx.destination);
+    o.type='sawtooth';o.frequency.value=148;
+    gn.gain.setValueAtTime(0.22,ctx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.48);
+    o.start();o.stop(ctx.currentTime+0.48);
+  }catch(e){}
+}
+
+function fmt(s){ return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60; }
+function plural(n,a,b,c){
+  const m=n%100; if(m>=11&&m<=19)return c;
+  const r=n%10; if(r===1)return a; if(r>=2&&r<=4)return b; return c;
+}
+function calcLevel(t){ if(t>90)return 1; if(t>60)return 2; return 3; }
+
+let g = {
+  running:false,speed:'slow',timeLeft:TOTAL_TIME,
+  stars:0,wordCount:0,answered:false,muted:false,
+  curWord:null,curAlive:null,level:1,
+  timerInt:null,wordTimeout:null
+};
+
+const fw      = document.getElementById('fw');
+const tdisp   = document.getElementById('tdisp');
+const scnt    = document.getElementById('scnt');
+const lpill   = document.getElementById('level-pill');
+const pbar    = document.getElementById('pbar');
+const muteBtn = document.getElementById('mute-btn');
+const root    = document.getElementById('wrap');
+
+function spawnFx(txt,color){
+  const el=document.createElement('div');
+  el.className='fbi'; el.textContent=txt;
+  el.style.color=color||'#f4b400';
+  el.style.left=(55+Math.random()*520)+'px';
+  el.style.top=(28+Math.random()*50)+'px';
+  root.appendChild(el);
+  setTimeout(()=>el.remove(),750);
+}
+
+function stopWord(){
+  fw.style.animation='none';
+  if(g.wordTimeout){clearTimeout(g.wordTimeout);g.wordTimeout=null;}
+}
+
+function launchWord(){
+  if(!g.running) return;
+  g.answered=false;
+  g.wordCount++;
+  const {word,alive}=pickWord();
+  g.curWord=word; g.curAlive=alive;
+  fw.style.fontSize=FIXED_FS+'px';
+  fw.textContent=word;
+  fw.className='';
+  fw.style.animation='none';
+  fw.style.display='block';
+  void fw.offsetWidth;
+  const dur=SPEEDS[g.speed];
+  fw.style.animation=`fly ${dur}ms linear forwards`;
+  if(g.wordTimeout) clearTimeout(g.wordTimeout);
+  g.wordTimeout=setTimeout(()=>{
+    if(!g.answered&&g.running) playWrong();
+    if(g.running) launchWord();
+  },dur+90);
+}
+
+function answer(isAlive){
+  if(!g.running||g.answered) return;
+  g.answered=true;
+  const ok=(isAlive===g.curAlive);
+  if(ok){ g.stars++; scnt.textContent=g.stars; fw.classList.add('ok'); playOk(); spawnFx('⭐'); }
+  else  { fw.classList.add('bad'); playWrong(); spawnFx('✗','#d32f2f'); }
+  stopWord();
+  setTimeout(()=>{if(g.running)launchWord();},560);
+}
+
+function updateLevel(){
+  const lv=calcLevel(g.timeLeft);
+  if(lv!==g.level){
+    g.level=lv;
+    recentWords.length=0; // сброс recent при смене этапа
+    lpill.textContent='Уровень '+lv;
+    lpill.style.animation='none';
+    void lpill.offsetWidth;
+    lpill.style.animation='lvlPop 0.5s ease';
+    spawnFx('Уровень '+lv+'!','#1a3d0a');
+  }
+}
+
+function startGame(){
+  g.running=true; g.stars=0; g.wordCount=0;
+  g.timeLeft=TOTAL_TIME; g.answered=false; g.level=1;
+  recentWords.length = 0;
+  scnt.textContent='0';
+  tdisp.textContent=fmt(TOTAL_TIME);
+  pbar.style.width='100%';
+  lpill.textContent='Уровень 1';
+  document.getElementById('ss').style.display='none';
+  document.getElementById('rs').style.display='none';
+  fw.style.display='block';
+  g.timerInt=setInterval(()=>{
+    g.timeLeft--;
+    tdisp.textContent=fmt(g.timeLeft);
+    pbar.style.width=(g.timeLeft/TOTAL_TIME*100)+'%';
+    updateLevel();
+    if(g.timeLeft<=0) endGame();
+  },1000);
+  launchWord();
+}
+
+function endGame(){
+  g.running=false;
+  clearInterval(g.timerInt);
+  stopWord();
+  fw.style.display='none';
+  const s=g.stars;
+  let msg='';
+  if(s>=35) msg='🏆 Феноменально! Ты настоящий эксперт!';
+  else if(s>=25) msg='🌟 Отличный результат! Природа тебе покорилась!';
+  else if(s>=15) msg='🌿 Хорошая работа! Ещё немного — и ты чемпион!';
+  else msg='🌱 Не сдавайся — попробуй ещё раз!';
+  document.getElementById('rcnt').textContent=s+' '+plural(s,'звезда','звезды','звёзд');
+  document.getElementById('rmsg').textContent=msg;
+  document.getElementById('rs').style.display='flex';
+}
+
+muteBtn.onclick=()=>{ g.muted=!g.muted; muteBtn.textContent=g.muted?'🔇':'🔊'; };
+document.getElementById('start-btn').onclick  = startGame;
+document.getElementById('restart-btn').onclick = startGame;
+document.getElementById('btn-a').onclick       = ()=>answer(true);
+document.getElementById('btn-n').onclick       = ()=>answer(false);
+
+document.querySelectorAll('.sp-btn').forEach(b=>{
+  b.onclick=function(){
+    g.speed=this.dataset.s||this.dataset.ss;
+    document.querySelectorAll('.sp-btn').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll(`[data-s="${g.speed}"],[data-ss="${g.speed}"]`).forEach(x=>x.classList.add('active'));
+  };
+});
+
+document.addEventListener('keydown',e=>{
+  if(!g.running) return;
+  if(e.key==='ArrowLeft' ||e.key.toLowerCase()==='z') answer(true);
+  if(e.key==='ArrowRight'||e.key.toLowerCase()==='x') answer(false);
+});
+
+}); // DOMContentLoaded
+</script>
+</body>
+</html>
