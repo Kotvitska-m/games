@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ГОНКИ — тренажёр памяти</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --asphalt:#15161b;
+    --panel:#1d1f27;
+    --panel-light:#262933;
+    --yellow:#ffcf3f;
+    --orange:#ff5a1f;
+    --blue:#29d9ff;
+    --flag:#f2f1ea;
+    --green:#35d488;
+    --red:#ff4a4a;
+    --line:#33353f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,207,63,0.06), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(41,217,255,0.07), transparent 40%),
+      var(--asphalt);
+    color:var(--flag);
+    font-family:'Rubik', sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    overflow-x:hidden;
+    position:relative;
+  }
+  .display{font-family:'Teko', sans-serif; letter-spacing:0.5px;}
+
+  /* checkered divider */
+  .checker{
+    height:10px; width:100%;
+    background-image: repeating-conic-gradient(#0d0e12 0% 25%, #f2f1ea 0% 50%);
+    background-size: 20px 20px;
+    opacity:0.9;
+  }
+
+  /* lightning sticker */
+  .sticker{
+    position:absolute;
+    display:flex; align-items:center; justify-content:center;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+    pointer-events:none;
+    opacity:0.9;
+  }
+  .sticker svg{ width:100%; height:100%; }
+
+  /* ===== screens ===== */
+  .screen{
+    width:100%;
+    max-width:640px;
+    flex:1;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    padding:24px 18px 90px;
+    position:relative;
+    z-index:2;
+  }
+  .screen.active{display:flex;}
+
+  /* ===== MENU ===== */
+  #menu .title-wrap{
+    position:relative;
+    width:100%;
+    text-align:center;
+    padding:34px 10px 18px;
+  }
+  #menu h1{
+    font-family:'Teko', sans-serif;
+    font-weight:700;
+    font-size:88px;
+    line-height:0.85;
+    letter-spacing:2px;
+    color:var(--yellow);
+    text-shadow: 3px 3px 0 rgba(255,90,31,0.55), 0 0 30px rgba(255,207,63,0.25);
+    transform: skewX(-6deg);
+  }
+  #menu .subtitle{
+    font-size:14px;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    color:#9a9db0;
+    margin-top:4px;
+  }
+
+  .panel{
+    width:100%;
+    background:linear-gradient(180deg, var(--panel-light), var(--panel));
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:22px;
+    margin-top:20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    position:relative;
+  }
+  .field{margin-bottom:22px;}
+  .field:last-child{margin-bottom:0;}
+  .field-label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:'Teko', sans-serif;
+    font-size:20px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--flag);
+    margin-bottom:10px;
+  }
+  .field-label .readout{
+    font-family:'Teko', sans-serif;
+    font-size:26px;
+    color:var(--blue);
+  }
+
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:8px;
+    border-radius:6px;
+    background: linear-gradient(90deg, var(--orange), var(--yellow));
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:26px; height:26px;
+    border-radius:50%;
+    background:var(--flag);
+    border:4px solid var(--asphalt);
+    box-shadow:0 0 0 2px var(--blue);
+    cursor:pointer;
+    margin-top:0px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:26px; height:26px;
+    border-radius:50%;
+    background:var(--flag);
+    border:4px solid var(--asphalt);
+    box-shadow:0 0 0 2px var(--blue);
+    cursor:pointer;
+  }
+  .tick-row{
+    display:flex; justify-content:space-between;
+    font-size:11px; color:#6c6f7f;
+    margin-top:6px;
+    font-family:'Rubik';
+  }
+
+  .gear-select{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+  }
+  .gear-btn{
+    font-family:'Teko', sans-serif;
+    font-size:20px;
+    letter-spacing:1px;
+    padding:12px 6px;
+    text-align:center;
+    background:var(--asphalt);
+    border:2px solid var(--line);
+    border-radius:10px;
+    color:#b7bacb;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .gear-btn.active{
+    border-color:var(--yellow);
+    color:var(--asphalt);
+    background:var(--yellow);
+    box-shadow:0 0 16px rgba(255,207,63,0.5);
+  }
+  .gear-btn:hover{border-color:var(--blue);}
+
+  .start-btn{
+    margin-top:26px;
+    width:100%;
+    padding:18px;
+    border:none;
+    border-radius:14px;
+    background: repeating-linear-gradient(135deg, var(--yellow) 0 18px, #1c1d22 18px 36px);
+    background-size: 200% 200%;
+    color:#111;
+    font-family:'Teko', sans-serif;
+    font-size:30px;
+    letter-spacing:2px;
+    cursor:pointer;
+    box-shadow:0 8px 24px rgba(255,90,31,0.35);
+    position:relative;
+    overflow:hidden;
+  }
+  .start-btn span{
+    background:var(--asphalt);
+    color:var(--yellow);
+    padding:8px 22px;
+    border-radius:8px;
+    display:inline-block;
+  }
+  .start-btn:active{ transform:translateY(2px); }
+
+  /* ===== RACE ===== */
+  #race{ justify-content:flex-start; padding-top:20px; }
+  .race-hud{
+    width:100%;
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'Teko', sans-serif;
+    font-size:20px;
+    letter-spacing:1px;
+    color:#9a9db0;
+    padding:0 4px 10px;
+  }
+  .race-hud b{ color:var(--yellow); font-size:24px; }
+
+  .track{
+    width:100%;
+    height:220px;
+    border-radius:16px;
+    position:relative;
+    overflow:hidden;
+    background:
+      linear-gradient(180deg, #202230 0%, #17181f 100%);
+    border:1px solid var(--line);
+  }
+  .lane-line{
+    position:absolute;
+    left:0; width:100%; height:4px;
+    top:50%; transform:translateY(-50%);
+    background-image: repeating-linear-gradient(90deg, var(--yellow) 0 26px, transparent 26px 52px);
+    animation: laneMove 0.6s linear infinite;
+    opacity:0.55;
+  }
+  @keyframes laneMove{
+    from{background-position-x:0;}
+    to{background-position-x:-52px;}
+  }
+  .flying-word{
+    position:absolute;
+    top:50%;
+    left:100%;
+    transform:translateY(-50%);
+    white-space:nowrap;
+    font-family:'Teko', sans-serif;
+    font-weight:700;
+    font-size:44px;
+    letter-spacing:1px;
+    color:var(--flag);
+    text-shadow: -18px 2px 20px rgba(41,217,255,0.35), 4px 0 0 var(--orange);
+  }
+  .flying-word::after{
+    content:"";
+    position:absolute;
+    right:100%;
+    top:50%;
+    transform:translateY(-50%);
+    width:60px; height:2px;
+    background:linear-gradient(90deg, transparent, var(--blue));
+    opacity:0.7;
+  }
+  @keyframes flyAcross{
+    from{ left:100%; }
+    to{ left:-60%; }
+  }
+
+  .flag-checker-strip{
+    position:absolute; bottom:0; left:0; width:100%; height:10px;
+    background-image: repeating-conic-gradient(#0d0e12 0% 25%, #f2f1ea 0% 50%);
+    background-size:16px 16px;
+  }
+
+  /* ===== QUIZ ===== */
+  .quiz-hud{
+    width:100%;
+    display:flex; justify-content:space-between;
+    font-family:'Teko', sans-serif;
+    font-size:20px;
+    color:#9a9db0;
+    padding:2px 4px 14px;
+  }
+  .quiz-hud b{color:var(--yellow); font-size:24px;}
+  .quiz-hint{
+    font-size:13px;
+    color:#8a8da0;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  .word-grid{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:12px;
+  }
+  .word-chip{
+    font-family:'Rubik';
+    font-weight:700;
+    font-size:16px;
+    padding:16px 10px;
+    text-align:center;
+    border-radius:12px;
+    border:2px solid var(--line);
+    background:var(--panel-light);
+    color:var(--flag);
+    cursor:pointer;
+    transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    transform-origin:center;
+    animation: popIn .35s ease backwards;
+  }
+  .word-chip:hover{ border-color:var(--blue); }
+  .word-chip.correct{
+    background:rgba(53,212,136,0.15);
+    border-color:var(--green);
+    color:var(--green);
+    cursor:default;
+  }
+  .word-chip.wrong{
+    background:rgba(255,74,74,0.15);
+    border-color:var(--red);
+    color:var(--red);
+    cursor:default;
+    animation: shake .35s ease;
+  }
+  @keyframes popIn{
+    from{ opacity:0; transform:scale(0.6) translateY(10px); }
+    to{ opacity:1; transform:scale(1) translateY(0); }
+  }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-6px); }
+    75%{ transform:translateX(6px); }
+  }
+  .finish-btn{
+    margin-top:22px;
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    background:var(--blue);
+    color:#0c1116;
+    font-family:'Teko', sans-serif;
+    font-size:24px;
+    letter-spacing:1.5px;
+    cursor:pointer;
+  }
+
+  /* ===== RESULT ===== */
+  #result{ align-items:center; justify-content:center; text-align:center; }
+  .result-flag{
+    font-size:52px;
+    margin-bottom:6px;
+  }
+  #result h2{
+    font-family:'Teko', sans-serif;
+    font-size:52px;
+    color:var(--yellow);
+    letter-spacing:1px;
+  }
+  .score-big{
+    font-family:'Teko', sans-serif;
+    font-size:96px;
+    line-height:1;
+    color:var(--flag);
+    margin:8px 0 6px;
+  }
+  .score-big span{ color:var(--blue); }
+  .bonus-note{
+    color:var(--green);
+    font-size:14px;
+    margin-bottom:14px;
+    min-height:18px;
+  }
+  .stats-row{
+    display:flex; gap:14px;
+    margin:10px 0 26px;
+    width:100%;
+  }
+  .stat-card{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 8px;
+  }
+  .stat-card .num{
+    font-family:'Teko', sans-serif;
+    font-size:34px;
+  }
+  .stat-card.ok .num{ color:var(--green); }
+  .stat-card.bad .num{ color:var(--red); }
+  .stat-card .lbl{
+    font-size:11px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:#9a9db0;
+  }
+  .result-btns{ width:100%; display:flex; gap:12px; }
+  .btn-secondary, .btn-primary{
+    flex:1;
+    padding:15px;
+    border-radius:12px;
+    border:2px solid var(--line);
+    background:transparent;
+    color:var(--flag);
+    font-family:'Teko', sans-serif;
+    font-size:22px;
+    letter-spacing:1px;
+    cursor:pointer;
+  }
+  .btn-primary{
+    background:var(--yellow);
+    color:#161616;
+    border-color:var(--yellow);
+  }
+
+  footer{
+    position:fixed;
+    bottom:0; left:0; width:100%;
+    text-align:center;
+    padding:8px 0 10px;
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:#5c5f70;
+    background:linear-gradient(180deg, transparent, rgba(15,16,20,0.9) 40%);
+    z-index:5;
+  }
+  footer b{ color:#8a8da0; }
+
+  @media (max-width:420px){
+    #menu h1{ font-size:66px; }
+    .score-big{ font-size:72px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- decorative lightning stickers -->
+<div class="sticker" style="width:64px;height:64px; top:14px; left:8px; transform:rotate(-12deg);">
+  <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#ffcf3f"/><path d="M13 3 6 13h4l-1 8 8-11h-4l1-7Z" fill="#15161b"/></svg>
+</div>
+<div class="sticker" style="width:52px;height:52px; top:20px; right:10px; transform:rotate(16deg);">
+  <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#29d9ff"/><path d="M13 3 6 13h4l-1 8 8-11h-4l1-7Z" fill="#15161b"/></svg>
+</div>
+
+<div id="menu" class="screen active">
+  <div class="title-wrap">
+    <h1 class="display">ГОНКИ</h1>
+    <div class="subtitle">тренажёр памяти на скорости</div>
+  </div>
+
+  <div class="panel">
+    <div class="field">
+      <div class="field-label">Темп заезда <span class="readout" id="speedReadout">3.5 сек</span></div>
+      <input type="range" id="speedSlider" min="1" max="7" step="0.5" value="3.5">
+      <div class="tick-row"><span>1 сек — быстро</span><span>7 сек — медленно</span></div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Сложность</div>
+      <div class="gear-select">
+        <div class="gear-btn" data-diff="short">ЛЕГКО</div>
+        <div class="gear-btn active" data-diff="medium">СРЕДНЕ</div>
+        <div class="gear-btn" data-diff="long">СЛОЖНО</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">Количество слов <span class="readout" id="countReadout">7</span></div>
+      <input type="range" id="countSlider" min="5" max="10" step="1" value="7">
+      <div class="tick-row"><span>5</span><span>10</span></div>
+    </div>
+
+    <button class="start-btn" id="startBtn"><span>🏁 СТАРТ</span></button>
+  </div>
+</div>
+
+<div id="race" class="screen">
+  <div class="race-hud">
+    <span>СЛОВО <b id="raceIndex">1</b> / <span id="raceTotal">7</span></span>
+    <span id="raceDiffLabel">СРЕДНЕ</span>
+  </div>
+  <div class="track" id="track">
+    <div class="lane-line" style="top:30%"></div>
+    <div class="lane-line" style="top:50%"></div>
+    <div class="lane-line" style="top:70%"></div>
+    <div class="flag-checker-strip"></div>
+  </div>
+</div>
+
+<div id="quiz" class="screen">
+  <div class="quiz-hud">
+    <span>БАЛЛЫ: <b id="quizScore">0</b></span>
+    <span>ОШИБКИ: <b id="quizMistakes" style="color:var(--red)">0</b></span>
+  </div>
+  <div class="quiz-hint">Нажми на слова, которые проносились по трассе</div>
+  <div class="word-grid" id="wordGrid"></div>
+  <button class="finish-btn" id="finishBtn">ФИНИШ 🏁</button>
+</div>
+
+<div id="result" class="screen">
+  <div class="result-flag">🏁</div>
+  <h2 class="display">ФИНИШ</h2>
+  <div class="score-big"><span id="finalScore">0</span></div>
+  <div class="bonus-note" id="bonusNote"></div>
+  <div class="stats-row">
+    <div class="stat-card ok">
+      <div class="num" id="finalCorrect">0</div>
+      <div class="lbl">верно</div>
+    </div>
+    <div class="stat-card bad">
+      <div class="num" id="finalMistakes">0</div>
+      <div class="lbl">ошибок</div>
+    </div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-secondary" id="menuBtn">В МЕНЮ</button>
+    <button class="btn-primary" id="retryBtn">ПОВТОРИТЬ</button>
+  </div>
+</div>
+
+<div class="checker" style="position:fixed; top:0; left:0;"></div>
+<footer>трасса памяти · <b>Котвицкая</b></footer>
+
+<script>
+  // ===== word banks =====
+  const BANKS = {
+    short: ["дом","кот","сад","лес","мир","год","час","зал","газ","ход","бак","шум","нос","рот","сон","дар","миг","лёд","чай","дым","руль","трек","шина","полк","торт","парк","порт","куст","стол","звук","гром","свет","крем","факт","борт","флаг","знак","узел","шарф","финт"],
+    medium: ["гонка","финиш","старт","мотор","обгон","педаль","колесо","заезд","поворот","машина","дорога","капот","номер","сигнал","тормоз","спойлер","команда","пилот","сектор","кубок","финал","рекорд","победа","шоссе","авария","поломка","стрелка","кольцо","барьер","обзор","гараж","запуск","разгон","трасса"],
+    long: ["скорость","водитель","автомобиль","чемпионат","дистанция","велосипед","мотоциклист","преодоление","ускорение","торможение","препятствие","соперничество","багажник","светофор","перекрёсток","автогонка","состязание","победитель","соревнование","пилотирование"]
+  };
+
+  const diffLabels = {short:"ЛЕГКО", medium:"СРЕДНЕ", long:"СЛОЖНО"};
+
+  // ===== state =====
+  let settings = { speed: 3.5, difficulty: "medium", count: 7 };
+  let raceWords = [];
+  let quizPool = [];
+  let score = 0;
+  let correctCount = 0;
+  let mistakeCount = 0;
+
+  // ===== helpers =====
+  function shuffled(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+  function pickWords(bank, n){
+    return shuffled(BANKS[bank]).slice(0, n);
+  }
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  // ===== menu controls =====
+  const speedSlider = document.getElementById("speedSlider");
+  const speedReadout = document.getElementById("speedReadout");
+  speedSlider.addEventListener("input", () => {
+    settings.speed = parseFloat(speedSlider.value);
+    speedReadout.textContent = settings.speed.toFixed(1).replace(".0","") + " сек";
+  });
+
+  const countSlider = document.getElementById("countSlider");
+  const countReadout = document.getElementById("countReadout");
+  countSlider.addEventListener("input", () => {
+    settings.count = parseInt(countSlider.value);
+    countReadout.textContent = settings.count;
+  });
+
+  document.querySelectorAll(".gear-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".gear-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      settings.difficulty = btn.dataset.diff;
+    });
+  });
+
+  document.getElementById("startBtn").addEventListener("click", () => {
+    startGame();
+  });
+
+  // ===== race =====
+  async function startGame(){
+    raceWords = pickWords(settings.difficulty, settings.count);
+    score = 0; correctCount = 0; mistakeCount = 0;
+
+    document.getElementById("raceTotal").textContent = settings.count;
+    document.getElementById("raceDiffLabel").textContent = diffLabels[settings.difficulty];
+
+    showScreen("race");
+    await runRace();
+    buildQuiz();
+    showScreen("quiz");
+  }
+
+  async function runRace(){
+    const track = document.getElementById("track");
+    // clear old flying words
+    track.querySelectorAll(".flying-word").forEach(w => w.remove());
+
+    for(let i=0; i<raceWords.length; i++){
+      document.getElementById("raceIndex").textContent = i+1;
+      const word = raceWords[i];
+      const el = document.createElement("div");
+      el.className = "flying-word";
+      el.textContent = word;
+      const lane = [30,50,70][i % 3];
+      el.style.top = lane + "%";
+      el.style.animation = `flyAcross ${settings.speed}s linear forwards`;
+      track.appendChild(el);
+      await sleep(settings.speed * 1000 * 0.55);
+      el.remove();
+      await sleep(Math.max(120, settings.speed*1000*0.1));
+    }
+    await sleep(300);
+  }
+
+  // ===== quiz =====
+  function buildQuiz(){
+    const bank = BANKS[settings.difficulty];
+    const decoysAvailable = bank.filter(w => !raceWords.includes(w));
+    const decoyCount = Math.min(decoysAvailable.length, raceWords.length);
+    const decoys = shuffled(decoysAvailable).slice(0, decoyCount);
+    quizPool = shuffled([...raceWords, ...decoys]);
+
+    score = 0; correctCount = 0; mistakeCount = 0;
+    updateQuizHud();
+
+    const grid = document.getElementById("wordGrid");
+    grid.innerHTML = "";
+    quizPool.forEach((word, idx) => {
+      const chip = document.createElement("div");
+      chip.className = "word-chip";
+      chip.textContent = word;
+      chip.style.animationDelay = (idx*0.04) + "s";
+      chip.addEventListener("click", () => handleChipClick(chip, word));
+      grid.appendChild(chip);
+    });
+  }
+
+  function updateQuizHud(){
+    document.getElementById("quizScore").textContent = score;
+    document.getElementById("quizMistakes").textContent = mistakeCount;
+  }
+
+  function handleChipClick(chip, word){
+    if(chip.classList.contains("correct") || chip.classList.contains("wrong")) return;
+    if(raceWords.includes(word)){
+      chip.classList.add("correct");
+      score += 1;
+      correctCount += 1;
+    } else {
+      chip.classList.add("wrong");
+      score -= 1;
+      mistakeCount += 1;
+    }
+    updateQuizHud();
+  }
+
+  document.getElementById("finishBtn").addEventListener("click", () => {
+    let bonus = 0;
+    if(correctCount === raceWords.length && mistakeCount === 0){
+      bonus = 5;
+      score += bonus;
+    }
+    document.getElementById("finalScore").textContent = score;
+    document.getElementById("finalCorrect").textContent = correctCount;
+    document.getElementById("finalMistakes").textContent = mistakeCount;
+    document.getElementById("bonusNote").textContent = bonus > 0
+      ? "Бонус +5 за безошибочный заезд!"
+      : "";
+    showScreen("result");
+  });
+
+  document.getElementById("retryBtn").addEventListener("click", () => {
+    startGame();
+  });
+  document.getElementById("menuBtn").addEventListener("click", () => {
+    showScreen("menu");
+  });
+</script>
+</body>
+</html>
