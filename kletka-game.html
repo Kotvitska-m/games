@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Клетка</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Mulish:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e14;
+    --surface: #16161f;
+    --surface2: #1e1e2e;
+    --border: #2a2a3e;
+    --text: #e8e8f4;
+    --muted: #6b6b8a;
+    --c1: #ff6b6b;
+    --c2: #ffd93d;
+    --c3: #6bcb77;
+    --c4: #4d96ff;
+    --player: #fff;
+    --correct: #6bcb77;
+    --wrong: #ff6b6b;
+    --cell-size: 52px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Mulish', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* BACKGROUND GRID */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(77,150,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77,150,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+    padding: 24px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* HEADER */
+  header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+  .logo span { color: var(--c4); }
+
+  .byline {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    width: 100%;
+  }
+
+  /* SETTINGS ROW */
+  .settings-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .setting-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .seg-ctrl {
+    display: flex;
+    background: var(--bg);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .seg-btn {
+    flex: 1;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-family: 'Mulish', sans-serif;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .seg-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  /* BUTTONS */
+  .btn {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--c4);
+    color: #000;
+  }
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-family: 'Mulish', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+  .btn-answer {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 12px 36px;
+    border-radius: 10px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-answer:hover { border-color: var(--c4); color: var(--c4); }
+
+  /* GRID */
+  .grid-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .grid {
+    display: grid;
+    gap: 4px;
+    user-select: none;
+  }
+
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 22px;
+  }
+
+  .cell.clickable { cursor: pointer; }
+  .cell.clickable:hover { border-color: var(--c4); background: rgba(77,150,255,0.1); }
+
+  .cell.selected-answer {
+    border-color: var(--c4);
+    background: rgba(77,150,255,0.18);
+    box-shadow: 0 0 0 2px rgba(77,150,255,0.3);
+  }
+
+  .cell.correct-cell {
+    border-color: var(--correct);
+    background: rgba(107,203,119,0.18);
+    animation: pulse-green 0.6s ease;
+  }
+
+  .cell.wrong-cell {
+    border-color: var(--wrong);
+    background: rgba(255,107,107,0.18);
+    animation: pulse-red 0.6s ease;
+  }
+
+  @keyframes pulse-green {
+    0%,100% { box-shadow: 0 0 0 0 rgba(107,203,119,0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(107,203,119,0); }
+  }
+  @keyframes pulse-red {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,107,107,0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(255,107,107,0); }
+  }
+
+  /* PLAYER PIECE */
+  .player-piece {
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .player-piece:hover { transform: scale(1.15); }
+  .player-piece.selected { filter: drop-shadow(0 0 6px var(--c4)); transform: scale(1.15); }
+
+  /* COMMANDS DISPLAY */
+  .commands-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    min-height: 100px;
+    width: 100%;
+  }
+
+  .cmd-display {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    text-align: center;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: cmdIn 0.3s ease;
+    letter-spacing: -1px;
+  }
+
+  @keyframes cmdIn {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .cmd-counter {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .progress-dots {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 300px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: all 0.3s;
+  }
+  .dot.done { background: var(--muted); }
+  .dot.active { background: var(--c4); transform: scale(1.4); }
+
+  /* CLICK MODE BUTTON */
+  .click-next-btn {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 14px 32px;
+    color: var(--muted);
+    font-family: 'Mulish', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .click-next-btn:hover { border-color: var(--c4); color: var(--text); }
+
+  /* PLAYER ASIDE */
+  .answer-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .answer-hint {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .answer-hint strong { color: var(--text); }
+
+  .player-aside {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .player-aside:hover, .player-aside.selected { border-color: var(--c4); color: var(--c4); }
+  .player-aside.selected svg path, .player-aside.selected svg circle, .player-aside.selected svg line, .player-aside.selected svg ellipse {
+    stroke: var(--c4) !important;
+  }
+
+  /* RESULT */
+  .result-msg {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    text-align: center;
+    padding: 12px 24px;
+    border-radius: 10px;
+    animation: cmdIn 0.4s ease;
+  }
+  .result-msg.correct { color: var(--correct); background: rgba(107,203,119,0.1); }
+  .result-msg.wrong { color: var(--wrong); background: rgba(255,107,107,0.1); }
+
+  /* RULES MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+  }
+
+  .modal h2 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    color: var(--c4);
+  }
+
+  .modal p, .modal li {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .modal ol { padding-left: 20px; }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 22px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  /* PHASE transitions */
+  .phase { display: none; width: 100%; }
+  .phase.active { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+  .section-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    align-self: flex-start;
+  }
+
+  .flex-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  @media (max-width: 480px) {
+    :root { --cell-size: 44px; }
+    .logo { font-size: 22px; }
+    .cmd-display { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">КЛЕ<span>ТКА</span></div>
+    <div class="byline">Котвицкая</div>
+  </header>
+
+  <!-- PHASE 0: SETUP -->
+  <div class="phase active" id="phase-setup">
+    <div class="card" style="width:100%">
+      <div class="settings-row">
+        <div class="setting-group">
+          <div class="setting-label">Сложность (поле)</div>
+          <div class="seg-ctrl" id="diff-ctrl">
+            <button class="seg-btn active" data-diff="3">3×3</button>
+            <button class="seg-btn" data-diff="4">4×4</button>
+            <button class="seg-btn" data-diff="5">5×5</button>
+            <button class="seg-btn" data-diff="6">6×6</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">Команды</div>
+          <div class="seg-ctrl" id="mode-ctrl">
+            <button class="seg-btn active" data-mode="words">Слова</button>
+            <button class="seg-btn" data-mode="arrows">Стрелки</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-label">Режим показа</div>
+          <div class="seg-ctrl" id="speed-ctrl">
+            <button class="seg-btn" data-speed="2500">Медл.</button>
+            <button class="seg-btn active" data-speed="1500">Средн.</button>
+            <button class="seg-btn" data-speed="500">Быстро</button>
+            <button class="seg-btn" data-speed="0">Клик</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="setup-grid-wrap" class="grid-wrap"></div>
+
+    <div class="flex-row">
+      <button class="btn-ghost" onclick="showRules()">📖 Правила</button>
+      <button class="btn btn-primary" onclick="startGame()">НАЧАТЬ</button>
+    </div>
+  </div>
+
+  <!-- PHASE 1: COMMANDS -->
+  <div class="phase" id="phase-commands">
+    <div class="commands-area">
+      <div class="cmd-display" id="cmd-display">—</div>
+      <div class="cmd-counter" id="cmd-counter"></div>
+      <div class="progress-dots" id="progress-dots"></div>
+      <div id="click-next-wrap" style="display:none">
+        <div class="click-next-btn" id="click-next-btn" onclick="nextCommand()">
+          Нажми, чтобы показать следующую команду →
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2: ANSWER -->
+  <div class="phase" id="phase-answer">
+    <div class="answer-hint">
+      <strong>1.</strong> Выбери фигурку&nbsp;&nbsp;→&nbsp;&nbsp;<strong>2.</strong> Нажми на клетку, где она должна была остановиться
+    </div>
+
+    <div class="flex-row">
+      <div class="player-aside" id="player-aside" onclick="selectPlayer()">
+        <svg id="player-svg-aside" width="36" height="36" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="9" r="5" stroke="#fff" stroke-width="2.2"/>
+          <path d="M8 30c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+          <line x1="18" y1="19" x2="18" y2="27" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+        Фигурка
+      </div>
+    </div>
+
+    <div id="answer-grid-wrap" class="grid-wrap"></div>
+
+    <div class="flex-row">
+      <button class="btn-answer" id="answer-btn" onclick="submitAnswer()">ОТВЕТИТЬ</button>
+    </div>
+
+    <div id="result-display"></div>
+
+    <div class="flex-row" id="next-round-btn" style="display:none">
+      <button class="btn btn-primary" onclick="restartGame()">Играть снова</button>
+    </div>
+  </div>
+</div>
+
+<!-- RULES MODAL -->
+<div class="modal-overlay" id="rules-modal" style="display:none" onclick="closeRules(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeRules()">✕</button>
+    <h2>📖 Правила</h2>
+    <ol>
+      <li>Выбери сложность (размер поля) и настройки показа команд.</li>
+      <li>Нажми <strong>«Начать»</strong> — фигурка спрячется, начнут появляться команды.</li>
+      <li>Запоминай команды: стрелки или слова. Каждая команда выделена своим цветом.</li>
+      <li>После всех команд появится поле.</li>
+      <li>Нажми на фигурку, затем — на клетку, куда она должна была прийти.</li>
+      <li>Нажми <strong>«Ответить»</strong>. Зелёный = правильно! Красный = ошибка, правильная клетка подсветится зелёным.</li>
+    </ol>
+    <p style="margin-top:16px; color: var(--muted); font-size:12px;">Фигурка не выходит за пределы поля — если команда ведёт к краю, она остаётся на месте.</p>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let gridSize = 3;
+let displayMode = 'words';
+let displaySpeed = 1500; // ms, 0 = click
+let commands = [];
+let playerStart = { r: 0, c: 0 };
+let playerFinal = { r: 0, c: 0 };
+let cmdIndex = 0;
+let cmdTimer = null;
+
+// Answer phase
+let playerSelected = false;
+let selectedCell = null;
+
+const COLORS = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff'];
+const DIRS = {
+  up:    { label: 'Вверх',  arrow: '↑', dr: -1, dc: 0 },
+  down:  { label: 'Вниз',   arrow: '↓', dr:  1, dc: 0 },
+  left:  { label: 'Влево',  arrow: '←', dr: 0,  dc: -1 },
+  right: { label: 'Вправо', arrow: '→', dr: 0,  dc:  1 },
+};
+const DIR_KEYS = ['up','down','left','right'];
+
+// ===== HELPERS =====
+function getColor(idx) {
+  return COLORS[idx % COLORS.length];
+}
+
+function noRepeat(arr) {
+  // ensure no two consecutive same color index
+  return arr;
+}
+
+function genCommands(size) {
+  const n = size + 2 + Math.floor(Math.random() * 3); // steps = size+2 to size+4
+  const cmds = [];
+  let r = Math.floor(size/2), c = Math.floor(size/2);
+  playerStart = {r, c};
+  let lastDir = null;
+  for (let i = 0; i < n; i++) {
+    let possible = DIR_KEYS.filter(d => {
+      const {dr, dc} = DIRS[d];
+      const nr = r + dr, nc = c + dc;
+      return nr >= 0 && nr < size && nc >= 0 && nc < size;
+    });
+    if (possible.length === 0) break;
+    // prefer variety
+    let pick;
+    let attempts = 0;
+    do {
+      pick = possible[Math.floor(Math.random() * possible.length)];
+      attempts++;
+    } while (pick === lastDir && attempts < 10 && possible.length > 1);
+    cmds.push(pick);
+    r += DIRS[pick].dr;
+    c += DIRS[pick].dc;
+    lastDir = pick;
+  }
+  playerFinal = {r, c};
+  return cmds;
+}
+
+function makePlayerSVG(color='#ffffff', size=32) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 36 36" fill="none">
+    <circle cx="18" cy="9" r="5" stroke="${color}" stroke-width="2.2"/>
+    <path d="M8 30c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="${color}" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="18" y1="19" x2="18" y2="27" stroke="${color}" stroke-width="2.2" stroke-linecap="round"/>
+  </svg>`;
+}
+
+// ===== SETUP GRID =====
+function renderSetupGrid() {
+  const wrap = document.getElementById('setup-grid-wrap');
+  wrap.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  grid.style.gridTemplateColumns = `repeat(${gridSize}, var(--cell-size))`;
+
+  const midR = Math.floor(gridSize/2), midC = Math.floor(gridSize/2);
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      if (r === midR && c === midC) {
+        cell.innerHTML = makePlayerSVG('#ffffff', 32);
+      }
+      grid.appendChild(cell);
+    }
+  }
+  wrap.appendChild(grid);
+}
+
+// ===== SEG CONTROLS =====
+document.querySelectorAll('#diff-ctrl .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#diff-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    gridSize = parseInt(btn.dataset.diff);
+    renderSetupGrid();
+  });
+});
+
+document.querySelectorAll('#mode-ctrl .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#mode-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    displayMode = btn.dataset.mode;
+  });
+});
+
+document.querySelectorAll('#speed-ctrl .seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#speed-ctrl .seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    displaySpeed = parseInt(btn.dataset.speed);
+  });
+});
+
+// ===== PHASES =====
+function showPhase(id) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== GAME START =====
+function startGame() {
+  commands = genCommands(gridSize);
+  cmdIndex = 0;
+  playerSelected = false;
+  selectedCell = null;
+
+  // Build progress dots
+  const dots = document.getElementById('progress-dots');
+  dots.innerHTML = '';
+  commands.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.id = `dot-${i}`;
+    dots.appendChild(d);
+  });
+
+  showPhase('phase-commands');
+
+  if (displaySpeed === 0) {
+    // Click mode
+    document.getElementById('click-next-wrap').style.display = 'block';
+    showCommand(0);
+  } else {
+    document.getElementById('click-next-wrap').style.display = 'none';
+    showCommand(0);
+  }
+}
+
+function showCommand(idx) {
+  if (idx >= commands.length) {
+    endCommands();
+    return;
+  }
+  cmdIndex = idx;
+  const dir = commands[idx];
+  const colorIdx = idx % COLORS.length;
+  // Ensure no repeat: if same color as prev, skip
+  const prevColorIdx = (idx - 1 + COLORS.length);
+  const color = getColor(colorIdx === (idx > 0 ? (idx-1) % COLORS.length : -1) ? colorIdx + 1 : colorIdx);
+  // Safe color assignment: just cycle, guaranteed different consecutive by modulo logic
+  const safeColor = COLORS[idx % COLORS.length];
+
+  const disp = document.getElementById('cmd-display');
+  disp.style.animation = 'none';
+  void disp.offsetWidth;
+  disp.style.animation = 'cmdIn 0.3s ease';
+
+  if (displayMode === 'arrows') {
+    disp.textContent = DIRS[dir].arrow;
+    disp.style.fontSize = '56px';
+  } else {
+    disp.textContent = DIRS[dir].label;
+    disp.style.fontSize = window.innerWidth < 480 ? '24px' : '36px';
+  }
+  disp.style.color = safeColor;
+
+  document.getElementById('cmd-counter').textContent = `${idx + 1} / ${commands.length}`;
+
+  // Dots
+  for (let i = 0; i < commands.length; i++) {
+    const d = document.getElementById(`dot-${i}`);
+    if (i < idx) d.className = 'dot done';
+    else if (i === idx) d.className = 'dot active';
+    else d.className = 'dot';
+  }
+
+  if (displaySpeed > 0) {
+    cmdTimer = setTimeout(() => showCommand(idx + 1), displaySpeed);
+  }
+}
+
+function nextCommand() {
+  showCommand(cmdIndex + 1);
+}
+
+function endCommands() {
+  document.getElementById('cmd-display').textContent = '✓';
+  document.getElementById('cmd-display').style.color = '#6bcb77';
+  document.getElementById('cmd-counter').textContent = 'Все команды показаны!';
+
+  // Mark all dots done
+  for (let i = 0; i < commands.length; i++) {
+    const d = document.getElementById(`dot-${i}`);
+    d.className = 'dot done';
+    d.style.background = '#6bcb77';
+  }
+
+  setTimeout(() => {
+    buildAnswerPhase();
+    showPhase('phase-answer');
+  }, 800);
+}
+
+// ===== ANSWER PHASE =====
+function buildAnswerPhase() {
+  playerSelected = false;
+  selectedCell = null;
+
+  // Reset player aside
+  const aside = document.getElementById('player-aside');
+  aside.classList.remove('selected');
+  aside.querySelector('svg').innerHTML = `
+    <circle cx="18" cy="9" r="5" stroke="#fff" stroke-width="2.2"/>
+    <path d="M8 30c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="18" y1="19" x2="18" y2="27" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>`;
+
+  // Result reset
+  document.getElementById('result-display').innerHTML = '';
+  document.getElementById('next-round-btn').style.display = 'none';
+
+  const wrap = document.getElementById('answer-grid-wrap');
+  wrap.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  grid.style.gridTemplateColumns = `repeat(${gridSize}, var(--cell-size))`;
+
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      cell.id = `acell-${r}-${c}`;
+      grid.appendChild(cell);
+    }
+  }
+  wrap.appendChild(grid);
+  updateAnswerCellsClickable();
+}
+
+function updateAnswerCellsClickable() {
+  const cells = document.querySelectorAll('#answer-grid-wrap .cell');
+  cells.forEach(cell => {
+    cell.classList.remove('clickable');
+    cell.onclick = null;
+    if (playerSelected) {
+      cell.classList.add('clickable');
+      cell.onclick = () => selectCell(parseInt(cell.dataset.r), parseInt(cell.dataset.c));
+    }
+  });
+}
+
+function selectPlayer() {
+  playerSelected = true;
+  selectedCell = null;
+  document.getElementById('player-aside').classList.add('selected');
+  document.getElementById('player-aside').querySelector('svg').innerHTML = `
+    <circle cx="18" cy="9" r="5" stroke="var(--c4)" stroke-width="2.2"/>
+    <path d="M8 30c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="var(--c4)" stroke-width="2.2" stroke-linecap="round"/>
+    <line x1="18" y1="19" x2="18" y2="27" stroke="var(--c4)" stroke-width="2.2" stroke-linecap="round"/>`;
+  updateAnswerCellsClickable();
+}
+
+function selectCell(r, c) {
+  // Clear previous selection
+  document.querySelectorAll('#answer-grid-wrap .cell').forEach(cell => cell.classList.remove('selected-answer'));
+  selectedCell = {r, c};
+  document.getElementById(`acell-${r}-${c}`).classList.add('selected-answer');
+}
+
+function submitAnswer() {
+  if (!playerSelected) {
+    alert('Сначала выбери фигурку!');
+    return;
+  }
+  if (!selectedCell) {
+    alert('Выбери клетку на поле!');
+    return;
+  }
+
+  const correct = selectedCell.r === playerFinal.r && selectedCell.c === playerFinal.c;
+  const resultDiv = document.getElementById('result-display');
+
+  if (correct) {
+    document.getElementById(`acell-${selectedCell.r}-${selectedCell.c}`).classList.add('correct-cell');
+    resultDiv.innerHTML = `<div class="result-msg correct">✓ Правильно!</div>`;
+  } else {
+    document.getElementById(`acell-${selectedCell.r}-${selectedCell.c}`).classList.add('wrong-cell');
+    document.getElementById(`acell-${playerFinal.r}-${playerFinal.c}`).classList.add('correct-cell');
+    resultDiv.innerHTML = `<div class="result-msg wrong">✗ Неверно — правильная клетка подсвечена</div>`;
+  }
+
+  document.getElementById('next-round-btn').style.display = 'flex';
+
+  // Disable further clicks
+  document.querySelectorAll('#answer-grid-wrap .cell').forEach(cell => {
+    cell.classList.remove('clickable');
+    cell.onclick = null;
+  });
+}
+
+function restartGame() {
+  showPhase('phase-setup');
+  renderSetupGrid();
+}
+
+// ===== RULES =====
+function showRules() {
+  document.getElementById('rules-modal').style.display = 'flex';
+}
+function closeRules(e) {
+  if (!e || e.target === document.getElementById('rules-modal') || !e.target) {
+    document.getElementById('rules-modal').style.display = 'none';
+  }
+}
+
+// ===== INIT =====
+renderSetupGrid();
+</script>
+</body>
+</html>
