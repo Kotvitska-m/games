@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Скорочтение — Котвицкая</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Nunito:wght@400;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: #fdf6ee; overflow-x: hidden; }
+
+  .watercolor-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .wc-blob { position: absolute; border-radius: 60% 40% 70% 30% / 50% 60% 40% 70%; opacity: 0.15; filter: blur(30px); }
+
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: block; }
+
+  #start-screen { padding: 20px 24px 40px; max-width: 640px; margin: 0 auto; }
+  .game-title { text-align: center; margin-bottom: 8px; }
+  .game-title h1 { font-family: 'Caveat', cursive; font-size: 38px; font-weight: 700; color: #6a3fa0; line-height: 1.1; }
+  .game-title .subtitle { font-family: 'Caveat', cursive; font-size: 18px; color: #b07c3e; margin-top: 4px; }
+
+  .stickers-row { display: flex; justify-content: center; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+  .sticker { display: flex; align-items: center; justify-content: center; border-radius: 16px; padding: 10px 14px; font-size: 26px; box-shadow: 2px 3px 8px rgba(0,0,0,0.10); border: 2px solid rgba(255,255,255,0.7); transform: rotate(var(--rot)); transition: transform 0.2s; cursor: default; user-select: none; }
+  .sticker:hover { transform: rotate(0deg) scale(1.08); }
+
+  .section-title { font-family: 'Caveat', cursive; font-size: 22px; color: #6a3fa0; margin: 22px 0 10px; }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .opt-btn { background: white; border: 2px solid #ddd; border-radius: 14px; padding: 12px 10px; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 600; color: #555; cursor: pointer; transition: all 0.18s; text-align: center; }
+  .opt-btn:hover { border-color: #b07c3e; background: #fff8ef; color: #b07c3e; }
+  .opt-btn.selected { border-color: #6a3fa0; background: #f0eafc; color: #6a3fa0; }
+
+  .start-btn { display: block; width: 100%; margin-top: 24px; padding: 16px; background: linear-gradient(135deg, #8b5cf6, #6a3fa0); color: white; border: none; border-radius: 18px; font-family: 'Caveat', cursive; font-size: 26px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(106,63,160,0.3); transition: transform 0.15s, box-shadow 0.15s; }
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(106,63,160,0.4); }
+  .start-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+  .signature { text-align: center; margin-top: 28px; font-family: 'Caveat', cursive; font-size: 20px; color: #b07c3e; opacity: 0.8; }
+
+  #game-screen { padding: 16px 16px 40px; max-width: 660px; margin: 0 auto; }
+  .game-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .timer-display { font-family: 'Caveat', cursive; font-size: 32px; font-weight: 700; color: #6a3fa0; min-width: 52px; text-align: right; }
+  .timer-display.urgent { color: #e53e3e; animation: pulse 0.6s infinite alternate; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+  .level-badge { background: #f0eafc; border: 2px solid #c4a9e8; border-radius: 12px; padding: 6px 14px; font-family: 'Caveat', cursive; font-size: 18px; color: #6a3fa0; }
+  .back-btn { background: none; border: 2px solid #ddd; border-radius: 10px; padding: 6px 12px; font-size: 14px; color: #888; cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.15s; }
+  .back-btn:hover { border-color: #aaa; color: #555; }
+
+  .progress-bar-wrap { height: 6px; background: #eee; border-radius: 3px; margin-bottom: 16px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #e879a0); border-radius: 3px; transition: width 1s linear; }
+
+  .pyramid-container {
+    background: white;
+    border-radius: 20px;
+    padding: 24px 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 2px solid rgba(106,63,160,0.15);
+  }
+
+  /*
+    Пирамида: таблица на всю ширину.
+    Левая ячейка (50%) — текст выровнен вправо.
+    Центральная ячейка (14px) — точка или пусто.
+    Правая ячейка (50%) — текст выровнен влево.
+    Так точка ВСЕГДА строго по центру экрана на любом устройстве.
+    white-space: nowrap — слова не переносятся.
+  */
+  .pyr-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .pyr-table tr { line-height: 1.7; }
+
+  .pyr-table td {
+    padding: 0;
+    vertical-align: middle;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    color: #2d2d3a;
+    white-space: nowrap;
+  }
+
+  .td-left {
+    width: 50%;
+    text-align: right;
+    padding-right: 5px;
+  }
+  .td-dot {
+    width: 14px;
+    min-width: 14px;
+    text-align: center;
+    padding: 0;
+  }
+  .td-right {
+    width: 50%;
+    text-align: left;
+    padding-left: 5px;
+  }
+
+  /* Строка по центру (одно слово/фраза) — colspan=3 */
+  .td-center {
+    text-align: center;
+    padding: 0;
+  }
+
+  .red-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #e53e3e;
+    border-radius: 50%;
+    box-shadow: 0 0 7px rgba(229,62,62,0.65);
+    vertical-align: middle;
+  }
+
+  .hint-text { text-align: center; font-size: 13px; color: #999; margin-top: 14px; font-style: italic; line-height: 1.5; }
+
+  #result-screen { padding: 30px 24px 50px; max-width: 500px; margin: 0 auto; text-align: center; }
+  .result-emoji { font-size: 60px; margin-bottom: 12px; }
+  .result-title { font-family: 'Caveat', cursive; font-size: 34px; color: #6a3fa0; margin-bottom: 8px; }
+  .result-story { background: white; border-radius: 16px; padding: 18px 20px; margin: 20px 0; text-align: left; border: 2px solid #e8dff8; font-size: 15px; color: #444; line-height: 1.7; }
+  .result-story .story-title { font-family: 'Caveat', cursive; font-size: 19px; color: #b07c3e; margin-bottom: 8px; }
+  .action-btns { display: flex; gap: 12px; margin-top: 20px; }
+  .play-again-btn { flex: 1; padding: 14px; background: linear-gradient(135deg, #8b5cf6, #6a3fa0); color: white; border: none; border-radius: 14px; font-family: 'Caveat', cursive; font-size: 22px; cursor: pointer; box-shadow: 0 3px 12px rgba(106,63,160,0.3); transition: transform 0.15s; }
+  .play-again-btn:hover { transform: translateY(-2px); }
+  .menu-btn { flex: 1; padding: 14px; background: white; color: #6a3fa0; border: 2px solid #c4a9e8; border-radius: 14px; font-family: 'Caveat', cursive; font-size: 22px; cursor: pointer; transition: background 0.15s; }
+  .menu-btn:hover { background: #f5f0ff; }
+</style>
+</head>
+<body>
+
+<div class="watercolor-bg" id="wcbg"></div>
+
+<!-- СТАРТ -->
+<div id="start-screen" class="screen active">
+  <div class="game-title">
+    <h1>📖 Скорочтение</h1>
+    <div class="subtitle">тренировка периферийного зрения</div>
+  </div>
+  <div class="stickers-row">
+    <div class="sticker" style="background:#f0eafc;--rot:-4deg">🔤</div>
+    <div class="sticker" style="background:#fff3e0;--rot:3deg">📚</div>
+    <div class="sticker" style="background:#e8f5e9;--rot:-2deg">👆</div>
+    <div class="sticker" style="background:#fce4ec;--rot:5deg">✏️</div>
+    <div class="sticker" style="background:#e3f2fd;--rot:-3deg">📝</div>
+    <div class="sticker" style="background:#fff9c4;--rot:4deg">🎯</div>
+  </div>
+
+  <div class="section-title">⏱ Время</div>
+  <div class="options-grid">
+    <button class="opt-btn" data-group="time" data-val="30">30 секунд</button>
+    <button class="opt-btn" data-group="time" data-val="60">1 минута</button>
+    <button class="opt-btn" data-group="time" data-val="90">1.5 минуты</button>
+    <button class="opt-btn" data-group="time" data-val="120">2 минуты</button>
+  </div>
+
+  <div class="section-title">⭐ Сложность</div>
+  <div class="options-grid">
+    <button class="opt-btn" data-group="diff" data-val="1">🌱 Лёгкий</button>
+    <button class="opt-btn" data-group="diff" data-val="2">🌿 Средний</button>
+    <button class="opt-btn" data-group="diff" data-val="3">🌳 Трудный</button>
+    <button class="opt-btn" data-group="diff" data-val="4">🔥 Мастер</button>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled>Начать</button>
+  <div class="signature">— Котвицкая —</div>
+</div>
+
+<!-- ИГРА -->
+<div id="game-screen" class="screen">
+  <div class="game-header">
+    <button class="back-btn" id="back-btn">← Меню</button>
+    <div class="level-badge" id="level-badge">🌱 Лёгкий</div>
+    <div class="timer-display" id="timer-display">60</div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-bar" style="width:100%"></div>
+  </div>
+  <div class="pyramid-container">
+    <table class="pyr-table" id="pyramid-text"></table>
+  </div>
+  <div class="hint-text">Зафиксируй взгляд на красной точке<br>Читай боковым зрением</div>
+</div>
+
+<!-- РЕЗУЛЬТАТ -->
+<div id="result-screen" class="screen">
+  <div class="result-emoji" id="result-emoji">🌟</div>
+  <div class="result-title" id="result-title">Молодец!</div>
+  <div class="result-story" id="result-story">
+    <div class="story-title" id="story-title-res"></div>
+    <div id="story-full-text"></div>
+  </div>
+  <div class="action-btns">
+    <button class="play-again-btn" id="play-again-btn">Ещё раз</button>
+    <button class="menu-btn" id="menu-btn-res">Меню</button>
+  </div>
+  <div class="signature" style="margin-top:24px">— Котвицкая —</div>
+</div>
+
+<script>
+const TEXTS = [
+  {
+    id: 0, title: "Ёжик в тумане", author: "С. Козлов",
+    full: "Ёжик шёл через лес. Вокруг стелился туман. Было тихо и тепло. Где-то журчал ручей. Ёжик остановился и прислушался. Лес дышал спокойно.",
+    levels: [
+      { plain: "Ёжик" },
+      { plain: "шёл по лесу" },
+      { left: "в густом", right: "тумане" },
+      { left: "было тихо", right: "и тепло" },
+      { left: "где-то рядом", right: "журчал ручей" },
+      { left: "ёжик замер", right: "прислушался" },
+      { left: "лес вокруг", right: "дышал тихо" },
+      { left: "не было страшно", right: "было хорошо" },
+      { left: "туман был мягким", right: "тёплым как сон" },
+    ]
+  },
+  {
+    id: 1, title: "Медвежонок у реки", author: "С. Козлов",
+    full: "Медвежонок сидел у реки. В воде плавали рыбки. Он опустил лапу в воду. Вода оказалась холодной. Рыбки испугались и уплыли. Медвежонок засмеялся.",
+    levels: [
+      { plain: "Река" },
+      { plain: "тихая река" },
+      { left: "медвежонок", right: "у реки" },
+      { left: "смотрит в воду", right: "на рыбок" },
+      { left: "опустил лапу", right: "в реку" },
+      { left: "вода холодная", right: "рыбки уплыли" },
+      { left: "медвежонок смотрит", right: "и смеётся" },
+      { left: "хорошо сидеть", right: "у тихой реки" },
+      { left: "слышно как плещет", right: "прохладная вода" },
+    ]
+  },
+  {
+    id: 2, title: "Осенний лист", author: "В. Лиханов",
+    full: "Жёлтый лист упал с клёна. Он кружился в воздухе. Ветер нёс его далеко. Лист лёг на мокрую траву. Рядом упал ещё один. Осень пришла в лес.",
+    levels: [
+      { plain: "Лист" },
+      { plain: "жёлтый лист" },
+      { left: "упал с", right: "клёна" },
+      { left: "кружился", right: "в воздухе" },
+      { left: "ветер нёс", right: "далеко" },
+      { left: "лёг на", right: "мокрую траву" },
+      { left: "рядом упал", right: "ещё один" },
+      { left: "осень пришла", right: "в тихий лес" },
+      { left: "деревья отдают", right: "золотые листья" },
+    ]
+  },
+  {
+    id: 3, title: "Дождик", author: "С. Козлов",
+    full: "Пошёл дождь. Капли стучали по листьям. Лягушки прыгали в лужах. Кузнечики спрятались в траве. Земля жадно пила воду. Потом вышло солнце.",
+    levels: [
+      { plain: "Дождь" },
+      { plain: "идёт дождь" },
+      { left: "капли стучат", right: "по листьям" },
+      { left: "лягушки рады", right: "прыгают в лужах" },
+      { left: "кузнечики", right: "спрятались" },
+      { left: "земля пьёт", right: "тёплую воду" },
+      { left: "всё вокруг", right: "пахнет свежестью" },
+      { left: "дождь прошёл", right: "вышло солнце" },
+      { left: "после дождя мир", right: "стал чище и ярче" },
+    ]
+  },
+  {
+    id: 4, title: "Первый снег", author: "В. Лиханов",
+    full: "Ночью выпал первый снег. Утром всё стало белым. Деревья стояли в инее. Дети выбежали во двор. Они лепили снеговика. Зима пришла по-настоящему.",
+    levels: [
+      { plain: "Снег" },
+      { plain: "первый снег" },
+      { left: "ночью выпал", right: "тихий снег" },
+      { left: "утром всё", right: "стало белым" },
+      { left: "деревья стоят", right: "в инее" },
+      { left: "дети выбежали", right: "во двор" },
+      { left: "лепят дружно", right: "снеговика" },
+      { left: "зима пришла", right: "по-настоящему" },
+      { left: "белый снег лежит", right: "на ветках крыш" },
+    ]
+  },
+  {
+    id: 5, title: "Котёнок", author: "Л. Толстой",
+    full: "У Васи был котёнок. Он был маленький и пушистый. Котёнок любил играть с клубком. Вася смотрел и смеялся. Котёнок набегался и уснул.",
+    levels: [
+      { plain: "Котёнок" },
+      { plain: "малый котёнок" },
+      { left: "у Васи", right: "котёнок" },
+      { left: "пушистый", right: "маленький" },
+      { left: "любит играть", right: "с клубком" },
+      { left: "Вася смотрит", right: "и смеётся" },
+      { left: "котёнок прыгает", right: "гоняет клубок" },
+      { left: "набегался котёнок", right: "и крепко уснул" },
+      { left: "тёплый пушистый комок", right: "свернулся калачиком" },
+    ]
+  },
+  {
+    id: 6, title: "Зайка и лиса", author: "С. Козлов",
+    full: "Зайка грыз морковку под кустом. Вдруг он увидел лису. Лиса шла по тропинке. Зайка замер и не дышал. Лиса прошла мимо. Зайка выдохнул с облегчением.",
+    levels: [
+      { plain: "Заяц" },
+      { plain: "зайка сидит" },
+      { left: "грызёт", right: "морковку" },
+      { left: "вдруг увидел", right: "лису" },
+      { left: "лиса идёт", right: "по тропинке" },
+      { left: "зайка замер", right: "не дышит" },
+      { left: "лиса прошла", right: "мимо куста" },
+      { left: "зайка выдохнул", right: "с облегчением" },
+      { left: "опасность прошла", right: "мимо на этот раз" },
+    ]
+  },
+  {
+    id: 7, title: "Ручей весной", author: "В. Лиханов",
+    full: "Весной ручей проснулся. Он бежал по камушкам и пел. Рыбка плыла против течения. Солнце блестело на воде. Лягушки вышли на берег. Хорошо было у ручья.",
+    levels: [
+      { plain: "Ручей" },
+      { plain: "весной ручей" },
+      { left: "ручей проснулся", right: "и побежал" },
+      { left: "бежит и поёт", right: "по камушкам" },
+      { left: "рыбка плывёт", right: "против течения" },
+      { left: "солнце блестит", right: "на воде" },
+      { left: "лягушки вышли", right: "на берег" },
+      { left: "хорошо стоять", right: "у звонкого ручья" },
+      { left: "ручей поёт свою", right: "весеннюю песню" },
+    ]
+  },
+  {
+    id: 8, title: "Гриб для всех", author: "С. Козлов",
+    full: "Мышонок нашёл большой гриб. Он не мог унести его один. Позвал друга-ёжика. Вместе они тащили гриб домой. Вечером сварили суп. Он получился очень вкусным.",
+    levels: [
+      { plain: "Гриб" },
+      { plain: "большой гриб" },
+      { left: "мышонок нашёл", right: "гриб в лесу" },
+      { left: "один не смог", right: "унести его" },
+      { left: "позвал на помощь", right: "друга-ёжика" },
+      { left: "вместе тащили", right: "гриб домой" },
+      { left: "вечером варили", right: "грибной суп" },
+      { left: "суп получился", right: "очень вкусным" },
+      { left: "вместе любое дело", right: "спорится веселее" },
+    ]
+  },
+  {
+    id: 9, title: "Звёздное небо", author: "С. Козлов",
+    full: "Ёжик и Медвежонок лежали на полянке. Они смотрели на звёзды. Звёзд было очень много. Они тихо мигали в темноте. Ёжик спросил: где живут звёзды? Медвежонок не знал. Они молчали вместе.",
+    levels: [
+      { plain: "Звёзды" },
+      { plain: "ночное небо" },
+      { left: "ёжик и", right: "медвежонок" },
+      { left: "лежат на", right: "полянке" },
+      { left: "смотрят вверх", right: "на звёзды" },
+      { left: "звёзды мигают", right: "в темноте" },
+      { left: "где живут", right: "эти звёзды?" },
+      { left: "никто не знает", right: "они молчат" },
+      { left: "хорошо молчать вместе", right: "под звёздным небом" },
+    ]
+  },
+  {
+    id: 10, title: "Весна пришла", author: "В. Лиханов",
+    full: "Снег растаял. Побежали звонкие ручьи. С юга прилетели птицы. Они пели на ветках. Дети вышли гулять. Всё вокруг зазеленело. Весна пришла в мир.",
+    levels: [
+      { plain: "Весна" },
+      { plain: "идёт весна" },
+      { left: "снег растаял", right: "ручьи бегут" },
+      { left: "птицы вернулись", right: "с юга" },
+      { left: "поют на", right: "ветках птицы" },
+      { left: "дети вышли", right: "гулять во двор" },
+      { left: "всё вокруг", right: "зазеленело" },
+      { left: "весна пришла", right: "в наш мир" },
+      { left: "солнце согрело землю", right: "после долгой зимы" },
+    ]
+  },
+];
+
+const DIFF_NAMES = ["🌱 Лёгкий", "🌿 Средний", "🌳 Трудный", "🔥 Мастер"];
+const DIFF_CFG = [
+  { lines: 5, fsvw: 5.8 },
+  { lines: 6, fsvw: 5.0 },
+  { lines: 7, fsvw: 4.4 },
+  { lines: 9, fsvw: 3.6 },
+];
+
+let selTime = null, selDiff = null;
+let timerInt = null, remaining = 0, total = 0;
+let curTextId = -1, usedIds = [];
+
+function renderBg() {
+  const bg = document.getElementById('wcbg');
+  const colors = ['#c084fc','#f9a8d4','#86efac','#fcd34d','#93c5fd','#fca5a5'];
+  const pos = [
+    {t:'3%',l:'2%',w:300,h:250},{t:'8%',r:'2%',w:260,h:220},
+    {t:'45%',l:'5%',w:180,h:160},{t:'50%',r:'3%',w:240,h:200},
+    {t:'78%',l:'25%',w:280,h:200},{t:'1%',l:'38%',w:160,h:150},
+  ];
+  bg.innerHTML = pos.map((p,i) => {
+    let s = [`width:${p.w}px`,`height:${p.h}px`,`background:${colors[i%colors.length]}`];
+    if(p.t) s.push(`top:${p.t}`); if(p.l) s.push(`left:${p.l}`); if(p.r) s.push(`right:${p.r}`);
+    return `<div class="wc-blob" style="${s.join(';')}"></div>`;
+  }).join('');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+document.querySelectorAll('.opt-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const g = btn.dataset.group;
+    document.querySelectorAll(`.opt-btn[data-group="${g}"]`).forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    if(g === 'time') selTime = parseInt(btn.dataset.val);
+    if(g === 'diff') selDiff = parseInt(btn.dataset.val);
+    document.getElementById('start-btn').disabled = !(selTime && selDiff);
+  });
+});
+
+function pickText() {
+  if(usedIds.length >= TEXTS.length) usedIds = [];
+  const avail = TEXTS.filter(t => !usedIds.includes(t.id));
+  const t = avail[Math.floor(Math.random() * avail.length)];
+  usedIds.push(t.id);
+  curTextId = t.id;
+  return t;
+}
+
+function buildPyramid(text, diff) {
+  const table = document.getElementById('pyramid-text');
+  table.innerHTML = '';
+  const cfg = DIFF_CFG[diff - 1];
+  const numLines = cfg.lines;
+  const fsvw = cfg.fsvw;
+  const levels = text.levels.slice(0, numLines);
+  const midIdx = Math.floor(numLines / 2);
+
+  levels.forEach((lvl, i) => {
+    const isCenter = (i === midIdx);
+    const scaledVw = Math.max(2.6, fsvw - i * 0.28);
+    const fw = i < 3 ? '700' : '600';
+    const tr = document.createElement('tr');
+
+    if (lvl.plain !== undefined) {
+      // Простая строка по центру — colspan=3
+      const td = document.createElement('td');
+      td.className = 'td-center';
+      td.colSpan = 3;
+      td.style.fontSize = scaledVw + 'vw';
+      td.style.fontWeight = fw;
+      if (isCenter) {
+        td.innerHTML = lvl.plain + '&nbsp;<span class="red-dot"></span>';
+      } else {
+        td.textContent = lvl.plain;
+      }
+      tr.appendChild(td);
+    } else {
+      // Split-строка: три ячейки
+      const tdL = document.createElement('td');
+      tdL.className = 'td-left';
+      tdL.style.fontSize = scaledVw + 'vw';
+      tdL.style.fontWeight = fw;
+      tdL.textContent = lvl.left;
+
+      const tdD = document.createElement('td');
+      tdD.className = 'td-dot';
+      if (isCenter) {
+        tdD.innerHTML = '<span class="red-dot"></span>';
+      }
+
+      const tdR = document.createElement('td');
+      tdR.className = 'td-right';
+      tdR.style.fontSize = scaledVw + 'vw';
+      tdR.style.fontWeight = fw;
+      tdR.textContent = lvl.right;
+
+      tr.appendChild(tdL);
+      tr.appendChild(tdD);
+      tr.appendChild(tdR);
+    }
+    table.appendChild(tr);
+  });
+}
+
+function startTimer() {
+  remaining = selTime; total = selTime;
+  const disp = document.getElementById('timer-display');
+  const bar = document.getElementById('progress-bar');
+  disp.classList.remove('urgent');
+  function tick() {
+    disp.textContent = remaining;
+    bar.style.width = Math.round((remaining / total) * 100) + '%';
+    if(remaining <= 5) disp.classList.add('urgent');
+    if(remaining <= 0) { clearInterval(timerInt); showResult(); return; }
+    remaining--;
+  }
+  tick();
+  timerInt = setInterval(tick, 1000);
+}
+
+function showResult() {
+  clearInterval(timerInt);
+  const t = TEXTS[curTextId];
+  document.getElementById('result-emoji').textContent = ['🌟','⭐','🏆','🎯'][selDiff-1];
+  document.getElementById('result-title').textContent = ['Отлично!','Молодец!','Великолепно!','Мастер чтения!'][selDiff-1];
+  document.getElementById('story-title-res').textContent = `«${t.title}» — ${t.author}`;
+  document.getElementById('story-full-text').textContent = t.full;
+  showScreen('result-screen');
+}
+
+function startGame() {
+  clearInterval(timerInt);
+  const t = pickText();
+  document.getElementById('level-badge').textContent = DIFF_NAMES[selDiff-1];
+  buildPyramid(t, selDiff);
+  showScreen('game-screen');
+  startTimer();
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('back-btn').addEventListener('click', () => { clearInterval(timerInt); showScreen('start-screen'); });
+document.getElementById('play-again-btn').addEventListener('click', startGame);
+document.getElementById('menu-btn-res').addEventListener('click', () => { clearInterval(timerInt); showScreen('start-screen'); });
+
+renderBg();
+</script>
+</body>
+</html>
