@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Гимнастика глаз</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,500;1,400&display=swap');
+
+  :root {
+    --sky: #EAF4FB;
+    --mist: #D6EAF6;
+    --cloud: #F7FBFE;
+    --iris: #7BB8D8;
+    --iris-deep: #4E96BF;
+    --sage: #A8D5C2;
+    --sage-deep: #6DB89B;
+    --blush: #F2D9E8;
+    --text: #2C4A5A;
+    --text-soft: #6B8FA0;
+    --white: #FFFFFF;
+    --radius: 20px;
+    --shadow: 0 4px 24px rgba(78,150,191,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(160deg, var(--sky) 0%, var(--cloud) 60%, var(--mist) 100%);
+    min-height: 100vh;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .screen {
+    display: none;
+    width: 100%;
+    max-width: 480px;
+    animation: fadeIn 0.35s ease;
+  }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── HOME ── */
+  .home-card {
+    background: var(--white);
+    border-radius: 32px;
+    padding: 48px 36px 40px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    width: 100%;
+  }
+
+  .eye-logo {
+    width: 90px; height: 90px;
+    margin: 0 auto 24px;
+    position: relative;
+  }
+  .eye-logo svg { width: 100%; height: 100%; }
+
+  .logo-pulse {
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.6); }
+  }
+
+  .home-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.03em;
+    line-height: 1.2;
+    margin-bottom: 36px;
+  }
+  .home-subtitle {
+    display: none;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 14px;
+    width: 100%;
+  }
+  .btn {
+    flex: 1;
+    padding: 16px 12px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn:active { transform: scale(0.96); }
+
+  .btn-choose {
+    background: linear-gradient(135deg, var(--sage) 0%, var(--sage-deep) 100%);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(109,184,155,0.35);
+  }
+  .btn-choose:hover { filter: brightness(1.05); box-shadow: 0 6px 20px rgba(109,184,155,0.45); }
+
+  .btn-random {
+    background: linear-gradient(135deg, var(--iris) 0%, var(--iris-deep) 100%);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(78,150,191,0.35);
+  }
+  .btn-random:hover { filter: brightness(1.05); box-shadow: 0 6px 20px rgba(78,150,191,0.45); }
+
+  .btn-icon { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+
+  .signature {
+    margin-top: 28px;
+    font-size: 0.75rem;
+    color: var(--text-soft);
+    letter-spacing: 0.06em;
+    font-style: italic;
+  }
+
+  /* ── CHOOSE SCREEN ── */
+  .screen-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .back-btn {
+    background: var(--white);
+    border: none;
+    border-radius: 12px;
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    color: var(--text);
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+  .back-btn:active { transform: scale(0.93); }
+
+  .screen-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+  }
+
+  .ex-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 14px 8px 12px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid transparent;
+  }
+  .ex-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(78,150,191,0.16);
+    border-color: var(--iris);
+  }
+  .ex-card:active { transform: scale(0.95); }
+
+  .ex-card-icon { font-size: 1.8rem; margin-bottom: 6px; display: block; }
+  .ex-card-num {
+    font-size: 0.62rem;
+    color: var(--text-soft);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+  .ex-card-name {
+    font-size: 0.72rem;
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* ── EXERCISE SCREEN ── */
+  .ex-wrap {
+    background: var(--white);
+    border-radius: 32px;
+    padding: 32px 28px 28px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    text-align: center;
+  }
+
+  .ex-number {
+    font-size: 0.75rem;
+    color: var(--iris);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .ex-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 24px;
+    line-height: 1.3;
+  }
+
+  /* Animation canvas */
+  .anim-stage {
+    width: 240px; height: 240px;
+    margin: 0 auto 24px;
+    position: relative;
+    background: var(--sky);
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  .anim-stage canvas {
+    position: absolute; top: 0; left: 0;
+  }
+
+  .ex-desc {
+    font-size: 0.9rem;
+    color: var(--text-soft);
+    line-height: 1.6;
+    margin-bottom: 28px;
+    min-height: 42px;
+  }
+
+  .timer-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: var(--mist);
+    border-radius: 99px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sage), var(--iris));
+    border-radius: 99px;
+    transition: width 0.1s linear;
+    width: 100%;
+  }
+
+  .ex-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+  .btn-sm {
+    flex: 1;
+    padding: 13px 8px;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+  }
+  .btn-sm:active { transform: scale(0.95); }
+
+  .btn-repeat {
+    background: var(--blush);
+    color: #9B5B7A;
+  }
+  .btn-repeat:hover { filter: brightness(0.96); }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--iris) 0%, var(--iris-deep) 100%);
+    color: var(--white);
+    box-shadow: 0 3px 12px rgba(78,150,191,0.3);
+  }
+  .btn-next:hover { filter: brightness(1.06); }
+
+  .btn-back-choose {
+    background: var(--sky);
+    color: var(--text-soft);
+  }
+  .btn-menu {
+    background: var(--mist);
+    color: var(--text-soft);
+  }
+
+  .progress-label {
+    font-size: 0.75rem;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+    text-align: right;
+    width: 100%;
+  }
+
+  /* scrollbar for choose grid */
+  .grid-scroll {
+    width: 100%;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .grid-scroll::-webkit-scrollbar { width: 4px; }
+  .grid-scroll::-webkit-scrollbar-thumb { background: var(--mist); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="screen-home">
+  <div class="home-card">
+    <div class="eye-logo">
+      <svg viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="45" cy="45" rx="42" ry="22" fill="#EAF4FB" stroke="#7BB8D8" stroke-width="2.5"/>
+        <g class="logo-pulse">
+          <ellipse cx="45" cy="45" rx="42" ry="22" fill="none" stroke="#4E96BF" stroke-width="2"/>
+          <circle cx="45" cy="45" r="14" fill="#D6EAF6"/>
+          <circle cx="45" cy="45" r="9" fill="#4E96BF"/>
+          <circle cx="45" cy="45" r="4.5" fill="#2C4A5A"/>
+          <circle cx="48.5" cy="41.5" r="2" fill="white" opacity="0.8"/>
+        </g>
+        <path d="M3 45 Q20 20 45 20 Q70 20 87 45" stroke="#A8D5C2" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+        <path d="M3 45 Q20 70 45 70 Q70 70 87 45" stroke="#A8D5C2" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/>
+      </svg>
+    </div>
+    <div class="home-title">Гимнастика<br><em>глаз</em></div>
+    <div class="home-subtitle">Ашьиэмэль</div>
+    <div class="btn-row">
+      <button class="btn btn-choose" onclick="showChoose()">
+        <span class="btn-icon">🔲</span>Выбрать
+      </button>
+      <button class="btn btn-random" onclick="startRandom()">
+        <span class="btn-icon">✨</span>Случайно
+      </button>
+    </div>
+    <div class="signature">Котвицкая</div>
+  </div>
+</div>
+
+<!-- ══ CHOOSE ══ -->
+<div class="screen" id="screen-choose">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showHome()">←</button>
+    <div class="screen-title">Выберите упражнение</div>
+  </div>
+  <div class="grid-scroll">
+    <div class="grid" id="ex-grid"></div>
+  </div>
+</div>
+
+<!-- ══ EXERCISE ══ -->
+<div class="screen" id="screen-exercise">
+  <div class="ex-wrap">
+    <div class="ex-number" id="ex-num"></div>
+    <div class="ex-title" id="ex-title"></div>
+    <div class="anim-stage">
+      <canvas id="anim-canvas" width="240" height="240"></canvas>
+    </div>
+    <div class="ex-desc" id="ex-desc"></div>
+    <div class="progress-label" id="progress-label"></div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+    <div class="ex-actions" id="ex-actions"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════
+//  EXERCISES DATA
+// ══════════════════════════════════
+const exercises = [
+  { icon:'↕️', name:'Вверх-вниз', desc:'Медленно переводите взгляд вверх до упора, затем вниз. Голова неподвижна.', anim:'updown' },
+  { icon:'↔️', name:'Влево-вправо', desc:'Плавно ведите взгляд от крайнего левого до крайнего правого положения.', anim:'leftright' },
+  { icon:'⭕', name:'Круговые движения', desc:'Описывайте взглядом большой круг по часовой стрелке, затем против.', anim:'circle' },
+  { icon:'🔶', name:'Диагональ', desc:'Переводите взгляд по диагонали: из левого нижнего угла в правый верхний и обратно.', anim:'diagonal' },
+  { icon:'🔷', name:'Другая диагональ', desc:'Переводите взгляд по второй диагонали: из правого нижнего в левый верхний.', anim:'diagonal2' },
+  { icon:'📐', name:'Прямоугольник', desc:'Обводите взглядом воображаемый прямоугольник: верх–право–низ–лево.', anim:'rect' },
+  { icon:'8️⃣', name:'Горизонтальная восьмёрка', desc:'Рисуйте взглядом знак бесконечности ∞ в горизонтальной плоскости.', anim:'infinity' },
+  { icon:'🔢', name:'Вертикальная восьмёрка', desc:'Рисуйте взглядом цифру 8 в вертикальной плоскости.', anim:'figure8' },
+  { icon:'🔍', name:'Фокус: близко-далеко', desc:'Сфокусируйтесь на пальце в 30 см от лица, затем переведите взгляд на дальний предмет.', anim:'focus' },
+  { icon:'🌀', name:'Спираль', desc:'Мысленно ведите взгляд по спирали — от центра к краям и обратно.', anim:'spiral' },
+  { icon:'🌗', name:'Верхний полукруг', desc:'Медленно обводите взглядом верхнюю дугу — от левого виска к правому.', anim:'semicircleTop' },
+  { icon:'🌓', name:'Нижний полукруг', desc:'Медленно обводите взглядом нижнюю дугу — от левого к правому.', anim:'semicircleBot' },
+  { icon:'🌒', name:'Левый полукруг', desc:'Обводите взглядом левую дугу, от верхней точки до нижней.', anim:'semicircleLeft' },
+  { icon:'🌘', name:'Правый полукруг', desc:'Обводите взглядом правую дугу, от верхней точки до нижней.', anim:'semicircleRight' },
+  { icon:'💫', name:'Маятник', desc:'Плавно качайте взглядом из стороны в сторону, как маятник часов.', anim:'pendulum' },
+  { icon:'🎯', name:'Сведение к носу', desc:'Медленно приближайте палец к переносице, фокусируя взгляд, затем удаляйте.', anim:'converge' },
+  { icon:'✨', name:'Моргание', desc:'Быстро и интенсивно моргайте в течение 5 секунд, затем широко откройте глаза.', anim:'blink' },
+  { icon:'😌', name:'Пальминг', desc:'Закройте глаза и накройте их тёплыми ладонями. Расслабьтесь на 30 секунд.', anim:'palming' },
+  { icon:'🔆', name:'Зажмуривание', desc:'Крепко зажмурьтесь на 5 секунд, затем широко откройте глаза на 5 секунд.', anim:'squeeze' },
+  { icon:'🌐', name:'Перекрёстный взгляд', desc:'Сначала посмотрите на кончик носа, затем переведите взгляд на переносицу.', anim:'cross' },
+  { icon:'🖊️', name:'Слежение за карандашом', desc:'Держите карандаш вертикально и медленно водите им влево-вправо, не двигая головой.', anim:'tracking' },
+  { icon:'🌊', name:'Волновое движение', desc:'Ведите взгляд волнообразно — по синусоидной траектории слева направо.', anim:'wave' },
+  { icon:'🏔️', name:'Треугольник', desc:'Обводите взглядом стороны воображаемого равностороннего треугольника.', anim:'triangle' },
+  { icon:'⬡', name:'Гексагон', desc:'Плавно переводите взгляд по шести точкам воображаемого шестиугольника.', anim:'hexagon' },
+  { icon:'🎭', name:'Быстрые переводы', desc:'Резко переводите взгляд между четырьмя угловыми точками: ↖ ↗ ↙ ↘.', anim:'corners' },
+  { icon:'🔁', name:'Двойной круг', desc:'Обведите взглядом большой круг по часовой стрелке, затем сразу — малый круг в центре против часовой.', anim:'doublecircle' },
+  { icon:'🔭', name:'Дальний горизонт', desc:'Посмотрите вдаль (6+ метров) и удерживайте расслабленный фокус 30 секунд.', anim:'horizon' },
+  { icon:'🌿', name:'Зигзаг', desc:'Ведите взгляд зигзагообразно — вверх-вправо, вниз-вправо, вверх-вправо.', anim:'zigzag' },
+  { icon:'💠', name:'Ромб', desc:'Обводите взглядом четыре точки ромба: верх–право–низ–лево.', anim:'diamond' },
+  { icon:'🥚', name:'Эллипс', desc:'Обводите взглядом широкий горизонтальный эллипс — плавно, не спеша, сначала по часовой стрелке, затем против.', anim:'ellipse' },
+];
+
+// ══════════════════════════════════
+//  STATE
+// ══════════════════════════════════
+let mode = 'random'; // 'random' | 'choose'
+let currentIndex = 0;
+let animFrame = null;
+let timerInterval = null;
+const DURATION = 20; // seconds per exercise
+
+// ══════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showHome() {
+  stopAnim();
+  showScreen('screen-home');
+}
+
+function showChoose() {
+  mode = 'choose';
+  buildGrid();
+  showScreen('screen-choose');
+}
+
+function startRandom() {
+  mode = 'random';
+  currentIndex = Math.floor(Math.random() * exercises.length);
+  showExercise(currentIndex);
+}
+
+function buildGrid() {
+  const grid = document.getElementById('ex-grid');
+  grid.innerHTML = '';
+  exercises.forEach((ex, i) => {
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    card.innerHTML = `<span class="ex-card-icon">${ex.icon}</span>
+      <div class="ex-card-num">№ ${i+1}</div>
+      <div class="ex-card-name">${ex.name}</div>`;
+    card.onclick = () => { currentIndex = i; showExercise(i); };
+    grid.appendChild(card);
+  });
+}
+
+function showExercise(idx) {
+  stopAnim();
+  const ex = exercises[idx];
+  document.getElementById('ex-num').textContent = `Упражнение ${idx+1} из ${exercises.length}`;
+  document.getElementById('ex-title').textContent = ex.name;
+  document.getElementById('ex-desc').textContent = ex.desc;
+  document.getElementById('progress-label').textContent = `${DURATION} секунд`;
+
+  // Actions
+  const actions = document.getElementById('ex-actions');
+  if (mode === 'random') {
+    actions.innerHTML = `
+      <button class="btn-sm btn-menu" onclick="showHome()">🏠 Меню</button>
+      <button class="btn-sm btn-repeat" onclick="repeatExercise()">↺ Повторить</button>
+      <button class="btn-sm btn-next" onclick="nextExercise()">Далее →</button>`;
+  } else {
+    actions.innerHTML = `
+      <button class="btn-sm btn-menu" onclick="showHome()">🏠 Меню</button>
+      <button class="btn-sm btn-repeat" onclick="repeatExercise()">↺ Повторить</button>
+      <button class="btn-sm btn-back-choose" onclick="showChoose()">☰ Список</button>`;
+  }
+
+  showScreen('screen-exercise');
+  startTimer();
+  startAnim(ex.anim);
+}
+
+function repeatExercise() { showExercise(currentIndex); }
+function nextExercise() {
+  currentIndex = Math.floor(Math.random() * exercises.length);
+  showExercise(currentIndex);
+}
+
+// ══════════════════════════════════
+//  TIMER
+// ══════════════════════════════════
+function startTimer() {
+  clearInterval(timerInterval);
+  const bar = document.getElementById('timer-bar');
+  const label = document.getElementById('progress-label');
+  let elapsed = 0;
+  bar.style.width = '100%';
+  timerInterval = setInterval(() => {
+    elapsed += 0.1;
+    const pct = Math.max(0, 100 - (elapsed / DURATION) * 100);
+    bar.style.width = pct + '%';
+    const remaining = Math.ceil(DURATION - elapsed);
+    label.textContent = remaining > 0 ? `${remaining} сек` : 'Готово!';
+    if (elapsed >= DURATION) clearInterval(timerInterval);
+  }, 100);
+}
+
+function stopAnim() {
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  clearInterval(timerInterval);
+}
+
+// ══════════════════════════════════
+//  ANIMATIONS
+// ══════════════════════════════════
+const C = 120, R = 240; // center, canvas size
+const EYE_R = 18, IRIS_R = 11, PUPIL_R = 6;
+
+function drawEye(ctx, x, y) {
+  const cx = C, cy = C;
+  // White of eye
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 60, 30, 0, 0, Math.PI*2);
+  ctx.fillStyle = '#F7FBFE';
+  ctx.fill();
+  ctx.strokeStyle = '#7BB8D8';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Iris
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, IRIS_R, 0, Math.PI*2);
+  const g = ctx.createRadialGradient(x, y, 2, x, y, IRIS_R);
+  g.addColorStop(0, '#7BB8D8');
+  g.addColorStop(1, '#4E96BF');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.restore();
+
+  // Pupil
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, PUPIL_R, 0, Math.PI*2);
+  ctx.fillStyle = '#2C4A5A';
+  ctx.fill();
+  ctx.restore();
+
+  // Highlight
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x+3, y-3, 2.5, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPath(ctx, points, color='#A8D5C2') {
+  if (!points || points.length < 2) return;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i=1;i<points.length;i++) ctx.lineTo(points[i].x, points[i].y);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4,4]);
+  ctx.globalAlpha = 0.5;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
+
+// Path clipping to eye ellipse
+function clipToEye(x, y) {
+  const dx = (x - C) / 55, dy = (y - C) / 26;
+  const d = Math.sqrt(dx*dx + dy*dy);
+  if (d > 1) { const s = 1/d; return { x: C + (x-C)*s*0.96, y: C + (y-C)*s*0.96 }; }
+  return {x, y};
+}
+
+function animate(fn) {
+  let start = null;
+  function loop(ts) {
+    if (!start) start = ts;
+    fn(ts - start);
+    animFrame = requestAnimationFrame(loop);
+  }
+  animFrame = requestAnimationFrame(loop);
+}
+
+function getCanvas() {
+  const canvas = document.getElementById('anim-canvas');
+  const ctx = canvas.getContext('2d');
+  return { canvas, ctx };
+}
+
+function clearCtx(ctx) {
+  ctx.clearRect(0, 0, R, R);
+  ctx.fillStyle = '#EAF4FB';
+  ctx.fillRect(0, 0, R, R);
+}
+
+function startAnim(type) {
+  const { ctx } = getCanvas();
+  const T = 3000; // period ms
+
+  function frame(ms) {
+    clearCtx(ctx);
+    const t = (ms % T) / T; // 0..1
+    let x = C, y = C;
+
+    switch(type) {
+      case 'updown': {
+        const pts = [{x:C,y:C-22},{x:C,y:C+22}];
+        drawPath(ctx, pts);
+        y = C + Math.sin(t * Math.PI*2) * 22;
+        break;
+      }
+      case 'leftright': {
+        const pts = [{x:C-50,y:C},{x:C+50,y:C}];
+        drawPath(ctx, pts);
+        x = C + Math.sin(t * Math.PI*2) * 50;
+        break;
+      }
+      case 'circle': {
+        const pts = Array.from({length:64}, (_,i)=>{
+          const a = (i/64)*Math.PI*2;
+          const p = clipToEye(C+Math.cos(a)*48, C+Math.sin(a)*22);
+          return p;
+        });
+        drawPath(ctx, pts);
+        const a = t * Math.PI*2;
+        const p = clipToEye(C+Math.cos(a)*48, C+Math.sin(a)*22);
+        x=p.x; y=p.y;
+        break;
+      }
+      case 'diagonal': {
+        const A=clipToEye(C-50,C+22), B=clipToEye(C+50,C-22);
+        drawPath(ctx,[A,B]);
+        const frac = (Math.sin(t*Math.PI*2)+1)/2;
+        x=lerp(A.x,B.x,frac); y=lerp(A.y,B.y,frac);
+        break;
+      }
+      case 'diagonal2': {
+        const A=clipToEye(C+50,C+22), B=clipToEye(C-50,C-22);
+        drawPath(ctx,[A,B]);
+        const frac=(Math.sin(t*Math.PI*2)+1)/2;
+        x=lerp(A.x,B.x,frac); y=lerp(A.y,B.y,frac);
+        break;
+      }
+      case 'rect': {
+        const corners=[clipToEye(C-48,C-20),clipToEye(C+48,C-20),clipToEye(C+48,C+20),clipToEye(C-48,C+20),clipToEye(C-48,C-20)];
+        drawPath(ctx,corners);
+        const seg=t*4; const si=Math.floor(seg); const sf=seg-si;
+        const A=corners[si%4], B=corners[(si+1)%4];
+        x=lerp(A.x,B.x,sf); y=lerp(A.y,B.y,sf);
+        break;
+      }
+      case 'infinity': {
+        const pts=Array.from({length:128},(_,i)=>{
+          const a=(i/128)*Math.PI*2;
+          const px=C+Math.cos(a)*50/(1+Math.sin(a)*Math.sin(a));
+          const py=C+Math.sin(a)*Math.cos(a)*22/(1+Math.sin(a)*Math.sin(a));
+          return clipToEye(px,py);
+        });
+        drawPath(ctx,pts);
+        const a=t*Math.PI*2;
+        const p=clipToEye(C+Math.cos(a)*50/(1+Math.sin(a)*Math.sin(a)),C+Math.sin(a)*Math.cos(a)*22/(1+Math.sin(a)*Math.sin(a)));
+        x=p.x;y=p.y;
+        break;
+      }
+      case 'figure8': {
+        const pts=Array.from({length:128},(_,i)=>{
+          const a=(i/128)*Math.PI*2;
+          const px=C+Math.sin(a)*22;
+          const py=C+Math.sin(a*2)*22;
+          return clipToEye(px,py);
+        });
+        drawPath(ctx,pts);
+        const a=t*Math.PI*2;
+        const p=clipToEye(C+Math.sin(a)*22,C+Math.sin(a*2)*22);
+        x=p.x;y=p.y;
+        break;
+      }
+      case 'focus': {
+        const scale=0.5+Math.abs(Math.sin(t*Math.PI))*0.5;
+        ctx.save();
+        ctx.globalAlpha=0.18;
+        ctx.strokeStyle='#4E96BF';
+        ctx.lineWidth=1.5;
+        for(let i=1;i<=3;i++){ctx.beginPath();ctx.arc(C,C,i*16*scale,0,Math.PI*2);ctx.stroke();}
+        ctx.restore();
+        break;
+      }
+      case 'spiral': {
+        const pts=Array.from({length:128},(_,i)=>{
+          const a=(i/128)*Math.PI*6;
+          const r=Math.min(i/128*50,50);
+          return clipToEye(C+Math.cos(a)*r,C+Math.sin(a)*r*0.45);
+        });
+        drawPath(ctx,pts);
+        const a=t*Math.PI*6, r=t*50;
+        const p=clipToEye(C+Math.cos(a)*r,C+Math.sin(a)*r*0.45);
+        x=p.x;y=p.y;
+        break;
+      }
+      case 'semicircleTop': {
+        const pts=Array.from({length:64},(_,i)=>{const a=Math.PI+(i/63)*Math.PI;return clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);});
+        drawPath(ctx,pts);
+        const a=Math.PI+t*Math.PI;
+        const p=clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);x=p.x;y=p.y;
+        break;
+      }
+      case 'semicircleBot': {
+        const pts=Array.from({length:64},(_,i)=>{const a=(i/63)*Math.PI;return clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);});
+        drawPath(ctx,pts);
+        const a=t*Math.PI;
+        const p=clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);x=p.x;y=p.y;
+        break;
+      }
+      case 'semicircleLeft': {
+        const pts=Array.from({length:64},(_,i)=>{const a=Math.PI/2+(i/63)*Math.PI;return clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);});
+        drawPath(ctx,pts);
+        const a=Math.PI/2+t*Math.PI;
+        const p=clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);x=p.x;y=p.y;
+        break;
+      }
+      case 'semicircleRight': {
+        const pts=Array.from({length:64},(_,i)=>{const a=-Math.PI/2+(i/63)*Math.PI;return clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);});
+        drawPath(ctx,pts);
+        const a=-Math.PI/2+t*Math.PI;
+        const p=clipToEye(C+Math.cos(a)*50,C+Math.sin(a)*22);x=p.x;y=p.y;
+        break;
+      }
+      case 'pendulum': {
+        const pts=[clipToEye(C-50,C),clipToEye(C+50,C)];
+        drawPath(ctx,pts);
+        x=C+Math.sin(t*Math.PI*2)*50; y=C;
+        const p=clipToEye(x,y);x=p.x;y=p.y;
+        break;
+      }
+      case 'converge': {
+        const sz=4+Math.abs(Math.sin(t*Math.PI))*14;
+        ctx.save();ctx.globalAlpha=0.2;ctx.strokeStyle='#4E96BF';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.arc(C,C,sz,0,Math.PI*2);ctx.stroke();
+        ctx.restore();
+        break;
+      }
+      case 'blink': {
+        const h=Math.abs(Math.sin(t*Math.PI*4))*28;
+        ctx.save();
+        ctx.beginPath();ctx.ellipse(C,C,58,h||1,0,0,Math.PI*2);
+        ctx.fillStyle='#D6EAF6';ctx.fill();
+        ctx.strokeStyle='#7BB8D8';ctx.lineWidth=2;ctx.stroke();
+        ctx.restore();
+        if(h<4){ctx.save();ctx.fillStyle='#2C4A5A';ctx.fillRect(C-30,C-1,60,2);ctx.restore(); return;}
+        break;
+      }
+      case 'palming': {
+        const alpha=0.3+0.7*Math.abs(Math.sin(t*Math.PI));
+        ctx.save();ctx.fillStyle=`rgba(168,213,194,${alpha})`;ctx.beginPath();ctx.ellipse(C,C,60,30,0,0,Math.PI*2);ctx.fill();ctx.restore();
+        ctx.save();ctx.fillStyle=`rgba(44,74,90,${0.6*alpha})`;ctx.beginPath();ctx.arc(C,C,8,0,Math.PI*2);ctx.fill();ctx.restore();
+        return;
+      }
+      case 'squeeze': {
+        const sq=Math.abs(Math.sin(t*Math.PI));
+        const hh=Math.max(2,sq*28);
+        ctx.save();ctx.beginPath();ctx.ellipse(C,C,58,hh,0,0,Math.PI*2);ctx.fillStyle='#F7FBFE';ctx.fill();ctx.strokeStyle='#7BB8D8';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+        if(hh<6){ctx.save();ctx.fillStyle='#2C4A5A';ctx.fillRect(C-30,C-1,60,2);ctx.restore();return;}
+        break;
+      }
+      case 'cross': {
+        const dist=5+Math.abs(Math.sin(t*Math.PI*2))*20;
+        // draw two eyes converging
+        ctx.save();ctx.globalAlpha=0.4;
+        ctx.beginPath();ctx.ellipse(C-dist,C,40,20,0,0,Math.PI*2);ctx.strokeStyle='#7BB8D8';ctx.lineWidth=1.5;ctx.stroke();
+        ctx.beginPath();ctx.ellipse(C+dist,C,40,20,0,0,Math.PI*2);ctx.stroke();
+        ctx.restore();
+        x=C; y=C;
+        break;
+      }
+      case 'tracking': {
+        const pts=[{x:C-50,y:C},{x:C+50,y:C}];drawPath(ctx,pts);
+        x=C+Math.sin(t*Math.PI*2)*50;y=C;const p=clipToEye(x,y);x=p.x;y=p.y;
+        break;
+      }
+      case 'wave': {
+        const pts=Array.from({length:64},(_,i)=>{const px=C-50+(i/63)*100;const py=C+Math.sin(i/63*Math.PI*3)*15;return clipToEye(px,py);});
+        drawPath(ctx,pts);
+        const px=C-50+t*100; const py=C+Math.sin(t*Math.PI*3)*15;
+        const p=clipToEye(px,py);x=p.x;y=p.y;
+        break;
+      }
+      case 'triangle': {
+        const tri=[clipToEye(C,C-22),clipToEye(C+48,C+20),clipToEye(C-48,C+20),clipToEye(C,C-22)];
+        drawPath(ctx,tri);
+        const seg=t*3;const si=Math.floor(seg);const sf=seg-si;
+        const A=tri[si%3],B=tri[(si+1)%3];
+        x=lerp(A.x,B.x,sf);y=lerp(A.y,B.y,sf);
+        break;
+      }
+      case 'hexagon': {
+        const hex=Array.from({length:7},(_,i)=>{const a=(i/6)*Math.PI*2-Math.PI/2;return clipToEye(C+Math.cos(a)*48,C+Math.sin(a)*22);});
+        drawPath(ctx,hex);
+        const seg=t*6;const si=Math.floor(seg);const sf=seg-si;
+        const A=hex[si%6],B=hex[(si+1)%6];
+        x=lerp(A.x,B.x,sf);y=lerp(A.y,B.y,sf);
+        break;
+      }
+      case 'corners': {
+        const cors=[clipToEye(C-45,C-20),clipToEye(C+45,C-20),clipToEye(C-45,C+20),clipToEye(C+45,C+20)];
+        cors.forEach(p=>{ctx.save();ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='rgba(168,213,194,0.5)';ctx.fill();ctx.restore();});
+        const idx=Math.floor(t*4)%4; const p=cors[idx];
+        x=p.x;y=p.y;
+        break;
+      }
+      case 'doublecircle': {
+        // Big circle CW for first half, small circle CCW for second half
+        const phase = t < 0.5 ? 0 : 1;
+        const localT = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+        const bigPts = Array.from({length:64},(_,i)=>{const a=(i/64)*Math.PI*2;return clipToEye(C+Math.cos(a)*48,C+Math.sin(a)*22);});
+        const smlPts = Array.from({length:64},(_,i)=>{const a=(i/64)*Math.PI*2;return clipToEye(C+Math.cos(a)*22,C+Math.sin(a)*10);});
+        drawPath(ctx, bigPts, 'rgba(168,213,194,0.4)');
+        drawPath(ctx, smlPts, 'rgba(78,150,191,0.4)');
+        let p;
+        if (phase === 0) {
+          const a = localT * Math.PI*2;
+          p = clipToEye(C+Math.cos(a)*48, C+Math.sin(a)*22);
+        } else {
+          const a = -localT * Math.PI*2;
+          p = clipToEye(C+Math.cos(a)*22, C+Math.sin(a)*10);
+        }
+        x=p.x; y=p.y;
+        break;
+      }
+      case 'horizon': {
+        drawPath(ctx,[clipToEye(C-55,C),clipToEye(C+55,C)],'rgba(78,150,191,0.3)');
+        ctx.save();ctx.globalAlpha=0.15+0.1*Math.sin(ms/800);
+        ctx.beginPath();ctx.ellipse(C,C,55,26,0,0,Math.PI*2);ctx.strokeStyle='#4E96BF';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+        x=C;y=C;
+        break;
+      }
+      case 'zigzag': {
+        const pts=[];for(let i=0;i<=8;i++){const px=C-50+(i/8)*100;const py=C+(i%2===0?-18:18);pts.push(clipToEye(px,py));}
+        drawPath(ctx,pts);
+        const seg=t*8;const si=Math.floor(seg);const sf=seg-si;
+        const A=pts[Math.min(si,7)],B=pts[Math.min(si+1,8)];
+        x=lerp(A.x,B.x,sf);y=lerp(A.y,B.y,sf);
+        break;
+      }
+      case 'diamond': {
+        const dm=[clipToEye(C,C-22),clipToEye(C+48,C),clipToEye(C,C+22),clipToEye(C-48,C),clipToEye(C,C-22)];
+        drawPath(ctx,dm);
+        const seg=t*4;const si=Math.floor(seg);const sf=seg-si;
+        const A=dm[si%4],B=dm[(si+1)%4];
+        x=lerp(A.x,B.x,sf);y=lerp(A.y,B.y,sf);
+        break;
+      }
+      case 'ellipse': {
+        // Wider horizontal ellipse, direction reverses halfway
+        const phase = t < 0.5 ? 1 : -1;
+        const localT = t < 0.5 ? t * 2 : (t - 0.5) * 2;
+        const pts = Array.from({length:128},(_,i)=>{const a=(i/128)*Math.PI*2;return clipToEye(C+Math.cos(a)*52,C+Math.sin(a)*16);});
+        drawPath(ctx, pts, '#A8D5C2');
+        const a = phase * localT * Math.PI*2;
+        const p = clipToEye(C+Math.cos(a)*52, C+Math.sin(a)*16);
+        x=p.x; y=p.y;
+        break;
+      }
+      default:
+        break;
+    }
+    const ep = clipToEye(x, y);
+    drawEye(ctx, ep.x, ep.y);
+  }
+
+  animate(frame);
+}
+</script>
+</body>
+</html>
