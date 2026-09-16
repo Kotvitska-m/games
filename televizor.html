@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Телевизор</title>
+<style>
+  :root{
+    --ink:#141018;
+    --paper:#f4f0ff;
+    --magenta:#ff2f92;
+    --cyan:#00e6d8;
+    --yellow:#ffd400;
+    --violet:#8b5cf6;
+    --lime:#c6ff00;
+    --orange:#ff7a1a;
+    --panel:#1b1524;
+    --panel2:#241a30;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    background:var(--ink);
+    color:var(--paper);
+    overflow-x:hidden;
+  }
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  /* ---------- abstract animated background ---------- */
+  .blobs{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+  .blob{
+    position:absolute;border-radius:50%;
+    filter:blur(60px);
+    opacity:.55;
+    mix-blend-mode:screen;
+    animation:float 16s ease-in-out infinite;
+  }
+  .blob.b1{width:38vw;height:38vw;background:var(--magenta);top:-8%;left:-6%;animation-duration:19s;}
+  .blob.b2{width:30vw;height:30vw;background:var(--cyan);bottom:-10%;right:-4%;animation-duration:14s;animation-delay:2s;}
+  .blob.b3{width:26vw;height:26vw;background:var(--yellow);top:35%;right:20%;animation-duration:22s;animation-delay:1s;}
+  .blob.b4{width:22vw;height:22vw;background:var(--violet);bottom:8%;left:15%;animation-duration:17s;animation-delay:3s;}
+  @keyframes float{
+    0%{transform:translate(0,0) scale(1);}
+    33%{transform:translate(4vw,-3vw) scale(1.08);}
+    66%{transform:translate(-3vw,4vw) scale(0.94);}
+    100%{transform:translate(0,0) scale(1);}
+  }
+
+  .stage{
+    position:relative;z-index:1;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 90px;
+  }
+  .screen{display:none;width:100%;max-width:900px;flex-direction:column;align-items:stretch;gap:18px;}
+  .screen.active{display:flex;}
+
+  h1.logo{
+    font-size:clamp(28px,6vw,52px);
+    font-weight:900;
+    letter-spacing:1px;
+    text-align:center;
+    margin:6px 0 2px;
+    background:linear-gradient(90deg,var(--magenta),var(--cyan),var(--yellow));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  p.tag{text-align:center;margin:0 0 10px;color:#c9c2e0;font-size:15px;}
+
+  .card{
+    background:var(--panel);
+    border-radius:22px;
+    padding:22px;
+    box-shadow:0 12px 40px rgba(0,0,0,.4);
+    border:2px solid rgba(255,255,255,.06);
+  }
+
+  /* ---------- settings ---------- */
+  .field{margin-bottom:20px;}
+  .field label.title{display:flex;justify-content:space-between;font-weight:700;font-size:15px;margin-bottom:8px;color:var(--paper);}
+  .field .val{color:var(--lime);font-weight:900;}
+  input[type=range]{
+    width:100%;height:8px;border-radius:6px;
+    -webkit-appearance:none;appearance:none;
+    background:linear-gradient(90deg,var(--magenta),var(--cyan));
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:24px;height:24px;border-radius:50%;
+    background:var(--yellow);
+    border:3px solid var(--ink);
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:24px;height:24px;border-radius:50%;
+    background:var(--yellow);border:3px solid var(--ink);cursor:pointer;
+  }
+  .checkbox-row{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border-radius:12px;
+    background:var(--panel2);
+    margin-bottom:8px;
+    cursor:pointer;
+    font-size:15px;
+    user-select:none;
+    border:2px solid transparent;
+    transition:border-color .15s;
+  }
+  .checkbox-row:hover{border-color:rgba(255,255,255,.15);}
+  .checkbox-row input{width:20px;height:20px;accent-color:var(--magenta);flex-shrink:0;}
+  .switch-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--panel2);border-radius:12px;}
+  .switch{position:relative;width:50px;height:28px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .switch .slider{position:absolute;inset:0;background:#3a3348;border-radius:20px;transition:.2s;cursor:pointer;}
+  .switch .slider:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:var(--paper);border-radius:50%;transition:.2s;}
+  .switch input:checked + .slider{background:var(--violet);}
+  .switch input:checked + .slider:before{transform:translateX(22px);background:var(--lime);}
+
+  .btn{
+    border:none;border-radius:14px;
+    padding:14px 22px;
+    font-size:16px;font-weight:800;
+    cursor:pointer;
+    color:var(--ink);
+    background:var(--lime);
+    box-shadow:0 6px 0 rgba(0,0,0,.35);
+    transition:transform .08s;
+  }
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.35);}
+  .btn.secondary{background:var(--cyan);}
+  .btn.alt{background:var(--yellow);}
+  .btn.pink{background:var(--magenta);color:#fff;}
+  .btn.ghost{background:var(--panel2);color:var(--paper);box-shadow:none;border:2px solid rgba(255,255,255,.15);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+
+  /* ---------- TV / game screen ---------- */
+  .tv-wrap{
+    display:flex;flex-direction:column;align-items:center;gap:14px;
+    width:100%;
+  }
+  .tv-frame.clickable{cursor:pointer;}
+  .tv-frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/3;
+    max-height:62vh;
+    border-radius:34px;
+    background:var(--panel);
+    border:10px solid #2b2138;
+    box-shadow:0 0 0 4px rgba(255,255,255,.05), 0 20px 60px rgba(0,0,0,.55);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .tv-frame::before, .tv-frame::after{
+    content:"";position:absolute;border-radius:50%;
+    filter:blur(30px);opacity:.7;transition:background 1s ease;
+  }
+  .tv-frame::before{width:40%;height:40%;top:-10%;left:-10%;}
+  .tv-frame::after{width:35%;height:35%;bottom:-8%;right:-8%;}
+  .tv-word{
+    position:relative;z-index:2;
+    font-weight:900;
+    text-align:center;
+    color:var(--paper);
+    line-height:1.1;
+    padding:0 5%;
+    text-shadow:0 4px 18px rgba(0,0,0,.5);
+    word-break:break-word;
+    max-width:94%;
+  }
+  .tv-progress{font-size:14px;color:#b8b0d8;text-align:center;letter-spacing:.5px;}
+  .tv-dot{width:9px;height:9px;border-radius:50%;background:var(--magenta);display:inline-block;margin:0 8px;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+
+  /* ---------- input screen ---------- */
+  textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:17px;
+    background:var(--panel2);
+    color:var(--paper);
+    border:2px solid rgba(255,255,255,.1);
+    border-radius:16px;
+    padding:14px;
+    resize:vertical;
+    line-height:1.5;
+    overflow-y:auto;
+  }
+  textarea#answer-box{height:300px;}
+  textarea#answer-readonly{height:260px;}
+
+  /* ---------- check screen ---------- */
+  .compare-cols{display:flex;gap:14px;flex-wrap:wrap;}
+  .compare-col{flex:1 1 260px;min-width:240px;}
+  .compare-col h3{margin:0 0 8px;font-size:15px;color:var(--yellow);}
+  .scroll-list{
+    height:260px;overflow-y:auto;
+    background:var(--panel2);
+    border-radius:16px;
+    padding:10px 14px;
+    border:2px solid rgba(255,255,255,.08);
+  }
+  .scroll-list ol{margin:0;padding-left:22px;}
+  .scroll-list li{padding:5px 0;font-size:16px;border-bottom:1px dashed rgba(255,255,255,.08);}
+
+  .grade-list{
+    max-height:420px;overflow-y:auto;
+    display:flex;flex-direction:column;gap:10px;
+    padding-right:4px;
+  }
+  .grade-row{
+    background:var(--panel2);
+    border-radius:14px;
+    padding:12px 14px;
+    display:flex;flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    border:2px solid rgba(255,255,255,.06);
+  }
+  .grade-row .idx{font-weight:900;color:var(--cyan);min-width:26px;}
+  .grade-row .word{font-weight:800;flex:1 1 140px;}
+  .grade-row .answer{flex:1 1 140px;color:#d8d0f5;}
+  .grade-row .answer.empty{color:#7a7292;font-style:italic;}
+  .grade-buttons{display:flex;gap:6px;}
+  .gbtn{border:none;border-radius:10px;padding:8px 10px;font-size:13px;font-weight:800;cursor:pointer;color:var(--ink);}
+  .gbtn.correct{background:var(--lime);}
+  .gbtn.partial{background:var(--yellow);}
+  .gbtn.wrong{background:var(--magenta);color:#fff;}
+  .gbtn:disabled{opacity:.3;cursor:not-allowed;}
+  .grade-row.graded-correct{border-color:var(--lime);}
+  .grade-row.graded-partial{border-color:var(--yellow);}
+  .grade-row.graded-wrong{border-color:var(--magenta);}
+
+  /* ---------- stats ---------- */
+  .stat-grid{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:14px 0;}
+  .stat-box{
+    flex:1 1 140px;
+    background:var(--panel2);
+    border-radius:18px;
+    padding:20px;
+    text-align:center;
+  }
+  .stat-box .num{font-size:38px;font-weight:900;}
+  .stat-box.correct .num{color:var(--lime);}
+  .stat-box.partial .num{color:var(--yellow);}
+  .stat-box.wrong .num{color:var(--magenta);}
+  .stat-box .lbl{font-size:13px;color:#bdb4dd;margin-top:4px;}
+
+  .hidden-field{display:none !important;}
+
+  .mode-toggle{display:flex;gap:10px;margin-bottom:14px;}
+  .toggle-btn{
+    flex:1;border:2px solid rgba(255,255,255,.15);
+    background:var(--panel2);color:var(--paper);
+    border-radius:12px;padding:10px 12px;font-weight:800;
+    font-size:14px;cursor:pointer;
+  }
+  .toggle-btn.active{background:var(--violet);border-color:var(--violet);color:#fff;}
+
+  .radio-row{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border-radius:12px;
+    background:var(--panel2);margin-bottom:8px;cursor:pointer;
+    font-size:15px;user-select:none;
+  }
+  .radio-row input{width:18px;height:18px;accent-color:var(--cyan);}
+
+  .grade-all-box{text-align:center;padding:18px 6px;}
+  .grade-all-box .big-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+  .gbtn.big{font-size:16px;padding:14px 22px;border-radius:14px;}
+  .hint-click{text-align:center;font-size:14px;color:var(--yellow);margin-top:4px;}
+
+  footer.sig{
+    position:fixed;left:0;right:0;bottom:0;z-index:5;
+    text-align:center;
+    padding:8px 0 10px;
+    font-family:Georgia,"Times New Roman",serif;
+    font-style:italic;
+    font-size:13px;
+    color:rgba(244,240,255,.45);
+    background:linear-gradient(180deg,rgba(20,16,24,0) 0%,rgba(20,16,24,.85) 60%);
+    letter-spacing:.5px;
+  }
+
+  @media (max-width:520px){
+    .tv-frame{max-height:52vh;}
+    .compare-cols{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<div class="blobs">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="blob b4"></div>
+</div>
+
+<div class="stage">
+
+  <!-- SETTINGS SCREEN -->
+  <section class="screen active" id="scr-settings">
+    <h1 class="logo">ТЕЛЕВИЗОР</h1>
+    <p class="tag">Связывайте слова в один воображаемый видеоряд у себя в голове — как в собственном телевизоре</p>
+
+    <div class="card">
+      <div class="field">
+        <label class="title">Смена слов</label>
+        <label class="radio-row"><input type="radio" name="mode" id="mode-auto" value="auto" checked> Автоматически, по времени</label>
+        <label class="radio-row"><input type="radio" name="mode" id="mode-click" value="click"> По клику (без времени)</label>
+      </div>
+
+      <div class="field" id="speed-field">
+        <label class="title">Скорость показа <span class="val" id="speed-val">2 сек</span></label>
+        <input type="range" id="speed" min="1" max="20" step="0.5" value="2">
+      </div>
+
+      <div class="field switch-row" id="inc-field">
+        <span>Нарастание скорости (к концу — быстрее)</span>
+        <label class="switch">
+          <input type="checkbox" id="increasing" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label class="title">Количество слов <span class="val" id="count-val">20</span></label>
+        <input type="range" id="count" min="10" max="40" step="1" value="20">
+      </div>
+
+      <div class="field">
+        <label class="title">Что показывать</label>
+        <label class="checkbox-row"><input type="checkbox" class="type-cb" value="noun" checked> Существительное <span style="opacity:.6">(стол)</span></label>
+        <label class="checkbox-row"><input type="checkbox" class="type-cb" value="noun_adj" checked> Существительное + прилагательное <span style="opacity:.6">(быстрый поезд)</span></label>
+        <label class="checkbox-row"><input type="checkbox" class="type-cb" value="number" checked> Число <span style="opacity:.6">(7)</span></label>
+        <label class="checkbox-row"><input type="checkbox" class="type-cb" value="number2" checked> Двузначное число <span style="opacity:.6">(84)</span></label>
+        <label class="checkbox-row"><input type="checkbox" class="type-cb" value="number2_noun" checked> Двузначное число + существительное <span style="opacity:.6">(53 облако)</span></label>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn" id="btn-start">Начать игру</button>
+        <button class="btn ghost" id="btn-stats-from-settings">Статистика</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section class="screen" id="scr-game">
+    <div class="tv-wrap">
+      <div class="tv-frame" id="tv-frame">
+        <div class="tv-word" id="tv-word"></div>
+      </div>
+      <div class="tv-progress"><span class="tv-dot"></span><span id="tv-progress-text">1 / 20</span><span class="tv-dot"></span></div>
+      <div class="hint-click hidden-field" id="hint-click">Нажмите на экран, чтобы показать следующее слово</div>
+    </div>
+  </section>
+
+  <!-- INPUT SCREEN -->
+  <section class="screen" id="scr-input">
+    <h1 class="logo" style="font-size:clamp(22px,4.5vw,34px);">Что вы запомнили?</h1>
+    <p class="tag">Впишите всё, что вспомните — каждое слово или число с новой строки, по порядку</p>
+    <div class="card">
+      <textarea id="answer-box" placeholder="стол&#10;7&#10;быстрый поезд&#10;..."></textarea>
+      <div class="btn-row">
+        <button class="btn" id="btn-check">Проверить</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHECK SCREEN -->
+  <section class="screen" id="scr-check">
+    <h1 class="logo" style="font-size:clamp(22px,4.5vw,34px);">Проверка</h1>
+
+    <div class="card">
+      <div class="compare-cols">
+        <div class="compare-col">
+          <h3>Что показывал экран</h3>
+          <div class="scroll-list"><ol id="list-words"></ol></div>
+        </div>
+        <div class="compare-col">
+          <h3>Ваши ответы</h3>
+          <textarea id="answer-readonly" readonly></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;color:var(--cyan);">Оцените ответы</h3>
+      <div class="mode-toggle">
+        <button class="toggle-btn active" id="mode-per-word-btn">По слову</button>
+        <button class="toggle-btn" id="mode-all-btn">Для всех</button>
+      </div>
+
+      <div id="grade-per-word">
+        <div class="grade-list" id="grade-list"></div>
+      </div>
+
+      <div id="grade-all" class="hidden-field">
+        <div class="grade-all-box">
+          <p style="margin:0;">Одна оценка сразу для всего задания</p>
+          <div class="big-buttons">
+            <button class="gbtn correct big" id="all-correct">Верно</button>
+            <button class="gbtn partial big" id="all-partial">Частично</button>
+            <button class="gbtn wrong big" id="all-wrong">Не верно</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn ghost" id="btn-goto-stats">Статистика</button>
+      <button class="btn secondary" id="btn-next-level">Далее</button>
+      <button class="btn alt" id="btn-goto-settings">Настройки</button>
+    </div>
+  </section>
+
+  <!-- STATS SCREEN -->
+  <section class="screen" id="scr-stats">
+    <h1 class="logo" style="font-size:clamp(22px,4.5vw,34px);">Статистика</h1>
+    <div class="card">
+      <div class="stat-grid">
+        <div class="stat-box correct"><div class="num" id="stat-correct">0</div><div class="lbl">Верно</div></div>
+        <div class="stat-box partial"><div class="num" id="stat-partial">0</div><div class="lbl">Частично</div></div>
+        <div class="stat-box wrong"><div class="num" id="stat-wrong">0</div><div class="lbl">Не верно</div></div>
+      </div>
+      <p class="tag" id="stat-total" style="margin-top:0;"></p>
+      <div class="btn-row">
+        <button class="btn ghost" id="btn-reset-stats">Сбросить статистику</button>
+        <button class="btn alt" id="btn-stats-back">Назад</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="sig">Котвицкая</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- word banks ---------------- */
+  var NOUNS = ["стол","стул","окно","дверь","книга","ручка","чашка","ложка","вилка","тарелка",
+    "диван","шкаф","ковёр","лампа","часы","зеркало","картина","ваза","подушка","одеяло",
+    "кровать","полка","ящик","замок","ключ","сумка","шапка","шарф","перчатка","ботинок",
+    "платье","рубашка","пуговица","молоток","гвоздь","отвёртка","лестница","велосипед","машина","самолёт",
+    "поезд","корабль","дерево","цветок","трава","камень","река","гора","облако","солнце",
+    "луна","звезда","снег","дождь","ветер","огонь","вода","земля","воздух","хлеб",
+    "молоко","яблоко","банан","апельсин","морковь","картофель","огурец","помидор","мясо","рыба",
+    "сыр","масло","сахар","соль","кофе","чай","собака","кошка","лошадь","корова",
+    "свинья","овца","курица","утка","гусь","заяц","лиса","волк","медведь","слон",
+    "тигр","лев","обезьяна","жираф","крокодил","черепаха","бабочка","пчела","паук","гриб"];
+
+  var ADJ = ["красный","синий","зелёный","жёлтый","чёрный","белый","большой","маленький","высокий","низкий",
+    "быстрый","медленный","тёплый","холодный","мягкий","твёрдый","сладкий","кислый","горький","солёный",
+    "светлый","тёмный","чистый","грязный","новый","старый","молодой","весёлый","грустный","добрый",
+    "злой","умный","глупый","сильный","слабый","тяжёлый","лёгкий","круглый","острый","гладкий",
+    "тонкий","толстый","широкий","узкий","длинный","короткий","ровный","кривой","яркий","тихий"];
+
+  var ACCENTS = ["#ff2f92","#00e6d8","#ffd400","#8b5cf6","#c6ff00","#ff7a1a"];
+
+  function randItem(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function randInt(min,maxExclusive){ return Math.floor(Math.random()*(maxExclusive-min))+min; }
+
+  function genWord(type){
+    switch(type){
+      case "noun": return randItem(NOUNS);
+      case "noun_adj": return randItem(ADJ) + " " + randItem(NOUNS);
+      case "number": return String(randInt(0,10));
+      case "number2": return String(randInt(10,100));
+      case "number2_noun": return String(randInt(10,100)) + " " + randItem(NOUNS);
+    }
+  }
+
+  /* ---------------- state ---------------- */
+  var settings = { speed:2, increasing:true, count:20, mode:"auto", types:["noun","noun_adj","number","number2","number2_noun"] };
+  var session = { words:[], answers:[], grades:[] };
+  var gameTimer = null;
+  var STATS_KEY = "tv_game_stats_v1";
+  var stats = loadStats();
+
+  function loadStats(){
+    try{
+      var raw = localStorage.getItem(STATS_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    return { correct:0, partial:0, wrong:0 };
+  }
+  function saveStats(){
+    try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){}
+  }
+
+  /* ---------------- screen navigation ---------------- */
+  function showScreen(id){
+    document.querySelectorAll(".screen").forEach(function(s){ s.classList.remove("active"); });
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0,0);
+  }
+
+  /* ---------------- settings UI wiring ---------------- */
+  var speedEl = document.getElementById("speed");
+  var speedVal = document.getElementById("speed-val");
+  var countEl = document.getElementById("count");
+  var countVal = document.getElementById("count-val");
+  var incEl = document.getElementById("increasing");
+
+  speedEl.addEventListener("input", function(){ speedVal.textContent = speedEl.value + " сек"; });
+  countEl.addEventListener("input", function(){ countVal.textContent = countEl.value; });
+
+  var speedField = document.getElementById("speed-field");
+  var incField = document.getElementById("inc-field");
+  var modeAutoEl = document.getElementById("mode-auto");
+  var modeClickEl = document.getElementById("mode-click");
+  function syncModeFields(){
+    var isClick = modeClickEl.checked;
+    speedField.classList.toggle("hidden-field", isClick);
+    incField.classList.toggle("hidden-field", isClick);
+  }
+  modeAutoEl.addEventListener("change", syncModeFields);
+  modeClickEl.addEventListener("change", syncModeFields);
+  syncModeFields();
+
+  document.getElementById("btn-start").addEventListener("click", function(){
+    var checked = Array.prototype.slice.call(document.querySelectorAll(".type-cb:checked")).map(function(c){return c.value;});
+    if(checked.length === 0){
+      alert("Выберите хотя бы один тип — что показывать на экране.");
+      return;
+    }
+    settings.speed = parseFloat(speedEl.value);
+    settings.increasing = incEl.checked;
+    settings.count = parseInt(countEl.value,10);
+    settings.mode = modeClickEl.checked ? "click" : "auto";
+    settings.types = checked;
+    startLevel();
+  });
+
+  document.getElementById("btn-stats-from-settings").addEventListener("click", function(){
+    renderStats(); showScreen("scr-stats");
+  });
+  document.getElementById("btn-goto-settings").addEventListener("click", function(){
+    showScreen("scr-settings");
+  });
+  document.getElementById("btn-goto-stats").addEventListener("click", function(){
+    renderStats(); showScreen("scr-stats");
+  });
+  document.getElementById("btn-stats-back").addEventListener("click", function(){
+    showScreen(session.words.length ? "scr-check" : "scr-settings");
+  });
+  document.getElementById("btn-reset-stats").addEventListener("click", function(){
+    if(confirm("Сбросить всю накопленную статистику?")){
+      stats = { correct:0, partial:0, wrong:0 };
+      saveStats();
+      renderStats();
+    }
+  });
+  document.getElementById("btn-next-level").addEventListener("click", function(){
+    startLevel();
+  });
+
+  /* ---------------- level / game logic ---------------- */
+  function buildWords(count, types){
+    var out = [];
+    for(var i=0;i<count;i++){ out.push(genWord(randItem(types))); }
+    return out;
+  }
+
+  function startLevel(){
+    session.words = buildWords(settings.count, settings.types);
+    session.answers = [];
+    session.grades = new Array(session.words.length).fill(null);
+    document.getElementById("answer-box").value = "";
+    showScreen("scr-game");
+    runWordSequence(0);
+  }
+
+  function computeIntervalMs(i,total){
+    var startSec = settings.speed;
+    if(!settings.increasing || total <= 1) return startSec*1000;
+    var endSec = 1; // fastest pace reached by the end
+    var t = startSec - (startSec-endSec) * (i/(total-1));
+    return Math.max(endSec, t) * 1000;
+  }
+
+  function fitFontSize(word){
+    var len = word.length;
+    var pxCap = Math.max(46, Math.min(230, Math.round(1500/len)));
+    return "min(" + pxCap + "px, 15vw, 20vh)";
+  }
+
+  function displayWord(word, idx, total){
+    var el = document.getElementById("tv-word");
+    el.textContent = word;
+    el.style.fontSize = fitFontSize(word);
+    var frame = document.getElementById("tv-frame");
+    frame.style.setProperty("--a", randItem(ACCENTS));
+    frame.querySelectorAll(".tv-word");
+    frame.style.background = "radial-gradient(circle at 30% 20%, " + randItem(ACCENTS) + "33, " + "#1b1524)";
+    frame.style.setProperty("color", "#fff");
+    frame.style.boxShadow = "0 0 0 4px rgba(255,255,255,.05), 0 0 60px " + randItem(ACCENTS) + "55, 0 20px 60px rgba(0,0,0,.55)";
+    document.getElementById("tv-progress-text").textContent = (idx+1) + " / " + total;
+    frame.classList.toggle("clickable", settings.mode === "click");
+  }
+
+  function runWordSequence(i){
+    if(i >= session.words.length){
+      showScreen("scr-input");
+      return;
+    }
+    displayWord(session.words[i], i, session.words.length);
+    var hint = document.getElementById("hint-click");
+    if(settings.mode === "click"){
+      hint.classList.remove("hidden-field");
+      waitForClickThenAdvance(i+1);
+    } else {
+      hint.classList.add("hidden-field");
+      var dur = computeIntervalMs(i, session.words.length);
+      gameTimer = setTimeout(function(){ runWordSequence(i+1); }, dur);
+    }
+  }
+
+  function waitForClickThenAdvance(nextIndex){
+    var frame = document.getElementById("tv-frame");
+    function handler(){
+      frame.removeEventListener("click", handler);
+      runWordSequence(nextIndex);
+    }
+    frame.addEventListener("click", handler);
+  }
+
+  document.getElementById("btn-check").addEventListener("click", function(){
+    var raw = document.getElementById("answer-box").value;
+    session.answers = raw.split("\n").map(function(s){ return s.trim(); });
+    renderCheckScreen();
+    showScreen("scr-check");
+  });
+
+  /* ---------------- check / grading ---------------- */
+  function renderCheckScreen(){
+    var listWords = document.getElementById("list-words");
+    listWords.innerHTML = "";
+    session.words.forEach(function(w){
+      var li = document.createElement("li");
+      li.textContent = w;
+      listWords.appendChild(li);
+    });
+
+    document.getElementById("answer-readonly").value = session.answers.join("\n");
+
+    var gradeList = document.getElementById("grade-list");
+    gradeList.innerHTML = "";
+    var total = Math.max(session.words.length, session.answers.length);
+    rowRefs = [];
+    allGraded = false;
+    document.getElementById("all-correct").disabled = false;
+    document.getElementById("all-partial").disabled = false;
+    document.getElementById("all-wrong").disabled = false;
+    document.getElementById("mode-per-word-btn").classList.add("active");
+    document.getElementById("mode-all-btn").classList.remove("active");
+    document.getElementById("grade-per-word").classList.remove("hidden-field");
+    document.getElementById("grade-all").classList.add("hidden-field");
+
+    for(var i=0;i<total;i++){
+      (function(i){
+        var word = session.words[i] !== undefined ? session.words[i] : "—";
+        var answer = session.answers[i] !== undefined ? session.answers[i] : "";
+        var row = document.createElement("div");
+        row.className = "grade-row";
+
+        var idxEl = document.createElement("div");
+        idxEl.className = "idx";
+        idxEl.textContent = (i+1) + ".";
+
+        var wordEl = document.createElement("div");
+        wordEl.className = "word";
+        wordEl.textContent = word;
+
+        var ansEl = document.createElement("div");
+        ansEl.className = "answer" + (answer ? "" : " empty");
+        ansEl.textContent = answer ? answer : "(пусто)";
+
+        var btnWrap = document.createElement("div");
+        btnWrap.className = "grade-buttons";
+
+        var bCorrect = document.createElement("button");
+        bCorrect.className = "gbtn correct"; bCorrect.textContent = "Верно";
+        var bPartial = document.createElement("button");
+        bPartial.className = "gbtn partial"; bPartial.textContent = "Частично";
+        var bWrong = document.createElement("button");
+        bWrong.className = "gbtn wrong"; bWrong.textContent = "Не верно";
+
+        bCorrect.addEventListener("click", function(){ gradeRow(i,"correct"); });
+        bPartial.addEventListener("click", function(){ gradeRow(i,"partial"); });
+        bWrong.addEventListener("click", function(){ gradeRow(i,"wrong"); });
+
+        btnWrap.appendChild(bCorrect);
+        btnWrap.appendChild(bPartial);
+        btnWrap.appendChild(bWrong);
+
+        row.appendChild(idxEl);
+        row.appendChild(wordEl);
+        row.appendChild(ansEl);
+        row.appendChild(btnWrap);
+        gradeList.appendChild(row);
+
+        rowRefs[i] = { row:row, bCorrect:bCorrect, bPartial:bPartial, bWrong:bWrong };
+      })(i);
+    }
+  }
+
+  var rowRefs = [];
+  var allGraded = false;
+
+  function gradeRow(i, kind){
+    if(session.grades[i]) return; // already graded, don't double count
+    session.grades[i] = kind;
+    if(kind === "correct") stats.correct++;
+    if(kind === "partial") stats.partial++;
+    if(kind === "wrong") stats.wrong++;
+    saveStats();
+    var ref = rowRefs[i];
+    if(ref){
+      ref.row.classList.add("graded-" + kind);
+      ref.bCorrect.disabled = ref.bPartial.disabled = ref.bWrong.disabled = true;
+    }
+  }
+
+  function gradeAll(kind){
+    if(allGraded) return;
+    var total = Math.max(session.words.length, session.answers.length);
+    for(var i=0;i<total;i++){ gradeRow(i, kind); }
+    allGraded = true;
+    document.getElementById("all-correct").disabled = true;
+    document.getElementById("all-partial").disabled = true;
+    document.getElementById("all-wrong").disabled = true;
+  }
+
+  document.getElementById("all-correct").addEventListener("click", function(){ gradeAll("correct"); });
+  document.getElementById("all-partial").addEventListener("click", function(){ gradeAll("partial"); });
+  document.getElementById("all-wrong").addEventListener("click", function(){ gradeAll("wrong"); });
+
+  var modePerWordBtn = document.getElementById("mode-per-word-btn");
+  var modeAllBtn = document.getElementById("mode-all-btn");
+  var gradePerWordBox = document.getElementById("grade-per-word");
+  var gradeAllBox = document.getElementById("grade-all");
+  modePerWordBtn.addEventListener("click", function(){
+    modePerWordBtn.classList.add("active");
+    modeAllBtn.classList.remove("active");
+    gradePerWordBox.classList.remove("hidden-field");
+    gradeAllBox.classList.add("hidden-field");
+  });
+  modeAllBtn.addEventListener("click", function(){
+    modeAllBtn.classList.add("active");
+    modePerWordBtn.classList.remove("active");
+    gradeAllBox.classList.remove("hidden-field");
+    gradePerWordBox.classList.add("hidden-field");
+  });
+
+  /* ---------------- stats screen ---------------- */
+  function renderStats(){
+    document.getElementById("stat-correct").textContent = stats.correct;
+    document.getElementById("stat-partial").textContent = stats.partial;
+    document.getElementById("stat-wrong").textContent = stats.wrong;
+    var total = stats.correct + stats.partial + stats.wrong;
+    document.getElementById("stat-total").textContent = "Всего оценено ответов: " + total;
+  }
+
+  renderStats();
+})();
+</script>
+</body>
+</html>
