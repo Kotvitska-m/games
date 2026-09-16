@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Фотопамять</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --table: #2b241d;
+    --table-dark: #201a15;
+    --cream: #f2e9d8;
+    --wood: #c99a5b;
+    --wood-dark: #8a6339;
+    --match-red: #c1440e;
+    --match-red-light: #e2662f;
+    --sulfur: #e8b23d;
+    --ink: #22190f;
+    --muted: #a9987d;
+    --ok: #6a9955;
+    --partial: #d3a03a;
+    --bad: #b3452f;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 30% 0%, rgba(255,220,160,0.06), transparent 55%),
+      repeating-linear-gradient(90deg, var(--table) 0px, var(--table) 3px, var(--table-dark) 3px, var(--table-dark) 6px);
+    font-family:'Inter',sans-serif;
+    color:var(--cream);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:28px 16px 12px;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:700;margin:0;}
+  .app{
+    width:100%;
+    max-width:720px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+    justify-content:center;
+    text-align:center;
+  }
+  .brand h1{font-size:2.1rem;letter-spacing:0.5px;color:var(--cream);}
+  .brand .flame{color:var(--sulfur);}
+  .screen{
+    background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12)), var(--table);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:6px;
+    padding:24px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.35);
+  }
+  .hidden{display:none !important;}
+
+  /* --- MENU --- */
+  .setting-row{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .setting-row label{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.95rem;
+    color:var(--muted);
+  }
+  .setting-row label b{color:var(--cream);font-weight:600;}
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:4px;
+    border-radius:2px;
+    background:var(--wood-dark);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:18px;height:18px;border-radius:50%;
+    background:var(--match-red);
+    border:2px solid var(--sulfur);
+    cursor:pointer;
+    margin-top:-1px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;
+    background:var(--match-red);
+    border:2px solid var(--sulfur);
+    cursor:pointer;
+  }
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:0.98rem;
+    padding:12px 20px;
+    border-radius:5px;
+    border:none;
+    cursor:pointer;
+    transition:transform .12s ease, filter .12s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--match-red);color:#fff2e8;}
+  .btn-primary:hover{filter:brightness(1.1);}
+  .btn-ghost{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,0.25);}
+  .btn-ghost:hover{border-color:var(--sulfur);color:var(--sulfur);}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .menu-actions{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+
+  /* --- GAME --- */
+  .stage-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:4/2.7;
+    border-radius:5px;
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.05), transparent 60%),
+      linear-gradient(160deg, #3a2f22, #2a2116);
+    border:1px solid rgba(0,0,0,0.4);
+    box-shadow:inset 0 0 40px rgba(0,0,0,0.5);
+  }
+  canvas{
+    position:absolute;
+    top:0;left:0;
+    width:100%;
+    height:100%;
+    touch-action:none;
+  }
+  .timer-pill{
+    position:absolute;
+    top:10px;right:10px;
+    background:rgba(0,0,0,0.5);
+    color:var(--sulfur);
+    padding:4px 12px;
+    border-radius:20px;
+    font-size:0.85rem;
+    font-weight:600;
+    letter-spacing:0.5px;
+    z-index:5;
+  }
+  .stage-caption{
+    text-align:center;
+    color:var(--muted);
+    font-size:0.9rem;
+    margin-top:10px;
+    min-height:1.3em;
+  }
+  .draw-tools{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+
+  /* --- RESULT --- */
+  .compare-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .compare-col h3{font-size:0.95rem;color:var(--muted);font-weight:600;margin-bottom:6px;text-align:center;}
+  .verdict-row{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .v-btn{flex:1;min-width:120px;color:#1c140a;font-weight:700;}
+  .v-ok{background:var(--ok);}
+  .v-partial{background:var(--partial);}
+  .v-bad{background:var(--bad);color:#fbe9e2;}
+  .after-verdict{
+    text-align:center;
+    margin-top:18px;
+    display:none;
+    flex-direction:column;
+    gap:10px;
+    align-items:center;
+  }
+  .after-verdict.show{display:flex;}
+  .saved-note{color:var(--muted);font-size:0.88rem;}
+
+  /* --- STATS --- */
+  table{width:100%;border-collapse:collapse;font-size:0.9rem;}
+  th,td{padding:7px 6px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.08);}
+  th{color:var(--muted);font-weight:600;font-size:0.8rem;text-transform:none;}
+  .stat-cards{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .stat-card{
+    flex:1;min-width:100px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:6px;
+    padding:12px;
+    text-align:center;
+  }
+  .stat-card .num{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;}
+  .stat-card .lbl{font-size:0.78rem;color:var(--muted);margin-top:2px;}
+  .empty-note{color:var(--muted);text-align:center;padding:20px 0;}
+  .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+
+  footer{
+    margin-top:22px;
+    color:rgba(255,255,255,0.28);
+    font-size:0.78rem;
+    letter-spacing:1px;
+    font-family:'Fraunces',serif;
+    font-style:italic;
+  }
+  .badge{
+    display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700;
+  }
+  .b-ok{background:var(--ok);color:#12200c;}
+  .b-partial{background:var(--partial);color:#231a05;}
+  .b-bad{background:var(--bad);color:#fbe9e2;}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="brand"><span class="flame">🔥</span><h1>Фотопамять</h1></div>
+
+  <!-- MENU SCREEN -->
+  <section id="menuScreen" class="screen">
+    <h2 style="margin-bottom:18px;font-size:1.2rem;">Настройки уровня</h2>
+
+    <div class="setting-row">
+      <label>Количество спичек <b id="countVal">8</b></label>
+      <input type="range" id="countRange" min="4" max="20" step="1" value="8">
+    </div>
+
+    <div class="setting-row">
+      <label>Время показа <b id="timeVal">1 сек</b></label>
+      <input type="range" id="timeRange" min="0.5" max="2" step="0.5" value="1">
+    </div>
+
+    <div class="menu-actions">
+      <button class="btn btn-primary" id="startBtn">Начать игру</button>
+      <button class="btn btn-ghost" id="openStatsBtn">Статистика</button>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="gameScreen" class="screen hidden">
+    <div class="stage-wrap">
+      <canvas id="viewCanvas" width="640" height="432"></canvas>
+      <canvas id="drawCanvas" width="640" height="432" class="hidden"></canvas>
+      <div class="timer-pill" id="timerPill"></div>
+    </div>
+    <div class="stage-caption" id="stageCaption">Запоминайте расположение спичек...</div>
+    <div class="draw-tools hidden" id="drawTools">
+      <button class="btn btn-ghost" id="clearDrawBtn">Стереть рисунок</button>
+      <button class="btn btn-primary" id="checkBtn">Проверить</button>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="resultScreen" class="screen hidden">
+    <h2 style="margin-bottom:14px;font-size:1.15rem;">Сравните с оригиналом</h2>
+    <div class="compare-grid">
+      <div class="compare-col">
+        <h3>Как было на самом деле</h3>
+        <div class="stage-wrap" style="aspect-ratio:4/2.2;">
+          <canvas id="resultCanvas" width="640" height="352"></canvas>
+        </div>
+      </div>
+      <div class="compare-col">
+        <h3>Ваш рисунок</h3>
+        <div class="stage-wrap" style="aspect-ratio:4/2.2;">
+          <canvas id="userCanvas" width="640" height="352"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict-row" id="verdictRow">
+      <button class="btn v-btn v-ok" data-v="ok">Верно</button>
+      <button class="btn v-btn v-partial" data-v="partial">Частично</button>
+      <button class="btn v-btn v-bad" data-v="bad">Неверно</button>
+    </div>
+
+    <div class="after-verdict" id="afterVerdict">
+      <p class="saved-note">Результат сохранён в статистику.</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="againBtn">Ещё раз</button>
+        <button class="btn btn-ghost" id="toMenuBtn">Настроить</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS SCREEN -->
+  <section id="statsScreen" class="screen hidden">
+    <div class="top-row">
+      <h2 style="font-size:1.15rem;">Статистика</h2>
+      <button class="btn btn-ghost" id="backFromStatsBtn">Назад</button>
+    </div>
+    <div class="stat-cards" id="statCards"></div>
+    <div id="statsTableWrap"></div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-ghost" id="clearStatsBtn">Очистить статистику</button>
+    </div>
+  </section>
+
+  <footer>Котвицкая</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- state ----------
+  const STORAGE_KEY = "fotopamyat_stats_v1";
+  let settings = { count: 8, time: 1 };
+  let currentMatches = [];
+  let timerInterval = null;
+
+  // ---------- elements ----------
+  const menuScreen = document.getElementById('menuScreen');
+  const gameScreen = document.getElementById('gameScreen');
+  const resultScreen = document.getElementById('resultScreen');
+  const statsScreen = document.getElementById('statsScreen');
+
+  const countRange = document.getElementById('countRange');
+  const timeRange = document.getElementById('timeRange');
+  const countVal = document.getElementById('countVal');
+  const timeVal = document.getElementById('timeVal');
+
+  const viewCanvas = document.getElementById('viewCanvas');
+  const drawCanvas = document.getElementById('drawCanvas');
+  const timerPill = document.getElementById('timerPill');
+  const stageCaption = document.getElementById('stageCaption');
+  const drawTools = document.getElementById('drawTools');
+
+  const resultCanvas = document.getElementById('resultCanvas');
+  const userCanvas = document.getElementById('userCanvas');
+  const verdictRow = document.getElementById('verdictRow');
+  const afterVerdict = document.getElementById('afterVerdict');
+
+  const statCards = document.getElementById('statCards');
+  const statsTableWrap = document.getElementById('statsTableWrap');
+
+  // ---------- settings UI ----------
+  function pluralSpichek(n){
+    const n10 = n % 10, n100 = n % 100;
+    if(n100 >= 11 && n100 <= 14) return 'спичек';
+    if(n10 === 1) return 'спичка';
+    if(n10 >=2 && n10 <=4) return 'спички';
+    return 'спичек';
+  }
+
+  countRange.addEventListener('input', ()=>{
+    settings.count = parseInt(countRange.value,10);
+    countVal.textContent = settings.count + ' ' + pluralSpichek(settings.count);
+  });
+  timeRange.addEventListener('input', ()=>{
+    settings.time = parseFloat(timeRange.value);
+    timeVal.textContent = (settings.time % 1 === 0 ? settings.time.toFixed(0) : settings.time.toString()) + ' сек';
+  });
+  countVal.textContent = settings.count + ' ' + pluralSpichek(settings.count);
+  timeVal.textContent = settings.time + ' сек';
+
+  function showScreen(el){
+    [menuScreen, gameScreen, resultScreen, statsScreen].forEach(s => s.classList.add('hidden'));
+    el.classList.remove('hidden');
+  }
+
+  // ---------- match generation ----------
+  function generateMatches(count, w, h){
+    const matches = [];
+    const pad = 40;
+    for(let i=0;i<count;i++){
+      const length = 60 + Math.random()*40;
+      const x = pad + Math.random()*(w - pad*2);
+      const y = pad + Math.random()*(h - pad*2);
+      const angle = Math.random()*Math.PI*2;
+      matches.push({x,y,angle,length});
+    }
+    return matches;
+  }
+
+  function drawMatch(ctx, m){
+    const dx = Math.cos(m.angle) * m.length/2;
+    const dy = Math.sin(m.angle) * m.length/2;
+    const x1 = m.x - dx, y1 = m.y - dy;
+    const x2 = m.x + dx, y2 = m.y + dy;
+
+    // wood body
+    ctx.strokeStyle = '#d9a066';
+    ctx.lineWidth = 5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+
+    // thin shading line
+    ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+
+    // head (red) at the x2 end
+    const headLen = m.length*0.16;
+    const hx = m.x + Math.cos(m.angle)*(m.length/2 - headLen/2);
+    const hy = m.y + Math.sin(m.angle)*(m.length/2 - headLen/2);
+    ctx.save();
+    ctx.translate(hx,hy);
+    ctx.rotate(m.angle);
+    ctx.fillStyle = '#c1440e';
+    ctx.beginPath();
+    ctx.ellipse(0,0, headLen*0.65, 6.5, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(-headLen*0.15,-2, headLen*0.25, 2.2, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawAllMatches(canvas, matches){
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    matches.forEach(m => drawMatch(ctx, m));
+  }
+
+  // ---------- game flow ----------
+  document.getElementById('startBtn').addEventListener('click', startGame);
+
+  function startGame(){
+    currentMatches = generateMatches(settings.count, viewCanvas.width, viewCanvas.height);
+    drawAllMatches(viewCanvas, currentMatches);
+    viewCanvas.classList.remove('hidden');
+    drawCanvas.classList.add('hidden');
+    drawTools.classList.add('hidden');
+    stageCaption.textContent = 'Запоминайте расположение спичек...';
+    showScreen(gameScreen);
+
+    let remaining = settings.time;
+    timerPill.textContent = remaining.toFixed(1) + ' с';
+    clearInterval(timerInterval);
+    timerInterval = setInterval(()=>{
+      remaining -= 0.1;
+      if(remaining <= 0){
+        clearInterval(timerInterval);
+        timerPill.textContent = '';
+        hideMatchesAndPrepareDrawing();
+      } else {
+        timerPill.textContent = remaining.toFixed(1) + ' с';
+      }
+    }, 100);
+  }
+
+  function hideMatchesAndPrepareDrawing(){
+    const ctx = viewCanvas.getContext('2d');
+    ctx.clearRect(0,0,viewCanvas.width,viewCanvas.height);
+    viewCanvas.classList.add('hidden');
+    drawCanvas.classList.remove('hidden');
+    drawTools.classList.remove('hidden');
+    stageCaption.textContent = 'Нарисуйте, как были расположены спички';
+    setupDrawing();
+  }
+
+  // ---------- drawing canvas ----------
+  let drawing = false;
+  let drawCtx = drawCanvas.getContext('2d');
+
+  function setupDrawing(){
+    drawCtx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+    drawCtx.strokeStyle = '#f2e9d8';
+    drawCtx.lineWidth = 4;
+    drawCtx.lineCap = 'round';
+    drawCtx.lineJoin = 'round';
+  }
+
+  function getPos(evt){
+    const rect = drawCanvas.getBoundingClientRect();
+    const scaleX = drawCanvas.width / rect.width;
+    const scaleY = drawCanvas.height / rect.height;
+    const point = evt.touches ? evt.touches[0] : evt;
+    return {
+      x: (point.clientX - rect.left) * scaleX,
+      y: (point.clientY - rect.top) * scaleY
+    };
+  }
+
+  function startDraw(e){
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    drawCtx.beginPath();
+    drawCtx.moveTo(p.x, p.y);
+  }
+  function moveDraw(e){
+    if(!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    drawCtx.lineTo(p.x, p.y);
+    drawCtx.stroke();
+  }
+  function endDraw(){ drawing = false; }
+
+  drawCanvas.addEventListener('mousedown', startDraw);
+  drawCanvas.addEventListener('mousemove', moveDraw);
+  window.addEventListener('mouseup', endDraw);
+  drawCanvas.addEventListener('touchstart', startDraw, {passive:false});
+  drawCanvas.addEventListener('touchmove', moveDraw, {passive:false});
+  drawCanvas.addEventListener('touchend', endDraw);
+
+  document.getElementById('clearDrawBtn').addEventListener('click', setupDrawing);
+  document.getElementById('checkBtn').addEventListener('click', goToResult);
+
+  // ---------- result screen ----------
+  function goToResult(){
+    // copy user drawing (scaled) to userCanvas
+    const uctx = userCanvas.getContext('2d');
+    uctx.clearRect(0,0,userCanvas.width,userCanvas.height);
+    uctx.drawImage(drawCanvas, 0,0, userCanvas.width, userCanvas.height);
+
+    // redraw original matches on resultCanvas scaled to its size
+    const rctx = resultCanvas.getContext('2d');
+    rctx.clearRect(0,0,resultCanvas.width,resultCanvas.height);
+    const scaleX = resultCanvas.width / viewCanvas.width;
+    const scaleY = resultCanvas.height / viewCanvas.height;
+    rctx.save();
+    rctx.scale(scaleX, scaleY);
+    currentMatches.forEach(m => drawMatch(rctx, m));
+    rctx.restore();
+
+    afterVerdict.classList.remove('show');
+    verdictRow.style.display = 'flex';
+    showScreen(resultScreen);
+  }
+
+  verdictRow.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-v]');
+    if(!btn) return;
+    saveStat(btn.dataset.v);
+    verdictRow.style.display = 'none';
+    afterVerdict.classList.add('show');
+  });
+
+  document.getElementById('againBtn').addEventListener('click', startGame);
+  document.getElementById('toMenuBtn').addEventListener('click', ()=> showScreen(menuScreen));
+
+  // ---------- statistics ----------
+  function loadStats(){
+    try{
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    }catch(e){ return []; }
+  }
+  function saveStats(arr){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+  function saveStat(verdict){
+    const stats = loadStats();
+    stats.unshift({
+      date: new Date().toISOString(),
+      count: settings.count,
+      time: settings.time,
+      result: verdict
+    });
+    saveStats(stats);
+  }
+
+  function verdictLabel(v){
+    if(v==='ok') return {text:'Верно', cls:'b-ok'};
+    if(v==='partial') return {text:'Частично', cls:'b-partial'};
+    return {text:'Неверно', cls:'b-bad'};
+  }
+
+  function formatDate(iso){
+    const d = new Date(iso);
+    return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
+  }
+
+  function renderStats(){
+    const stats = loadStats();
+    const total = stats.length;
+    const ok = stats.filter(s=>s.result==='ok').length;
+    const partial = stats.filter(s=>s.result==='partial').length;
+    const bad = stats.filter(s=>s.result==='bad').length;
+    const accuracy = total ? Math.round((ok/total)*100) : 0;
+
+    statCards.innerHTML = `
+      <div class="stat-card"><div class="num">${total}</div><div class="lbl">попыток</div></div>
+      <div class="stat-card"><div class="num">${ok}</div><div class="lbl">верно</div></div>
+      <div class="stat-card"><div class="num">${partial}</div><div class="lbl">частично</div></div>
+      <div class="stat-card"><div class="num">${bad}</div><div class="lbl">неверно</div></div>
+      <div class="stat-card"><div class="num">${accuracy}%</div><div class="lbl">точность</div></div>
+    `;
+
+    if(total === 0){
+      statsTableWrap.innerHTML = '<p class="empty-note">Пока нет сыгранных уровней. Сыграйте раунд — результат появится здесь.</p>';
+      return;
+    }
+
+    let rows = stats.slice(0,50).map(s=>{
+      const v = verdictLabel(s.result);
+      return `<tr>
+        <td>${formatDate(s.date)}</td>
+        <td>${s.count} ${pluralSpichek(s.count)}</td>
+        <td>${s.time} с</td>
+        <td><span class="badge ${v.cls}">${v.text}</span></td>
+      </tr>`;
+    }).join('');
+
+    statsTableWrap.innerHTML = `
+      <table>
+        <thead><tr><th>Дата</th><th>Спичек</th><th>Время</th><th>Результат</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  document.getElementById('openStatsBtn').addEventListener('click', ()=>{
+    renderStats();
+    showScreen(statsScreen);
+  });
+  document.getElementById('backFromStatsBtn').addEventListener('click', ()=> showScreen(menuScreen));
+  document.getElementById('clearStatsBtn').addEventListener('click', ()=>{
+    if(confirm('Удалить всю статистику без возможности восстановления?')){
+      localStorage.removeItem(STORAGE_KEY);
+      renderStats();
+    }
+  });
+
+  // init
+  showScreen(menuScreen);
+})();
+</script>
+</body>
+</html>
