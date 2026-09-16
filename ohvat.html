@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ОХВАТ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Mulish:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #faf7f2;
+    --bg2:      #f0ebe0;
+    --card:     #ffffff;
+    --border:   #ddd5c4;
+    --accent:   #c0550a;
+    --accent2:  #a04008;
+    --accent-s: #fde8d8;
+    --green:    #2d7a4f;
+    --green-bg: #d8f3e5;
+    --red-err:  #991b1b;
+    --red-bg:   #fee2e2;
+    --text:     #2a1f14;
+    --text2:    #6b5744;
+    --text3:    #b3a08a;
+    --dot:      #d63a1a;
+    --shadow:   0 4px 20px rgba(80,40,10,0.10);
+    --shadow-s: 0 2px 8px rgba(80,40,10,0.07);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Mulish', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px 12px 48px;
+    color: var(--text);
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(160,120,80,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(160,120,80,.06) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none; z-index: 0;
+  }
+
+  #app {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 420px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  .header {
+    width: 100%;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; padding-top: 4px;
+  }
+  .game-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 26px; font-weight: 900;
+    color: var(--accent); letter-spacing: 4px;
+  }
+  .rules-btn {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 7px 14px;
+    font-family: 'Mulish', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--text2); cursor: pointer;
+    box-shadow: var(--shadow-s); transition: all .15s;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .rules-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-s); }
+
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 22px 24px;
+    width: 100%; box-shadow: var(--shadow);
+  }
+
+  .section-label {
+    font-size: 10px; font-weight: 800;
+    letter-spacing: 2px; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+
+  .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  input[type=range] {
+    flex: 1; -webkit-appearance: none;
+    height: 5px; background: var(--bg2);
+    border-radius: 3px; outline: none; border: 1px solid var(--border);
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    background: var(--accent); border-radius: 50%;
+    border: 3px solid #fff; box-shadow: 0 0 0 1.5px var(--accent);
+    cursor: pointer; transition: transform .15s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  .slider-val { font-size: 15px; font-weight: 800; color: var(--accent); min-width: 44px; text-align: right; }
+
+  .seg-group { display: flex; gap: 6px; margin-bottom: 20px; }
+  .seg-btn {
+    flex: 1; padding: 9px 4px;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text2);
+    border-radius: 11px; cursor: pointer;
+    font-size: 13px; font-family: 'Mulish', sans-serif; font-weight: 700;
+    transition: all .15s; line-height: 1.4;
+  }
+  .seg-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 3px 10px rgba(192,85,10,.28); }
+  .seg-btn:hover:not(.active) { background: var(--accent-s); border-color: var(--accent); color: var(--accent); }
+
+  .start-btn {
+    width: 100%; padding: 14px;
+    background: var(--accent); border: none; border-radius: 12px;
+    color: #fff; font-size: 17px; font-family: 'Unbounded', sans-serif;
+    letter-spacing: 2px; cursor: pointer; margin-top: 4px;
+    box-shadow: 0 4px 16px rgba(192,85,10,.30); transition: all .18s;
+  }
+  .start-btn:hover { background: var(--accent2); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(192,85,10,.38); }
+  .start-btn:active { transform: scale(0.98); }
+
+  .hud { display: flex; gap: 7px; width: 100%; margin-bottom: 12px; }
+  .hud-box {
+    flex: 1; background: var(--card);
+    border: 1.5px solid var(--border); border-radius: 11px;
+    padding: 6px 8px; text-align: center; box-shadow: var(--shadow-s);
+  }
+  .hud-label { font-size: 9px; color: var(--text3); font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+  .hud-val { font-size: 16px; font-weight: 900; color: var(--accent); font-family: 'Unbounded', sans-serif; }
+
+  .progress-bar {
+    width: 100%; height: 5px; background: var(--bg2);
+    border-radius: 3px; margin-bottom: 16px; overflow: hidden; border: 1px solid var(--border);
+  }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), #f0954a); border-radius: 3px; transition: width .35s ease; }
+
+  /* ——— VIEWING AREA ——— */
+  .view-area {
+    position: relative;
+    width: 280px; height: 210px;
+    margin: 0 auto 10px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .view-area::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(200,175,140,.16) 100%);
+    pointer-events: none; z-index: 1;
+  }
+  .va-h { position: absolute; top: 50%; left: 8%; right: 8%; height: 1px; background: rgba(180,140,100,.10); }
+  .va-v { position: absolute; left: 50%; top: 8%; bottom: 8%; width: 1px; background: rgba(180,140,100,.10); }
+
+  /* Red dot — behind text */
+  .red-dot {
+    position: absolute;
+    width: 11px; height: 11px;
+    background: var(--dot);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(214,58,26,.20), 0 0 8px rgba(214,58,26,.30);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Word on top of dot */
+  .word-display {
+    position: absolute;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    padding: 0 22px;
+    line-height: 1.35;
+    z-index: 3;
+    opacity: 1; transition: opacity .1s;
+    letter-spacing: 1px; white-space: normal;
+  }
+  .word-display.hidden { opacity: 0; }
+
+  .dot-hint {
+    font-size: 11px; color: var(--text3); font-weight: 600;
+    text-align: center; margin-bottom: 14px; letter-spacing: .2px;
+    line-height: 1.5;
+  }
+
+  /* ——— QUIZ ——— */
+  .quiz-title {
+    font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 700;
+    color: var(--accent); text-align: center; letter-spacing: 1px; margin-bottom: 16px;
+  }
+  .quiz-q { font-size: 14px; color: var(--text); margin-bottom: 8px; line-height: 1.5; font-weight: 600; }
+  .quiz-input {
+    width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 9px; padding: 8px 12px; color: var(--text);
+    font-size: 14px; font-family: 'Mulish', sans-serif; font-weight: 600;
+    margin-bottom: 4px; outline: none; transition: border-color .15s;
+  }
+  .quiz-input:focus { border-color: var(--accent); }
+  .quiz-input:disabled { background: var(--bg2); color: var(--text2); }
+  .quiz-item { margin-bottom: 14px; }
+  .result-badge { display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; margin-top: 2px; }
+  .badge-ok { background: var(--green-bg); color: var(--green); }
+  .badge-err { background: var(--red-bg); color: var(--red-err); }
+  .check-btn {
+    display: block; margin: 10px auto 0;
+    background: var(--accent); border: none; border-radius: 10px; color: #fff;
+    padding: 10px 28px; font-family: 'Unbounded', sans-serif; font-size: 13px;
+    letter-spacing: 1px; cursor: pointer; box-shadow: 0 3px 10px rgba(192,85,10,.25); transition: all .15s;
+  }
+  .check-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .check-btn:disabled { background: var(--text3); box-shadow: none; cursor: default; transform: none; }
+
+  /* ——— RESULT ——— */
+  .result-card { text-align: center; }
+  .result-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: var(--text3); text-transform: uppercase; margin-bottom: 6px; }
+  .result-stars { font-size: 30px; margin-bottom: 6px; }
+  .result-score { font-family: 'Unbounded', sans-serif; font-size: 44px; font-weight: 900; color: var(--accent); margin-bottom: 4px; }
+  .result-msg { font-size: 15px; color: var(--text2); margin-bottom: 20px; font-weight: 600; }
+  .action-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .act-btn {
+    background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+    color: var(--text2); padding: 9px 20px; font-family: 'Mulish', sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s;
+  }
+  .act-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-s); }
+  .act-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 3px 10px rgba(192,85,10,.25); }
+  .act-btn.primary:hover { background: var(--accent2); }
+
+  /* ——— MODAL ——— */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(42,31,20,.50);
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 26px 24px 22px;
+    max-width: 380px; width: 100%;
+    box-shadow: 0 8px 40px rgba(42,31,20,.22); position: relative;
+  }
+  .modal-title {
+    font-family: 'Unbounded', sans-serif; font-size: 14px; font-weight: 700;
+    color: var(--accent); margin-bottom: 14px; letter-spacing: 1px;
+  }
+  .modal-body { font-size: 13px; color: var(--text2); line-height: 1.75; }
+  .modal-body b { color: var(--text); font-weight: 700; }
+  .modal-body p { margin-bottom: 9px; }
+  .modal-close {
+    position: absolute; top: 14px; right: 16px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 4px 10px; font-size: 12px; font-weight: 700; color: var(--text2);
+    cursor: pointer; transition: all .15s;
+  }
+  .modal-close:hover { background: var(--accent-s); color: var(--accent); border-color: var(--accent); }
+
+  .hidden-screen { display: none !important; }
+  .signature { margin-top: 24px; font-size: 12px; color: var(--text3); font-style: italic; letter-spacing: .5px; align-self: flex-end; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="header">
+    <span class="game-title">ОХВАТ</span>
+    <button class="rules-btn" id="rules-open-btn">📖 Правила</button>
+  </div>
+
+  <!-- SETUP -->
+  <div id="screen-setup" class="card">
+    <div class="section-label">Время показа</div>
+    <div class="slider-row">
+      <input type="range" id="speed-slider" min="0.5" max="4" step="0.5" value="1.5">
+      <div class="slider-val" id="speed-val">1.5 с</div>
+    </div>
+    <div class="section-label">Сложность</div>
+    <div class="seg-group" id="diff-group">
+      <button class="seg-btn active" data-v="1">1<br>Легко</button>
+      <button class="seg-btn" data-v="2">2<br>Средне</button>
+      <button class="seg-btn" data-v="3">3<br>Трудно</button>
+    </div>
+    <div class="section-label">Количество слов</div>
+    <div class="slider-row">
+      <input type="range" id="count-slider" min="5" max="15" step="1" value="8">
+      <div class="slider-val" id="count-val">8</div>
+    </div>
+    <button class="start-btn" id="start-btn">▶ НАЧАТЬ</button>
+  </div>
+
+  <!-- GAME -->
+  <div id="screen-game" class="hidden-screen" style="width:100%;flex-direction:column;align-items:center">
+    <div class="hud">
+      <div class="hud-box"><div class="hud-label">Слово</div><div class="hud-val" id="hud-word">1</div></div>
+      <div class="hud-box"><div class="hud-label">Из</div><div class="hud-val" id="hud-total">8</div></div>
+      <div class="hud-box"><div class="hud-label">Время</div><div class="hud-val" id="hud-time">1.5с</div></div>
+      <div class="hud-box"><div class="hud-label">Уровень</div><div class="hud-val" id="hud-diff">1</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+    <div class="view-area">
+      <div class="va-h"></div>
+      <div class="va-v"></div>
+      <div class="word-display hidden" id="word-el"></div>
+      <div class="red-dot"></div>
+    </div>
+    <div class="dot-hint">Смотри на красную точку — читай боковым зрением</div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="card hidden-screen">
+    <div class="quiz-title">🔍 ПРОВЕРЬ СЕБЯ</div>
+    <div id="quiz-questions"></div>
+    <button class="check-btn" id="check-btn">ПРОВЕРИТЬ</button>
+  </div>
+
+  <!-- RESULT -->
+  <div id="screen-result" class="card hidden-screen result-card">
+    <div class="result-label">Результат</div>
+    <div class="result-stars" id="res-stars"></div>
+    <div class="result-score" id="res-score"></div>
+    <div class="result-msg" id="res-msg"></div>
+    <div class="action-row">
+      <button class="act-btn primary" id="btn-replay">Ещё раз</button>
+      <button class="act-btn" id="btn-menu">В меню</button>
+    </div>
+  </div>
+
+  <div class="signature">Котвицкая</div>
+</div>
+
+<!-- RULES MODAL -->
+<div class="modal-overlay" id="modal-rules">
+  <div class="modal">
+    <button class="modal-close" id="rules-close-btn">✕ Закрыть</button>
+    <div class="modal-title">📖 Как играть</div>
+    <div class="modal-body">
+      <p><b>Цель:</b> запомнить слова, которые появляются на экране одно за другим.</p>
+      <p><b>Главное правило:</b> смотри на <b style="color:#d63a1a">красную точку</b> в центре — не отводи взгляд! Слова читай <b>боковым (периферийным) зрением</b>.</p>
+      <p><b>Настройки:</b><br>
+        — <b>Время</b> — как долго видно каждое слово<br>
+        — <b>Сложность</b> — 1 (короткие слова) → 3 (словосочетания)<br>
+        — <b>Количество слов</b> — от 5 до 15
+      </p>
+      <p><b>После игры</b> ответь на 2–3 вопроса, чтобы проверить, что запомнил.</p>
+      <p><b>Слова идут от коротких к длинным</b> — тренируй охват всё шире!</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  const WORDS = {
+    easy:[
+      "мама","папа","суп","сок","сыр","рис","хлеб","кот","дом","брат",
+      "сестра","урок","школа","каша","мёд","чай","торт","борщ","блин","сад",
+      "дочь","сын","тётя","дядя","пирог","рыба","яйцо","лук","соль","сахар",
+      "зуб","нос","рот","ухо","бок","лоб","дед","кит","бор","жук",
+      "гриб","лист","крот","волк","слон","краб","рак","ёж","лев","бобр"
+    ],
+    medium:[
+      "семья","бабушка","дедушка","учитель","завтрак","обед","ужин","портфель","тетрадь","карандаш",
+      "пельмени","котлеты","макароны","молоко","морковка","капуста","яблоко","арбуз","банан","апельсин",
+      "занятие","задание","учёба","диктант","каникулы","родители","братья","кухня","варенье","сметана",
+      "черника","малина","клубника","перемена","линейка","ластик","учебник","дневник","кабинет","столовая",
+      "печенье","компот","котёнок","рубашка","подруга","соседка","тарелка","закуска","праздник","стакан"
+    ],
+    hard:[
+      "домашнее задание","классный руководитель","продукты питания","семейный ужин","школьная столовая",
+      "любимое блюдо","бабушкины пироги","расписание уроков","летние каникулы","день рождения",
+      "завтрак в школе","карманные деньги","мамина помощь","дополнительные уроки","здоровая еда",
+      "любимый предмет","семейные традиции","приготовление еды","книжная полка","школьный рюкзак",
+      "классное собрание","родительское собрание","сладкий десерт","овощной салат","компот из ягод",
+      "вкусный завтрак","старший братик","младшая сестра","любимый учитель","школьные друзья"
+    ]
+  };
+
+  function getAllWords(diff){
+    if(diff===1) return [...WORDS.easy];
+    if(diff===2) return [...WORDS.medium];
+    return [...WORDS.hard];
+  }
+
+  function shuffle(arr){
+    const a=[...arr];
+    for(let i=a.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function letterLen(w){ return w.replace(/\s/g,'').length; }
+
+  // Builds exactly `count` words sorted by length.
+  // count < 9  → strictly increasing lengths
+  // count >= 9 → at most 2 consecutive same length
+  function buildWordList(count, diff, prevWords){
+    let pool = getAllWords(diff);
+    if(prevWords && prevWords.length) pool = pool.filter(w => !prevWords.includes(w));
+    pool = shuffle(pool);
+
+    if(count < 9){
+      // Group by letter-length, pick one per bucket
+      const byLen = {};
+      for(const w of pool){
+        const l = letterLen(w);
+        if(!byLen[l]) byLen[l] = [];
+        byLen[l].push(w);
+      }
+      const lens = Object.keys(byLen).map(Number).sort((a,b)=>a-b);
+      const chosen = [];
+      for(const l of lens){
+        if(chosen.length >= count) break;
+        chosen.push(byLen[l][0]);
+      }
+      // Fallback: pool might not have enough distinct lengths — fill from remaining
+      if(chosen.length < count){
+        const used = new Set(chosen);
+        for(const w of pool){
+          if(chosen.length >= count) break;
+          if(!used.has(w)){ chosen.push(w); used.add(w); }
+        }
+      }
+      chosen.sort((a,b) => letterLen(a) - letterLen(b));
+      return chosen.slice(0, count);
+
+    } else {
+      // Sort pool by length, allow ≤2 consecutive same length
+      const sorted = [...pool].sort((a,b) => letterLen(a) - letterLen(b));
+      const chosen = [];
+      const used = new Set();
+      for(const w of sorted){
+        if(chosen.length >= count) break;
+        if(used.has(w)) continue;
+        const wl = letterLen(w);
+        const n  = chosen.length;
+        if(n >= 2 && letterLen(chosen[n-1]) === wl && letterLen(chosen[n-2]) === wl) continue;
+        chosen.push(w);
+        used.add(w);
+      }
+      // Fallback if still short
+      if(chosen.length < count){
+        for(const w of sorted){
+          if(chosen.length >= count) break;
+          if(!used.has(w)){ chosen.push(w); used.add(w); }
+        }
+      }
+      return chosen.slice(0, count);
+    }
+  }
+
+  function buildQuiz(words, diff){
+    const qs = [];
+    qs.push({ q: "Какое слово появилось первым?", answer: words[0].toLowerCase() });
+    // No word revealed in question
+    qs.push({ q: "Сколько букв в последнем слове?", answer: String(letterLen(words[words.length-1])) });
+    if(diff >= 2){
+      const mid    = words[Math.floor(words.length / 2)];
+      const letter = mid[0].toUpperCase();
+      const expected = words.filter(w => w[0].toUpperCase() === letter).map(w => w.toLowerCase());
+      qs.push({ q: `Назови любое слово из игры, которое начинается на «${letter}»:`, answer: expected, multi: true });
+    }
+    return qs;
+  }
+
+  const screens = ['screen-setup','screen-game','screen-quiz','screen-result'];
+  function showOnly(id){
+    screens.forEach(s => {
+      const el = document.getElementById(s);
+      el.classList.add('hidden-screen');
+      el.style.display = '';
+    });
+    const target = document.getElementById(id);
+    target.classList.remove('hidden-screen');
+    if(id === 'screen-game') target.style.display = 'flex';
+  }
+
+  const speedSlider = document.getElementById('speed-slider');
+  const speedVal    = document.getElementById('speed-val');
+  const countSlider = document.getElementById('count-slider');
+  const countVal    = document.getElementById('count-val');
+  speedSlider.oninput = () => speedVal.textContent = speedSlider.value + ' с';
+  countSlider.oninput = () => countVal.textContent = countSlider.value;
+
+  let activeDiff = 1;
+  document.getElementById('diff-group').querySelectorAll('.seg-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('#diff-group .seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeDiff = +btn.dataset.v;
+    };
+  });
+
+  document.getElementById('rules-open-btn').onclick  = () => document.getElementById('modal-rules').classList.add('open');
+  document.getElementById('rules-close-btn').onclick = () => document.getElementById('modal-rules').classList.remove('open');
+  document.getElementById('modal-rules').onclick = e => { if(e.target === e.currentTarget) e.currentTarget.classList.remove('open'); };
+
+  let state    = { words:[], speed:1.5, diff:1, count:8, prevWords:[] };
+  let quizData = [];
+
+  document.getElementById('start-btn').onclick = () => {
+    const speed = parseFloat(speedSlider.value);
+    const count = parseInt(countSlider.value);
+    const diff  = activeDiff;
+    const words = buildWordList(count, diff, state.prevWords);
+    state = { words, speed, diff, count, prevWords: state.prevWords };
+    document.getElementById('hud-total').textContent = words.length;
+    document.getElementById('hud-time').textContent  = speed + 'с';
+    document.getElementById('hud-diff').textContent  = diff;
+    showOnly('screen-game');
+    runGame();
+  };
+
+  function runGame(){
+    const { words, speed } = state;
+    const wordEl  = document.getElementById('word-el');
+    const prog    = document.getElementById('prog');
+    const hudWord = document.getElementById('hud-word');
+    let i = 0;
+    function next(){
+      if(i >= words.length){
+        state.prevWords = [...words];
+        quizData = buildQuiz(words, state.diff);
+        renderQuiz();
+        return;
+      }
+      hudWord.textContent = i + 1;
+      prog.style.width = ((i / words.length) * 100) + '%';
+      wordEl.textContent = words[i].toUpperCase();
+      wordEl.classList.remove('hidden');
+      setTimeout(() => {
+        wordEl.classList.add('hidden');
+        i++;
+        setTimeout(next, 280);
+      }, speed * 1000);
+    }
+    next();
+  }
+
+  function renderQuiz(){
+    showOnly('screen-quiz');
+    const container = document.getElementById('quiz-questions');
+    container.innerHTML = '';
+    quizData.forEach((q, qi) => {
+      const div = document.createElement('div');
+      div.className = 'quiz-item';
+      div.innerHTML = `<div class="quiz-q">${qi+1}. ${q.q}</div>
+        <input class="quiz-input" id="qi-${qi}" placeholder="Ваш ответ...">
+        <div id="qr-${qi}" style="min-height:20px"></div>`;
+      container.appendChild(div);
+    });
+    const btn = document.getElementById('check-btn');
+    btn.disabled = false;
+    btn.onclick = checkQuiz;
+  }
+
+  function checkQuiz(){
+    let correct = 0;
+    quizData.forEach((q, qi) => {
+      const inp = document.getElementById('qi-' + qi);
+      const res = document.getElementById('qr-' + qi);
+      const val = inp.value.trim().toLowerCase();
+      let ok = false;
+      if(q.multi) ok = q.answer.some(a => val === a || (val.length > 1 && (val.includes(a) || a.includes(val))));
+      else         ok = val === q.answer;
+      correct += ok ? 1 : 0;
+      res.innerHTML = ok
+        ? `<span class="result-badge badge-ok">✓ Верно!</span>`
+        : `<span class="result-badge badge-err">✗ Правильно: «${Array.isArray(q.answer) ? q.answer[0] : q.answer}»</span>`;
+      inp.disabled = true;
+    });
+    document.getElementById('check-btn').disabled = true;
+    setTimeout(() => showResult(correct, quizData.length), 900);
+  }
+
+  function showResult(correct, total){
+    showOnly('screen-result');
+    const pct   = correct / total;
+    const stars = pct === 1 ? 3 : pct >= .5 ? 2 : 1;
+    document.getElementById('res-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    document.getElementById('res-score').textContent = correct + ' / ' + total;
+    const msgs = ['Попробуй ещё раз!','Хорошая работа!','Отличная память!'];
+    document.getElementById('res-msg').textContent = msgs[stars - 1];
+    document.getElementById('btn-replay').onclick = () => {
+      const words = buildWordList(state.count, state.diff, state.prevWords);
+      state = { ...state, words };
+      showOnly('screen-game');
+      runGame();
+    };
+    document.getElementById('btn-menu').onclick = () => showOnly('screen-setup');
+  }
+
+  showOnly('screen-setup');
+})();
+</script>
+</body>
+</html>
