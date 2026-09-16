@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Креатив</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,560;0,9..144,680;1,9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #EFE9DC;
+    --panel: #F7F3E9;
+    --ink: #221E18;
+    --ink-soft: #4B4436;
+    --navy: #1F3A5F;
+    --mustard: #D9A404;
+    --magenta: #B23A6A;
+    --teal: #2F6E62;
+    --rust: #A5461F;
+    --line: rgba(34,30,24,0.16);
+    --font-display: 'Fraunces', serif;
+    --font-ui: 'Space Grotesk', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 8% 12%, rgba(178,58,106,0.05), transparent 40%),
+      radial-gradient(circle at 92% 85%, rgba(31,58,95,0.06), transparent 45%);
+  }
+
+  .app{
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 90px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- Screens ---------- */
+  .screen{ display:none; flex:1; }
+  .screen.active{ display:flex; flex-direction:column; }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 13px 26px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+    letter-spacing: 0.01em;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .btn-primary{
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-primary:hover{ background: var(--navy); }
+  .btn-ghost{
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .btn-ghost:hover{ background: rgba(34,30,24,0.06); }
+  .btn-text{
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    padding: 8px 4px;
+    font-size: 14px;
+  }
+  .btn-text:hover{ color: var(--ink); }
+  .btn-text.danger{ color: var(--rust); }
+  .btn-text.danger:hover{ color: #7a3316; }
+
+  /* ---------- Menu screen ---------- */
+  .hero{
+    display: flex;
+    align-items: center;
+    gap: 56px;
+    flex: 1;
+    padding-top: 24px;
+  }
+  .hero-text{ flex: 1 1 440px; max-width: 520px; }
+  .title{
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 680;
+    font-size: clamp(52px, 9vw, 84px);
+    line-height: 0.98;
+    margin: 0 0 18px;
+    letter-spacing: -0.01em;
+  }
+  .lead{
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0 0 34px;
+    max-width: 46ch;
+  }
+  .settings-label{
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 10px;
+  }
+  .chip-row{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 34px;
+  }
+  .chip{
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .chip:hover{ border-color: var(--ink); }
+  .chip.active{
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .menu-actions{ display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .hero-art{
+    flex: 1 1 360px;
+    max-width: 420px;
+    aspect-ratio: 1/1;
+    background: var(--panel);
+    border-radius: 4px;
+    border: 1.5px solid var(--line);
+    padding: 18px;
+    box-shadow: 0 18px 40px -22px rgba(34,30,24,0.35);
+  }
+  .hero-art svg{ width:100%; height:100%; display:block; }
+
+  /* ---------- Game screen ---------- */
+  .game-toolbar{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0 20px;
+    border-bottom: 1.5px solid var(--line);
+    margin-bottom: 22px;
+  }
+  .timer{
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 20px;
+    background: var(--panel);
+    border: 1.5px solid var(--line);
+    padding: 6px 16px;
+    border-radius: 999px;
+    color: var(--navy);
+  }
+
+  .game-layout{
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 36px;
+    align-items: start;
+    flex: 1;
+  }
+
+  .artwork-panel{ position: sticky; top: 20px; }
+  .artwork-frame{
+    background: var(--panel);
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    padding: 22px;
+    aspect-ratio: 1/1;
+    box-shadow: 0 22px 46px -26px rgba(34,30,24,0.4);
+    overflow: hidden;
+    position: relative;
+  }
+  .artwork-spin{
+    width:100%;
+    height:100%;
+    transform-origin: 50% 50%;
+    transition: transform 0.15s ease;
+  }
+  .artwork-spin svg{ width:100%; height:100%; display:block; }
+
+  .rotate-controls{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .rotate-btn{
+    font-family: var(--font-ui);
+    font-size: 18px;
+    line-height: 1;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s ease;
+  }
+  .rotate-btn:hover{ border-color: var(--ink); }
+  .rotate-slider{
+    flex: 1;
+    max-width: 220px;
+    accent-color: var(--navy);
+  }
+  .rotate-value{
+    font-size: 13px;
+    color: var(--ink-soft);
+    width: 44px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .rotate-reset{
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-family: var(--font-ui);
+  }
+  .rotate-reset:hover{ color: var(--ink); }
+  .artwork-caption{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 19px;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: 16px 0 0;
+  }
+
+  .answers-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px 14px;
+  }
+  .answer-row{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1.3px solid var(--line);
+    padding-bottom: 6px;
+  }
+  .answer-num{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-style: italic;
+    color: var(--ink-soft);
+    width: 20px;
+    flex: none;
+    font-size: 15px;
+  }
+  .answer-input{
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: var(--font-ui);
+    font-size: 14.5px;
+    color: var(--ink);
+    padding: 6px 2px;
+    outline: none;
+  }
+  .answer-input::placeholder{ color: rgba(75,68,54,0.45); }
+  .answer-input:focus{ background: rgba(217,164,4,0.10); border-radius: 2px; }
+  .answer-input:disabled{ color: var(--ink-soft); }
+
+  .game-actions{
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+    align-items: center;
+  }
+  .save-toast{
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--teal);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .save-toast.show{ opacity: 1; }
+
+  .time-up-msg{
+    font-size: 14px;
+    color: var(--rust);
+    font-weight: 600;
+    margin-top: 14px;
+  }
+
+  /* ---------- Gallery screen ---------- */
+  .gallery-header{
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    padding-bottom: 20px;
+    border-bottom: 1.5px solid var(--line);
+    margin-bottom: 24px;
+  }
+  .gallery-header h2{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 30px;
+    margin: 0;
+  }
+  .gallery-list{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 18px;
+  }
+  .gallery-card{
+    background: var(--panel);
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    padding: 12px;
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.15s ease;
+  }
+  .gallery-card:hover{
+    transform: translateY(-3px);
+    box-shadow: 0 14px 26px -18px rgba(34,30,24,0.45);
+  }
+  .gallery-thumb{ aspect-ratio: 1/1; margin-bottom: 10px; }
+  .gallery-thumb svg{ width:100%; height:100%; display:block; }
+  .gallery-date{ font-size: 12.5px; color: var(--ink-soft); margin: 0 0 2px; }
+  .gallery-count{ font-size: 13px; font-weight: 600; margin: 0; }
+  .gallery-empty{ color: var(--ink-soft); font-size: 15px; }
+  .loading{ color: var(--ink-soft); font-size: 14px; }
+
+  .view-header{
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1.5px solid var(--line);
+    margin-bottom: 24px;
+  }
+
+  /* ---------- Signature ---------- */
+  .signature{
+    position: fixed;
+    right: 22px;
+    bottom: 16px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 14px;
+    color: rgba(34,30,24,0.4);
+    letter-spacing: 0.02em;
+    pointer-events: none;
+  }
+
+  @media (max-width: 860px){
+    .hero{ flex-direction: column; align-items: stretch; gap: 30px; }
+    .hero-art{ max-width: 100%; }
+    .game-layout{ grid-template-columns: 1fr; }
+    .artwork-panel{ position: static; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- MENU -->
+  <section id="screen-menu" class="screen active">
+    <div class="hero">
+      <div class="hero-text">
+        <h1 class="title">Креатив</h1>
+        <p class="lead">Одна клякса — сотня образов. На экране появится абстрактная фигура: наложенные друг на друга пятна и линии. Запишите всё, что в ней узнаёте — лицо, велосипед, вазу, дерево, что угодно. Чем больше вариантов, тем гибче воображение.</p>
+
+        <p class="settings-label">Время на один раунд</p>
+        <div class="chip-row" id="time-chips">
+          <button class="chip active" data-minutes="0">Без ограничений</button>
+          <button class="chip" data-minutes="1">1 мин</button>
+          <button class="chip" data-minutes="2">2 мин</button>
+          <button class="chip" data-minutes="3">3 мин</button>
+          <button class="chip" data-minutes="4">4 мин</button>
+          <button class="chip" data-minutes="5">5 мин</button>
+        </div>
+
+        <div class="menu-actions">
+          <button id="btn-start" class="btn btn-primary">Начать</button>
+          <button id="btn-gallery" class="btn btn-ghost">Мои работы</button>
+        </div>
+      </div>
+      <div class="hero-art" id="menu-blot-preview"></div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="screen-game" class="screen">
+    <div class="game-toolbar">
+      <button id="btn-to-menu" class="btn btn-text">← Настройки</button>
+      <div class="timer" id="timer-display" hidden><span id="timer-text">00:00</span></div>
+    </div>
+    <div class="game-layout">
+      <div class="artwork-panel">
+        <div class="artwork-frame"><div class="artwork-spin" id="artwork-container"></div></div>
+        <div class="rotate-controls">
+          <button class="rotate-btn" id="rotate-left" title="Повернуть влево">↺</button>
+          <input type="range" class="rotate-slider" id="rotate-slider" min="-180" max="180" value="0" step="1">
+          <button class="rotate-btn" id="rotate-right" title="Повернуть вправо">↻</button>
+          <span class="rotate-value" id="rotate-value">0°</span>
+          <button class="rotate-reset" id="rotate-reset">сбросить</button>
+        </div>
+        <p class="artwork-caption">Что вы здесь видите?</p>
+      </div>
+      <div class="answers-panel">
+        <div class="answers-grid" id="answers-grid"></div>
+      </div>
+    </div>
+    <div class="game-actions">
+      <button id="btn-save" class="btn btn-primary">Сохранить работу</button>
+      <button id="btn-next" class="btn btn-ghost">Следующая картинка</button>
+      <span class="save-toast" id="save-toast">Сохранено</span>
+    </div>
+    <p id="time-up-msg" class="time-up-msg" hidden>Время вышло. Можно сохранить работу или перейти к следующей картинке.</p>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="screen-gallery" class="screen">
+    <div class="gallery-header">
+      <button id="btn-gallery-back" class="btn btn-text">← Настройки</button>
+      <h2>Мои работы</h2>
+    </div>
+    <div id="gallery-list" class="gallery-list"></div>
+    <p id="gallery-empty" class="gallery-empty" hidden>Пока пусто. Сыграйте раунд и сохраните результат.</p>
+  </section>
+
+  <!-- VIEW SAVED WORK -->
+  <section id="screen-view" class="screen">
+    <div class="view-header">
+      <button id="btn-view-back" class="btn btn-text">← Мои работы</button>
+      <button id="btn-view-delete" class="btn btn-text danger">Удалить</button>
+    </div>
+    <div class="game-layout">
+      <div class="artwork-panel">
+        <div class="artwork-frame"><div class="artwork-spin" id="view-artwork-container"></div></div>
+        <div class="rotate-controls">
+          <button class="rotate-btn" id="view-rotate-left" title="Повернуть влево">↺</button>
+          <input type="range" class="rotate-slider" id="view-rotate-slider" min="-180" max="180" value="0" step="1">
+          <button class="rotate-btn" id="view-rotate-right" title="Повернуть вправо">↻</button>
+          <span class="rotate-value" id="view-rotate-value">0°</span>
+          <button class="rotate-reset" id="view-rotate-reset">сбросить</button>
+        </div>
+      </div>
+      <div class="answers-panel">
+        <div class="answers-grid" id="view-answers-grid"></div>
+      </div>
+    </div>
+  </section>
+
+</div>
+<footer class="signature">Котвицкая</footer>
+
+<script>
+  // ---------------- Utilities ----------------
+  function rand(min, max){ return Math.random() * (max - min) + min; }
+  function randInt(min, max){ return Math.floor(rand(min, max + 1)); }
+  function choice(arr){ return arr[randInt(0, arr.length - 1)]; }
+
+  const BLOT_COLORS = ['#D9A404', '#B23A6A', '#2F6E62', '#A5461F', '#1F3A5F', '#6B7B3F'];
+
+  function makeBlobPath(cx, cy, baseR, pointsCount, irregularity){
+    const pts = [];
+    for(let i = 0; i < pointsCount; i++){
+      const angle = (Math.PI * 2 * i) / pointsCount;
+      const r = baseR * (1 + rand(-irregularity, irregularity));
+      pts.push([cx + Math.cos(angle) * r, cy + Math.sin(angle) * r]);
+    }
+    const n = pts.length;
+    let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} `;
+    for(let i = 0; i < n; i++){
+      const p0 = pts[(i - 1 + n) % n];
+      const p1 = pts[i];
+      const p2 = pts[(i + 1) % n];
+      const p3 = pts[(i + 2) % n];
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += `C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} `;
+    }
+    d += 'Z';
+    return d;
+  }
+
+  function generateArtwork(){
+    const W = 500, H = 500;
+    let shapes = '';
+
+    const numBlobs = randInt(3, 5);
+    for(let i = 0; i < numBlobs; i++){
+      const cx = rand(60, 260);
+      const cy = rand(90, 410);
+      const r = rand(35, 105);
+      const pts = randInt(7, 12);
+      const irregularity = rand(0.35, 0.65);
+      const color = choice(BLOT_COLORS);
+      const opacity = rand(0.55, 0.9);
+      const path = makeBlobPath(cx, cy, r, pts, irregularity);
+      shapes += `<path d="${path}" fill="${color}" opacity="${opacity.toFixed(2)}"/>`;
+    }
+
+    const numSplat = randInt(5, 11);
+    for(let i = 0; i < numSplat; i++){
+      const cx = rand(40, 245);
+      const cy = rand(40, 460);
+      const r = rand(3, 13);
+      const color = choice(BLOT_COLORS);
+      const opacity = rand(0.5, 0.85);
+      shapes += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${color}" opacity="${opacity.toFixed(2)}"/>`;
+    }
+
+    const numDrips = randInt(0, 3);
+    for(let i = 0; i < numDrips; i++){
+      const x1 = rand(60, 230), y1 = rand(60, 200);
+      const x2 = x1 + rand(-20, 20), y2 = y1 + rand(60, 180);
+      const cx1 = x1 + rand(-15, 15), cy1 = y1 + rand(20, 60);
+      const color = choice(BLOT_COLORS);
+      const sw = rand(2, 6);
+      shapes += `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${cx1.toFixed(1)} ${cy1.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${color}" stroke-width="${sw.toFixed(1)}" stroke-linecap="round" opacity="0.75"/>`;
+    }
+
+    return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <g>${shapes}</g>
+      <g transform="translate(${W},0) scale(-1,1)">${shapes}</g>
+    </svg>`;
+  }
+
+  // ---------------- State ----------------
+  let selectedTimeMinutes = 0;
+  let currentArtworkSVG = '';
+  let timerInterval = null;
+  let timeLeftSec = 0;
+  let currentViewWorkId = null;
+  let gameRotation = 0;
+  let viewRotation = 0;
+
+  // ---------------- Screen switching ----------------
+  function showScreen(name){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  // ---------------- Answers grid ----------------
+  function buildAnswersGrid(containerId, values, readonly){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    for(let i = 0; i < 25; i++){
+      const row = document.createElement('div');
+      row.className = 'answer-row';
+
+      const num = document.createElement('span');
+      num.className = 'answer-num';
+      num.textContent = i + 1;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'answer-input';
+      input.autocomplete = 'off';
+      input.placeholder = readonly ? '' : 'например: лицо…';
+      input.value = values ? (values[i] || '') : '';
+      input.dataset.index = i;
+      if(readonly) input.readOnly = true;
+
+      if(!readonly){
+        input.addEventListener('keydown', (e) => {
+          if(e.key !== 'Enter') return;
+          e.preventDefault();
+          const idx = Number(input.dataset.index);
+          const next = container.querySelector(`.answer-input[data-index="${idx + 1}"]`);
+          if(next){
+            next.focus();
+            next.select();
+          }else{
+            input.blur();
+          }
+        });
+      }
+
+      row.appendChild(num);
+      row.appendChild(input);
+      container.appendChild(row);
+    }
+  }
+
+  function collectAnswers(){
+    const inputs = document.querySelectorAll('#answers-grid .answer-input');
+    const arr = new Array(25).fill('');
+    inputs.forEach(inp => { arr[Number(inp.dataset.index)] = inp.value; });
+    return arr;
+  }
+
+  // ---------------- Timer ----------------
+  function updateTimerText(){
+    const m = Math.floor(timeLeftSec / 60).toString().padStart(2, '0');
+    const s = (timeLeftSec % 60).toString().padStart(2, '0');
+    document.getElementById('timer-text').textContent = `${m}:${s}`;
+  }
+
+  function setInputsEnabled(enabled){
+    document.querySelectorAll('#answers-grid .answer-input').forEach(inp => { inp.disabled = !enabled; });
+  }
+
+  function startTimer(minutes){
+    clearInterval(timerInterval);
+    const timerDisplay = document.getElementById('timer-display');
+    const timeUpMsg = document.getElementById('time-up-msg');
+    timeUpMsg.hidden = true;
+    setInputsEnabled(true);
+
+    if(minutes === 0){
+      timerDisplay.hidden = true;
+      return;
+    }
+    timerDisplay.hidden = false;
+    timeLeftSec = minutes * 60;
+    updateTimerText();
+    timerInterval = setInterval(() => {
+      timeLeftSec--;
+      updateTimerText();
+      if(timeLeftSec <= 0){
+        clearInterval(timerInterval);
+        timeUpMsg.hidden = false;
+        setInputsEnabled(false);
+      }
+    }, 1000);
+  }
+
+  // ---------------- Round flow ----------------
+  function startRound(){
+    currentArtworkSVG = generateArtwork();
+    document.getElementById('artwork-container').innerHTML = currentArtworkSVG;
+    applyGameRotation(0);
+    buildAnswersGrid('answers-grid', null, false);
+    startTimer(selectedTimeMinutes);
+    const toast = document.getElementById('save-toast');
+    toast.classList.remove('show');
+  }
+
+  // ---------------- Save / Gallery ----------------
+  async function saveCurrentWork(){
+    const answers = collectAnswers();
+    const filledCount = answers.filter(a => a.trim() !== '').length;
+    if(filledCount === 0){
+      const proceed = confirm('Пока нет ни одного ответа. Сохранить всё равно?');
+      if(!proceed) return;
+    }
+    const work = {
+      id: 'w' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+      date: new Date().toISOString(),
+      svg: currentArtworkSVG,
+      answers: answers,
+      timeLimit: selectedTimeMinutes
+    };
+    try{
+      let list = [];
+      try{
+        const res = await window.storage.get('creative-works', false);
+        if(res && res.value) list = JSON.parse(res.value);
+      }catch(e){ list = []; }
+      list.unshift(work);
+      const result = await window.storage.set('creative-works', JSON.stringify(list), false);
+      if(!result) throw new Error('Storage set failed');
+      const toast = document.getElementById('save-toast');
+      toast.textContent = 'Сохранено';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }catch(e){
+      console.error('Save error:', e);
+      alert('Не удалось сохранить работу. Проверьте соединение и попробуйте ещё раз.');
+    }
+  }
+
+  async function loadGallery(){
+    const listEl = document.getElementById('gallery-list');
+    const emptyEl = document.getElementById('gallery-empty');
+    listEl.innerHTML = '<p class="loading">Загрузка…</p>';
+    let list = [];
+    try{
+      const res = await window.storage.get('creative-works', false);
+      if(res && res.value) list = JSON.parse(res.value);
+    }catch(e){ list = []; }
+
+    listEl.innerHTML = '';
+    if(list.length === 0){
+      emptyEl.hidden = false;
+      return;
+    }
+    emptyEl.hidden = true;
+
+    list.forEach(work => {
+      const card = document.createElement('div');
+      card.className = 'gallery-card';
+
+      const thumb = document.createElement('div');
+      thumb.className = 'gallery-thumb';
+      thumb.innerHTML = work.svg;
+
+      const info = document.createElement('div');
+      const filled = work.answers.filter(a => a && a.trim() !== '').length;
+      const dateStr = new Date(work.date).toLocaleString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const dateP = document.createElement('p');
+      dateP.className = 'gallery-date';
+      dateP.textContent = dateStr;
+      const countP = document.createElement('p');
+      countP.className = 'gallery-count';
+      countP.textContent = `${filled} из 25 заполнено`;
+      info.appendChild(dateP);
+      info.appendChild(countP);
+
+      card.appendChild(thumb);
+      card.appendChild(info);
+      card.addEventListener('click', () => openWork(work));
+      listEl.appendChild(card);
+    });
+  }
+
+  function openWork(work){
+    currentViewWorkId = work.id;
+    document.getElementById('view-artwork-container').innerHTML = work.svg;
+    applyViewRotation(0);
+    buildAnswersGrid('view-answers-grid', work.answers, true);
+    showScreen('view');
+  }
+
+  async function deleteCurrentWork(){
+    if(!currentViewWorkId) return;
+    const proceed = confirm('Удалить эту работу без возможности восстановления?');
+    if(!proceed) return;
+    try{
+      let list = [];
+      try{
+        const res = await window.storage.get('creative-works', false);
+        if(res && res.value) list = JSON.parse(res.value);
+      }catch(e){ list = []; }
+      list = list.filter(w => w.id !== currentViewWorkId);
+      await window.storage.set('creative-works', JSON.stringify(list), false);
+    }catch(e){
+      console.error('Delete error:', e);
+      alert('Не удалось удалить работу.');
+    }
+    showScreen('gallery');
+    loadGallery();
+  }
+
+  // ---------------- Rotation ----------------
+  function initRotationControl(container, slider, leftBtn, rightBtn, valueEl, resetBtn, getRotation, setRotation){
+    function apply(deg){
+      deg = ((deg + 180) % 360 + 360) % 360 - 180; // normalize to -180..180
+      setRotation(deg);
+      container.style.transform = `rotate(${deg}deg)`;
+      slider.value = deg;
+      valueEl.textContent = Math.round(deg) + '°';
+    }
+    leftBtn.addEventListener('click', () => apply(getRotation() - 15));
+    rightBtn.addEventListener('click', () => apply(getRotation() + 15));
+    slider.addEventListener('input', () => apply(Number(slider.value)));
+    resetBtn.addEventListener('click', () => apply(0));
+    return apply;
+  }
+
+  const applyGameRotation = initRotationControl(
+    document.getElementById('artwork-container'),
+    document.getElementById('rotate-slider'),
+    document.getElementById('rotate-left'),
+    document.getElementById('rotate-right'),
+    document.getElementById('rotate-value'),
+    document.getElementById('rotate-reset'),
+    () => gameRotation,
+    (deg) => { gameRotation = deg; }
+  );
+
+  const applyViewRotation = initRotationControl(
+    document.getElementById('view-artwork-container'),
+    document.getElementById('view-rotate-slider'),
+    document.getElementById('view-rotate-left'),
+    document.getElementById('view-rotate-right'),
+    document.getElementById('view-rotate-value'),
+    document.getElementById('view-rotate-reset'),
+    () => viewRotation,
+    (deg) => { viewRotation = deg; }
+  );
+
+  // ---------------- Event wiring ----------------
+  document.getElementById('time-chips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if(!chip) return;
+    document.querySelectorAll('#time-chips .chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedTimeMinutes = Number(chip.dataset.minutes);
+  });
+
+  document.getElementById('btn-start').addEventListener('click', () => {
+    showScreen('game');
+    startRound();
+  });
+
+  document.getElementById('btn-gallery').addEventListener('click', () => {
+    showScreen('gallery');
+    loadGallery();
+  });
+
+  document.getElementById('btn-to-menu').addEventListener('click', () => {
+    clearInterval(timerInterval);
+    showScreen('menu');
+  });
+
+  document.getElementById('btn-save').addEventListener('click', saveCurrentWork);
+
+  document.getElementById('btn-next').addEventListener('click', () => {
+    startRound();
+  });
+
+  document.getElementById('btn-gallery-back').addEventListener('click', () => {
+    showScreen('menu');
+  });
+
+  document.getElementById('btn-view-back').addEventListener('click', () => {
+    showScreen('gallery');
+    loadGallery();
+  });
+
+  document.getElementById('btn-view-delete').addEventListener('click', deleteCurrentWork);
+
+  // ---------------- Init ----------------
+  document.getElementById('menu-blot-preview').innerHTML = generateArtwork();
+</script>
+</body>
+</html>
